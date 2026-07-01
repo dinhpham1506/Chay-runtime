@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Chạy Console</title>
+  <style>
+    :root {
+      --bg: #eef2f6;
+      --surface: #ffffff;
+      --surface-soft: #f8fafc;
+      --ink: #172033;
+      --muted: #64748b;
+      --line: #d8e1ea;
+      --primary: #102033;
+      --accent: #0f766e;
+      --accent-soft: #e6f4f1;
+      --warn: #b45309;
+      --danger: #b42318;
+      --code-bg: #101828;
+      --code-ink: #d8e7ff;
+      --shadow: 0 10px 28px rgba(16, 32, 51, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+    html { color-scheme: light; }
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      font: 14px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    button, textarea { font: inherit; }
+    button {
+      min-height: 44px;
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      background: var(--primary);
+      color: #fff;
+      cursor: pointer;
+      transition: background 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+    }
+    button:hover { background: #1d3148; }
+    button:active { transform: translateY(1px); }
+    button:focus-visible, textarea:focus-visible {
+      outline: 3px solid rgba(15, 118, 110, 0.26);
+      outline-offset: 2px;
+    }
+    button.secondary {
+      background: #e2e8f0;
+      color: var(--ink);
+    }
+    button.secondary:hover { background: #d6dee9; }
+
+    textarea {
+      width: 100%;
+      min-height: 92px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--ink);
+      background: #fff;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--ink);
+      font-weight: 650;
+    }
+
+    .app-header {
+      min-height: 64px;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: var(--primary);
+      color: #fff;
+      box-shadow: var(--shadow);
+    }
+    .brand {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 14px;
+      min-width: 0;
+    }
+    .brand-mark {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #19c37d;
+      box-shadow: 0 0 0 5px rgba(25, 195, 125, 0.14);
+      flex: 0 0 auto;
+    }
+    .brand-title { font-size: 16px; font-weight: 750; }
+    .header-meta {
+      color: #c7d7ea;
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(260px, 300px) minmax(0, 1fr) minmax(300px, 380px);
+      min-height: calc(100dvh - 64px);
+    }
+    .sidebar, .inspector {
+      background: var(--surface);
+      overflow: auto;
+    }
+    .sidebar { border-right: 1px solid var(--line); }
+    .inspector { border-left: 1px solid var(--line); }
+    .workspace {
+      min-width: 0;
+      overflow: auto;
+      padding: 18px;
+    }
+    .panel {
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+    .panel h2, .section-title {
+      margin: 0 0 12px;
+      font-size: 14px;
+      line-height: 1.2;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .actions button { margin: 0; }
+    .muted { color: var(--muted); }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(150px, 1fr));
+      gap: 12px;
+    }
+    .lane {
+      min-height: 210px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-soft);
+      overflow: hidden;
+    }
+    .lane h3 {
+      margin: 0;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+      text-transform: uppercase;
+    }
+    .agent-card {
+      margin: 10px;
+      padding: 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(16, 32, 51, 0.06);
+    }
+    .agent-card b, .item b { display: block; }
+    .agent-card p, .item p {
+      margin: 7px 0 0;
+      color: #334155;
+      overflow-wrap: anywhere;
+    }
+    .section-block { margin-top: 18px; }
+    .item {
+      padding: 10px 0;
+      border-top: 1px solid #edf2f7;
+      overflow-wrap: anywhere;
+    }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border-radius: 999px;
+      padding: 2px 8px;
+      color: var(--accent);
+      background: var(--accent-soft);
+      font-size: 12px;
+      font-weight: 650;
+    }
+    .log {
+      min-height: 96px;
+      margin-top: 12px;
+      white-space: pre-wrap;
+      border-radius: 8px;
+      padding: 12px;
+      background: var(--code-bg);
+      color: var(--code-ink);
+      font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      overflow: auto;
+    }
+    .files { font-size: 12px; }
+
+    @media (max-width: 1180px) {
+      .layout { grid-template-columns: minmax(260px, 300px) minmax(0, 1fr); }
+      .inspector {
+        grid-column: 1 / -1;
+        border-left: 0;
+        border-top: 1px solid var(--line);
+      }
+      .flow { grid-template-columns: repeat(3, minmax(140px, 1fr)); }
+    }
+
+    @media (max-width: 760px) {
+      .app-header { align-items: flex-start; flex-direction: column; }
+      .layout { grid-template-columns: 1fr; }
+      .sidebar, .inspector {
+        border-right: 0;
+        border-left: 0;
+      }
+      .workspace { padding: 14px; }
+      .flow { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-title">Chạy Console</span>
+      <span id="stamp" class="header-meta"></span>
+      <span id="runner" class="header-meta" aria-live="polite"></span>
+    </div>
+    <span class="header-meta">Realtime workflow, token budget, checks, and chat</span>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" aria-label="Task controls">
+      <section class="panel">
+        <h2>Create task</h2>
+        <label for="taskText">Task for worker</label>
+        <textarea id="taskText" placeholder="Describe the task for the agent"></textarea>
+        <div class="actions">
+          <button type="button" data-action="create-task">Create + Run</button>
+          <button type="button" class="secondary" data-action="run-worker">Run worker</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Efficiency</h2>
+        <div id="quality"></div>
+        <div class="actions">
+          <button type="button" class="secondary" data-action="eval-report">Refresh quality</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Token budget</h2>
+        <div id="tokens"></div>
+        <div class="actions">
+          <button type="button" class="secondary" data-action="token-report">Refresh tokens</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Checks</h2>
+        <div class="actions">
+          <button type="button" data-action="validate-output">Validate result</button>
+          <button type="button" class="secondary" data-action="patch-check">Patch check</button>
+          <button type="button" class="secondary" data-action="experience-snapshot">Experience</button>
+        </div>
+        <div id="checks" class="log" aria-live="polite"></div>
+      </section>
+    </aside>
+
+    <main class="workspace" aria-label="Realtime workflow">
+      <div id="flow" class="flow"></div>
+
+      <section class="section-block">
+        <h2 class="section-title">Tasks</h2>
+        <div id="tasks"></div>
+      </section>
+
+      <section class="section-block">
+        <h2 class="section-title">Timeline</h2>
+        <div id="timeline"></div>
+      </section>
+
+      <section class="section-block">
+        <h2 class="section-title">Plan ledger</h2>
+        <div id="ledger"></div>
+      </section>
+    </main>
+
+    <aside class="inspector" aria-label="Project context">
+      <section class="panel">
+        <h2>Selected files</h2>
+        <div id="files" class="files"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Experience</h2>
+        <div id="experience"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Chat</h2>
+        <div id="chat"></div>
+        <label for="message">Message</label>
+        <textarea id="message" placeholder="Send a note to main or codex"></textarea>
+        <div class="actions">
+          <button type="button" data-action="send-chat">Send</button>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  <script>
+    const steps = ["assigned", "reading", "planning", "editing", "testing", "patch_check", "done", "blocked"];
+    const $ = (id) => document.getElementById(id);
+    const els = {
+      stamp: $("stamp"),
+      runner: $("runner"),
+      flow: $("flow"),
+      taskText: $("taskText"),
+      quality: $("quality"),
+      tokens: $("tokens"),
+      checks: $("checks"),
+      tasks: $("tasks"),
+      timeline: $("timeline"),
+      ledger: $("ledger"),
+      files: $("files"),
+      experience: $("experience"),
+      chat: $("chat"),
+      message: $("message")
+    };
+
+    document.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-action]");
+      if (!button) return;
+      runButtonAction(button, actions[button.dataset.action]);
+    });
+
+    const actions = {
+      "create-task": createTask,
+      "run-worker": runWorker,
+      "validate-output": validateOutput,
+      "patch-check": patchCheck,
+      "token-report": tokenReport,
+      "eval-report": evalReport,
+      "experience-snapshot": experienceSnapshot,
+      "send-chat": sendChat
+    };
+
+    async function runButtonAction(button, action) {
+      if (!action) return;
+      button.disabled = true;
+      try { await action(); } finally { button.disabled = false; }
+    }
+
+    async function api(path, body) {
+      const response = await fetch(path, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      return response.json();
+    }
+
+    function render(state) {
+      els.stamp.textContent = new Date(state.generated_at).toLocaleTimeString();
+      els.runner.textContent = state.runner
+        ? `${state.runner.worker} running (${state.runner.engine}) pid ${state.runner.pid}`
+        : "";
+      els.flow.innerHTML = steps.map((step) => `<div class="lane"><h3>${step}</h3><div id="c-${step}"></div></div>`).join("");
+
+      for (const agent of state.agents) {
+        const step = steps.includes(agent.step) ? agent.step : "assigned";
+        $(`c-${step}`).insertAdjacentHTML("beforeend", [
+          "<div class=\"agent-card\">",
+          `<b>${esc(agent.agent)}</b>`,
+          `<small>${esc(agent.role)} / ${esc(agent.llm)}</small>`,
+          `<p>${esc(agent.message || agent.step)}</p>`,
+          "</div>"
+        ].join(""));
+      }
+
+      els.tasks.innerHTML = state.tasks.map((task) => [
+        "<div class=\"item\">",
+        `<b>${esc(task.agent || "")}</b> <span class="status">${esc(task.status || "")}</span>`,
+        `<p>${esc(task.goal || "")}</p>`,
+        `<small>${esc((task.files || []).join(", "))}</small>`,
+        "</div>"
+      ].join("")).join("") || "<p class=\"muted\">No tasks</p>";
+
+      els.files.innerHTML = state.selected_files.map((file) => [
+        "<div class=\"item\">",
+        `${esc(file.path)}<br><small>${esc(file.role || "")}</small>`,
+        "</div>"
+      ].join("")).join("") || "<p class=\"muted\">No context</p>";
+
+      els.timeline.innerHTML = renderTimeline(state.progress_history || []);
+      els.ledger.innerHTML = renderLedger(state.plan_ledger);
+      els.experience.innerHTML = renderExperience(state.experience);
+      els.chat.innerHTML = state.chat.map((message) => [
+        "<div class=\"item\">",
+        `<b>${esc(message.from)} -> ${esc(message.to)}</b>`,
+        `<p>${esc(message.message)}</p>`,
+        "</div>"
+      ].join("")).join("") || "<p class=\"muted\">No messages</p>";
+
+      renderQuality(state.eval_report);
+      renderTokens(state.token_report);
+      els.checks.textContent = JSON.stringify(state.checks, null, 2);
+    }
+
+    async function load() {
+      try {
+        render(await fetch("/api/state").then((response) => response.json()));
+      } catch {
+        // The next SSE update or interval tick can recover the view.
+      }
+    }
+
+    function connect() {
+      const stream = new EventSource("/api/stream");
+      stream.onmessage = (event) => {
+        try { render(JSON.parse(event.data)); } catch {}
+      };
+    }
+
+    function renderQuality(report) {
+      els.quality.innerHTML = [
+        `<div class="item"><b>${report.score}/100</b> ${esc(report.grade)}</div>`,
+        `<div class="item"><small>${esc(report.next_action)}</small></div>`,
+        ...report.cases.map((item) => `<div class="item">${item.ok ? "OK" : "FAIL"} ${esc(item.id)}<br><small>${esc(item.value)}</small></div>`)
+      ].join("");
+    }
+
+    function renderTokens(report) {
+      els.tokens.innerHTML = [
+        `<div class="item"><b>${report.estimates.chay_context_tokens}</b> Chạy Runtime tokens</div>`,
+        `<div class="item"><b>${report.estimates.full_repo_tokens}</b> full repo estimate</div>`,
+        `<div class="item"><b>${report.estimates.savings_percent}%</b> savings</div>`,
+        `<div class="item">work ${report.notes.work_note.tokens}/${report.budgets.maxNoteTokens}<br>result ${report.notes.result_note.tokens}/${report.budgets.maxResultTokens}<br><small>${esc((report.violations || []).map((item) => item.type).join(", ") || "within budget")}</small></div>`
+      ].join("");
+    }
+
+    function renderTimeline(history) {
+      return history.slice(-20).reverse().map((item) => [
+        "<div class=\"item\">",
+        `<b>${esc(item.agent)} - ${esc(item.step)}</b>`,
+        `<p>${esc(item.message || "")}</p>`,
+        `<small>${esc(new Date(item.updated_at).toLocaleTimeString())}</small>`,
+        "</div>"
+      ].join("")).join("") || "<p class=\"muted\">No progress yet</p>";
+    }
+
+    function renderLedger(ledger) {
+      if (!ledger) return "<p class=\"muted\">No ledger yet</p>";
+      return (ledger.steps_done || []).map((step) => [
+        "<div class=\"item\">",
+        `<b>#${step.step_index} ${esc(step.worker)}</b>`,
+        `<p>${esc(step.result_summary)}</p>`,
+        `<small>${esc((step.changed_files || []).join(", "))}</small>`,
+        "</div>"
+      ].join("")).join("") || "<p class=\"muted\">No completed steps</p>";
+    }
+
+    function renderExperience(experience) {
+      if (!experience) return "<p class=\"muted\">No snapshot yet</p>";
+      return [
+        `<div class="item"><b>${esc(experience.framework)}</b></div>`,
+        `<div class="item">memory refs ${esc((experience.spectrum?.memory?.refs || []).length)}<br>skills ${esc((experience.spectrum?.skills?.items || []).length)}<br>rules ${esc(experience.spectrum?.rules?.policy_ref || "")}</div>`
+      ].join("");
+    }
+
+    async function createTask() {
+      const task = els.taskText.value.trim();
+      if (!task) return;
+      els.checks.textContent = "Creating task...";
+      els.checks.textContent = JSON.stringify(await api("/api/action", { action: "create_task", task, worker: "codex" }), null, 2);
+      els.taskText.value = "";
+      load();
+    }
+
+    async function runWorker() {
+      els.checks.textContent = "Dispatching worker...";
+      els.checks.textContent = JSON.stringify(await api("/api/action", { action: "run_worker", worker: "codex" }), null, 2);
+      load();
+    }
+
+    async function validateOutput() {
+      els.checks.textContent = JSON.stringify(await api("/api/action", { action: "validate_output" }), null, 2);
+      load();
+    }
+
+    async function patchCheck() {
+      els.checks.textContent = "Generating scoped diff and checking patch...";
+      els.checks.textContent = JSON.stringify(await api("/api/action", { action: "patch_check" }), null, 2);
+      load();
+    }
+
+    async function tokenReport() {
+      els.checks.textContent = JSON.stringify(await api("/api/action", { action: "token_report" }), null, 2);
+      load();
+    }
+
+    async function evalReport() {
+      els.checks.textContent = JSON.stringify(await api("/api/action", { action: "eval_report" }), null, 2);
+      load();
+    }
+
+    async function experienceSnapshot() {
+      els.checks.textContent = JSON.stringify(await api("/api/action", { action: "experience_snapshot" }), null, 2);
+      load();
+    }
+
+    async function sendChat() {
+      const text = els.message.value.trim();
+      if (!text) return;
+      await api("/api/chat", { from: "human", to: "main", message: text });
+      els.message.value = "";
+      load();
+    }
+
+    function esc(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#39;"
+      }[char]));
+    }
+
+    load();
+    connect();
+    setInterval(load, 10000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "task_id": "task_001",
+  "goal": "Replace this with the user task",
+  "requirements": [
+    "Use compact JSON notes",
+    "Do not read audit markdown",
+    "Keep patches small"
+  ],
+  "constraints": [
+    "No long agent-to-agent chat",
+    "No unbounded command execution",
+    "Follow existing design patterns and SOLID principles",
+    "Split code by responsibility, not arbitrary line count"
+  ]
+}

@@ -1,0 +1,54 @@
+import { readJson, exists } from "../utils/fs.js";
+
+export function loadPolicy(file = "policies/chay_policy.json") {
+  if (!exists(file)) {
+    return {
+      maxNoteTokens: 1200,
+      maxResultTokens: 900,
+      maxChangedFiles: 6,
+      maxAddedLines: 300,
+      maxDeletedLines: 200,
+      maxTotalDiffLines: 500,
+      maxCommandsPerTask: 8,
+      maxSubagents: 2,
+      maxSubagentDepth: 1,
+      architectureRules: [
+        "Follow local patterns.",
+        "Apply SOLID where useful.",
+        "Split by responsibility, not line count.",
+        "Separate validation, orchestration, persistence, and presentation.",
+        "Use explicit dependencies; avoid hidden global state."
+      ],
+      minimalPatchRules: [
+        "Before writing code, ask whether the change needs to exist; skip unnecessary work.",
+        "Reuse existing local helpers, components, functions, and patterns before creating new ones.",
+        "Prefer standard library and native platform features before adding dependencies.",
+        "Use an installed dependency only when it already exists and clearly reduces complexity.",
+        "Write the smallest correct patch that satisfies the task and output contract.",
+        "Do not remove validation, error handling, security checks, accessibility, or tests to make code smaller.",
+        "Do not introduce abstractions, wrappers, files, or configuration unless they remove real complexity.",
+        "If the best solution is one line or a native element, use it."
+      ],
+      agentSkills: [
+        "repo_search",
+        "context_reading",
+        "solid_refactor",
+        "test_runner",
+        "patch_guard",
+        "minimal_patch"
+      ],
+      allowedDomains: ["ai_orchestration", "backend_architecture", "coding_agent_runtime", "repo_intelligence"],
+      forbiddenNotePaths: ["audit/"],
+      forbiddenPatterns: [
+        "hardcoded_test_value",
+        "bypass_validation",
+        "catch_exception_and_ignore",
+        "return_null_on_error",
+        "disable_test",
+        "comment_out_logic",
+        "fake_success_response"
+      ]
+    };
+  }
+  return readJson(file);
+}

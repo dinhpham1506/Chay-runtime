@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "required": ["work_id", "worker", "status", "summary", "findings"],
+  "properties": {
+    "work_id": { "type": "string" },
+    "worker": { "type": "string" },
+    "status": { "enum": ["completed", "failed", "blocked", "partial"] },
+    "summary": { "type": "string" },
+    "findings": { "type": "array" },
+    "changed_files": { "type": "array" },
+    "risks": { "type": "array" },
+    "next_recommendation": { "type": "string" }
+  }
+}

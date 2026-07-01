@@ -1,0 +1,53 @@
+{
+  "name": "chay-runtime",
+  "version": "0.1.0",
+  "description": "Note-based policy runtime for multi-agent coding CLIs: Claude, Codex, and Antigravity.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dinhpham1506/chay-runtime.git"
+  },
+  "homepage": "https://github.com/dinhpham1506/chay-runtime#readme",
+  "bugs": {
+    "url": "https://github.com/dinhpham1506/chay-runtime/issues"
+  },
+  "bin": {
+    "cr": "./bin/cr.js"
+  },
+  "files": [
+    "bin",
+    "docs",
+    "examples",
+    "scripts",
+    "src",
+    "test",
+    "policies",
+    "schemas",
+    "site",
+    "templates",
+    "README.md"
+  ],
+  "scripts": {
+    "postinstall": "node ./bin/postinstall.js",
+    "start": "node ./bin/cr.js",
+    "check": "node ./bin/cr.js doctor",
+    "test": "node ./test/smoke.js",
+    "build": "node ./scripts/build.js",
+    "pack:local": "npm pack",
+    "publish:public": "npm publish --access public"
+  },
+  "keywords": [
+    "ai",
+    "agents",
+    "cli",
+    "boundary",
+    "codex",
+    "claude-code",
+    "antigravity",
+    "orchestration"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

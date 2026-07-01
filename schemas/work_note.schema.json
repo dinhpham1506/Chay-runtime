@@ -1,0 +1,18 @@
+{
+  "type": "object",
+  "required": ["work_id", "controller", "assigned_to", "worker", "goal", "inputs", "architecture_rules", "skills", "output_contract", "allowed_tools", "forbidden", "output_schema"],
+  "properties": {
+    "work_id": { "type": "string" },
+    "controller": { "type": "object" },
+    "assigned_to": { "type": "string" },
+    "worker": { "type": "object" },
+    "goal": { "type": "string" },
+    "inputs": { "type": "array" },
+    "architecture_rules": { "type": "array", "items": { "type": "string" } },
+    "skills": { "type": "array", "items": { "type": "string" } },
+    "output_contract": { "type": "object" },
+    "allowed_tools": { "type": "array" },
+    "forbidden": { "type": "array" },
+    "output_schema": { "type": "string" }
+  }
+}
