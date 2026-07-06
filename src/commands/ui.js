@@ -13,6 +13,7 @@ import { buildTokenReport } from "../core/tokenReport.js";
 import { validateResultNote, validateWorkNote } from "../core/validators.js";
 import { normalizeAgentName } from "../core/agents.js";
 import { defaultWorker, resultNotePath, workNotePath } from "../core/host.js";
+import { supportedAgentNames } from "../core/engineAdapters.js";
 import { progressSteps } from "../utils/progress.js";
 import { scanRepo } from "./repoScan.js";
 import { planContext } from "./contextPlan.js";
@@ -219,6 +220,8 @@ function buildState() {
     generated_at: new Date().toISOString(),
     runner: runningWorker ? { ...runningWorker, elapsed_ms: Date.now() - Date.parse(runningWorker.started_at) } : null,
     default_worker: worker,
+    available_agents: supportedAgentNames(),
+    available_workers: availableWorkers(host),
     progress_steps: progressSteps,
     capabilities: {
       realtime: "sse_plus_file_watch",
@@ -245,6 +248,11 @@ function agentsFrom(host, notes, progress) {
     const latest = progress.find((item) => item.agent === agent.agent);
     return { agent: agent.agent, role: agent.role, llm: agent.llm || "user-selected", skills: agent.skills || [], step: latest?.step || stepFor(agent.agent, notes), message: latest?.message || "", updated_at: latest?.updated_at || null };
   });
+}
+
+function availableWorkers(host) {
+  const workers = (host.workers || []).map((worker) => normalizeAgentName(worker.agent)).filter(Boolean);
+  return workers.length > 0 ? [...new Set(workers)] : supportedAgentNames();
 }
 
 function normalizeProgress(progress) {

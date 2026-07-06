@@ -335,11 +335,11 @@
         <div class="form-grid">
           <div>
             <label for="workerName">Worker</label>
-            <input id="workerName" value="codex" autocomplete="off">
+            <select id="workerName"></select>
           </div>
           <div>
             <label for="agentName">Engine</label>
-            <input id="agentName" value="codex" autocomplete="off">
+            <select id="agentName"></select>
           </div>
           <div>
             <label for="maxRetries">Retries</label>
@@ -582,6 +582,8 @@
     function syncControls(state) {
       const firstWorker = (state.agents || []).find((agent) => agent.role === "worker");
       const worker = firstWorker?.agent || state.default_worker || "codex";
+      syncOptions(els.workerName, state.available_workers || state.available_agents || ["codex"], worker);
+      syncOptions(els.agentName, state.available_agents || ["codex", "claude", "antigravity"], firstWorker?.agent || worker);
       if (!els.workerName.dataset.touched) els.workerName.value = worker;
       if (!els.agentName.dataset.touched) els.agentName.value = firstWorker?.agent || worker;
       if (!els.progressStep.options.length) {
@@ -595,9 +597,27 @@
       }
     }
 
+    function syncOptions(select, values, preferred) {
+      const normalized = [...new Set(values.map(normalizeAgentName).filter(Boolean))];
+      const current = select.value || preferred;
+      const next = normalized.includes(normalizeAgentName(current)) ? normalizeAgentName(current) : normalizeAgentName(preferred || normalized[0] || "codex");
+      const signature = normalized.join(",");
+      if (select.dataset.options === signature) {
+        select.value = next;
+        return;
+      }
+      select.innerHTML = normalized.map((value) => `<option value="${esc(value)}">${esc(agentLabel(value))}</option>`).join("");
+      select.dataset.options = signature;
+      select.value = next;
+    }
+
     function normalizeAgentName(agent) {
       const value = String(agent || "").trim().toLowerCase();
       return agentAliases[value] || value;
+    }
+
+    function agentLabel(agent) {
+      return agent === "antigravity" ? "Antigravity" : agent.charAt(0).toUpperCase() + agent.slice(1);
     }
 
     function renderRunnerClock() {
@@ -767,7 +787,7 @@
     }
 
     for (const control of [els.workerName, els.agentName]) {
-      control.addEventListener("input", () => { control.dataset.touched = "1"; });
+      control.addEventListener("change", () => { control.dataset.touched = "1"; });
     }
 
     function esc(value) {

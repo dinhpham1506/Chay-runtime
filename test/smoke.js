@@ -253,4 +253,6 @@ function verifyUiTemplate() {
   for (const text of ["/api/stream", "testCommand", "worker_options", "stateSignature"]) {
     assert.ok(server.includes(text), `missing UI server contract: ${text}`);
   }
+  assert.ok(server.includes("available_agents"));
+  assert.ok(server.includes("available_workers"));
 }
