@@ -410,6 +410,11 @@
       </section>
 
       <section class="section-block">
+        <h2 class="section-title">Worker result</h2>
+        <div id="results"></div>
+      </section>
+
+      <section class="section-block">
         <h2 class="section-title">Timeline</h2>
         <div id="timeline"></div>
       </section>
@@ -476,6 +481,7 @@
       checks: $("checks"),
       actionResult: $("actionResult"),
       tasks: $("tasks"),
+      results: $("results"),
       timeline: $("timeline"),
       ledger: $("ledger"),
       files: $("files"),
@@ -565,6 +571,7 @@
       ].join("")).join("") || "<p class=\"muted\">No context</p>";
 
       els.timeline.innerHTML = renderTimeline(state.progress_history || []);
+      els.results.innerHTML = renderResults(state.result_notes || []);
       els.ledger.innerHTML = renderLedger(state.plan_ledger);
       els.experience.innerHTML = renderExperience(state.experience);
       els.chat.innerHTML = state.chat.map((message) => [
@@ -684,6 +691,25 @@
         "</div>"
       ].join("");
       }).join("") || "<p class=\"muted\">No progress yet</p>";
+    }
+
+    function renderResults(results) {
+      return results.slice().reverse().map((result) => [
+        "<div class=\"item\">",
+        `<b>${esc(result.worker)} - ${esc(result.status)}</b>`,
+        `<p>${esc(result.summary || "No summary")}</p>`,
+        listBlock("changed", result.changed_files),
+        listBlock("findings", result.findings),
+        listBlock("risks", result.risks),
+        result.next_recommendation ? `<small>next: ${esc(result.next_recommendation)}</small>` : "",
+        `<small>${esc(result.file || "")}</small>`,
+        "</div>"
+      ].join("")).join("") || "<p class=\"muted\">No result_note yet</p>";
+    }
+
+    function listBlock(label, items) {
+      if (!Array.isArray(items) || items.length === 0) return "";
+      return `<small>${label}: ${esc(items.join(", "))}</small><br>`;
     }
 
     function renderLedger(ledger) {

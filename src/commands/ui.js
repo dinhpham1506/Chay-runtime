@@ -230,6 +230,7 @@ function buildState() {
     },
     agents: agentsFrom(host, notes, progress),
     tasks: taskList(notes, context),
+    result_notes: resultNotes(notes),
     selected_files: context.selected_files || [],
     progress_history: progressHistory,
     plan_ledger: optionalJson("memory/plan_ledger.json"),
@@ -261,6 +262,20 @@ function normalizeProgress(progress) {
 
 function taskList(notes, context) {
   return notes.filter((note) => ["work", "result"].includes(note.kind)).map((note) => ({ id: note.data.work_id, agent: normalizeAgentName(note.data.assigned_to || note.data.worker), status: note.data.status || "assigned", goal: compact(note.data.goal || context.task || ""), summary: compact(note.data.summary || ""), files: note.data.changed_files || note.data.allowed_files || [] }));
+}
+
+function resultNotes(notes) {
+  return notes.filter((note) => note.kind === "result").map((note) => ({
+    file: note.file,
+    work_id: note.data.work_id,
+    worker: normalizeAgentName(note.data.worker),
+    status: note.data.status || "",
+    summary: compact(note.data.summary || ""),
+    findings: Array.isArray(note.data.findings) ? note.data.findings.map(compact) : [],
+    changed_files: Array.isArray(note.data.changed_files) ? note.data.changed_files : [],
+    risks: Array.isArray(note.data.risks) ? note.data.risks.map(compact) : [],
+    next_recommendation: compact(note.data.next_recommendation || "")
+  }));
 }
 
 function buildChecks(notes, worker = defaultWorker()) {

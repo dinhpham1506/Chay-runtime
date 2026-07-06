@@ -245,7 +245,7 @@ function verifyUiTemplate() {
   const html = fs.readFileSync(path.join(repoRoot, "site", "console.html"), "utf8");
   const server = fs.readFileSync(path.join(repoRoot, "src", "commands", "ui.js"), "utf8");
   const progress = fs.readFileSync(path.join(repoRoot, "src", "utils", "progress.js"), "utf8");
-  for (const text of ["workerName", "agentName", "testCommand", "progressStep", "streamStatus", "actionResult", "durationText", "live-age"]) {
+  for (const text of ["workerName", "agentName", "testCommand", "progressStep", "streamStatus", "actionResult", "durationText", "live-age", "Worker result"]) {
     assert.ok(html.includes(text), `missing console control: ${text}`);
   }
   assert.ok(progress.includes("validate_result"), "missing progress contract: validate_result");
@@ -255,4 +255,5 @@ function verifyUiTemplate() {
   }
   assert.ok(server.includes("available_agents"));
   assert.ok(server.includes("available_workers"));
+  assert.ok(server.includes("result_notes"));
 }
