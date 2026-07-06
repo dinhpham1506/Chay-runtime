@@ -11,6 +11,7 @@ import { loadPolicy } from "../core/policy.js";
 import { buildEvalReport } from "../core/evalReport.js";
 import { buildTokenReport } from "../core/tokenReport.js";
 import { validateResultNote, validateWorkNote } from "../core/validators.js";
+import { normalizeAgentName } from "../core/agents.js";
 import { defaultWorker, resultNotePath, workNotePath } from "../core/host.js";
 import { progressSteps } from "../utils/progress.js";
 import { scanRepo } from "./repoScan.js";
@@ -98,8 +99,9 @@ function startWatcher() {
 let runningWorker = null;
 
 function spawnWorker(worker, options = {}) {
+  worker = normalizeAgentName(worker);
   if (runningWorker) return { ok: false, error: "worker_busy", pid: runningWorker.pid };
-  const engine = options.agent || process.env.CHAY_WORKER_ENGINE || worker;
+  const engine = normalizeAgentName(options.agent || process.env.CHAY_WORKER_ENGINE || worker);
   const maxRetries = options.maxRetries ?? 3;
   const workFile = workNotePath(worker);
   if (!exists(workFile)) return { ok: false, error: "work_note_not_found", file: workFile };
@@ -134,7 +136,7 @@ function spawnWorker(worker, options = {}) {
 
 async function runAction(res, body) {
   const data = JSON.parse(body || "{}");
-  const worker = data.worker || defaultWorker();
+  const worker = normalizeAgentName(data.worker || defaultWorker());
   if (data.action === "create_task") return createUiTask(res, data, worker);
   if (data.action === "run_worker") { const dispatch = spawnWorker(worker, data); return sendJson(res, dispatch.ok ? 200 : 409, dispatch); }
   if (data.action === "validate_output") return validateUiOutput(res, data.file || resultNotePath(worker));
@@ -146,15 +148,16 @@ async function runAction(res, body) {
 }
 
 async function createUiTask(res, data, worker) {
+  worker = normalizeAgentName(worker);
   const task = data.task || "";
   if (!task.trim()) return sendJson(res, 400, { ok: false, error: "task_required" });
   await scanRepo(["--root", ".", "--out", ".chay-index/project_map.json"]);
   await planContext(["--task", task, "--index", ".chay-index/project_map.json", "--out", "memory/context_package.json", "--max-notes", "2"]);
   const files = selectedFiles("memory/context_package.json").join(",");
-  await makeWorkpack(["--worker", worker, "--goal", task, "--out", `memory/${worker}_work_note.json`, "--compact", ...(files ? ["--allowed-files", files] : [])]);
+  await makeWorkpack(["--worker", worker, "--goal", task, "--out", workNotePath(worker), "--compact", ...(files ? ["--allowed-files", files] : [])]);
   writeProgress(worker, "assigned", "Task assigned from Chạy Runtime UI", task);
   const dispatch = data.run === false ? { ok: true, skipped: true } : spawnWorker(worker, data);
-  sendJson(res, 200, { ok: true, task, worker, work_note: `memory/${worker}_work_note.json`, dispatch });
+  sendJson(res, 200, { ok: true, task, worker, work_note: workNotePath(worker), dispatch });
   broadcastState();
 }
 
@@ -208,13 +211,13 @@ function buildState() {
   const host = optionalJson("memory/host_config.json") || {};
   const context = optionalJson("memory/context_package.json") || {};
   const notes = readMemoryNotes();
-  const progress = notes.filter((note) => note.kind === "progress" && !Array.isArray(note.data)).map((note) => note.data);
-  const progressHistory = notes.filter((note) => note.kind === "progress_history" && Array.isArray(note.data)).flatMap((note) => note.data).slice(-80);
+  const progress = notes.filter((note) => note.kind === "progress" && !Array.isArray(note.data)).map((note) => normalizeProgress(note.data));
+  const progressHistory = notes.filter((note) => note.kind === "progress_history" && Array.isArray(note.data)).flatMap((note) => note.data.map(normalizeProgress)).slice(-80);
   const policy = loadPolicy();
   const worker = defaultWorker();
   return {
     generated_at: new Date().toISOString(),
-    runner: runningWorker,
+    runner: runningWorker ? { ...runningWorker, elapsed_ms: Date.now() - Date.parse(runningWorker.started_at) } : null,
     default_worker: worker,
     progress_steps: progressSteps,
     capabilities: {
@@ -236,16 +239,20 @@ function buildState() {
 }
 
 function agentsFrom(host, notes, progress) {
-  const main = host.main ? [{ ...host.main, role: "main" }] : [];
-  const workers = (host.workers || []).map((worker) => ({ ...worker, role: "worker" }));
+  const main = host.main ? [{ ...host.main, agent: normalizeAgentName(host.main.agent), role: "main" }] : [];
+  const workers = (host.workers || []).map((worker) => ({ ...worker, agent: normalizeAgentName(worker.agent), role: "worker" }));
   return [...main, ...workers].map((agent) => {
     const latest = progress.find((item) => item.agent === agent.agent);
     return { agent: agent.agent, role: agent.role, llm: agent.llm || "user-selected", skills: agent.skills || [], step: latest?.step || stepFor(agent.agent, notes), message: latest?.message || "", updated_at: latest?.updated_at || null };
   });
 }
 
+function normalizeProgress(progress) {
+  return progress?.agent ? { ...progress, agent: normalizeAgentName(progress.agent) } : progress;
+}
+
 function taskList(notes, context) {
-  return notes.filter((note) => ["work", "result"].includes(note.kind)).map((note) => ({ id: note.data.work_id, agent: note.data.assigned_to || note.data.worker, status: note.data.status || "assigned", goal: compact(note.data.goal || context.task || ""), summary: compact(note.data.summary || ""), files: note.data.changed_files || note.data.allowed_files || [] }));
+  return notes.filter((note) => ["work", "result"].includes(note.kind)).map((note) => ({ id: note.data.work_id, agent: normalizeAgentName(note.data.assigned_to || note.data.worker), status: note.data.status || "assigned", goal: compact(note.data.goal || context.task || ""), summary: compact(note.data.summary || ""), files: note.data.changed_files || note.data.allowed_files || [] }));
 }
 
 function buildChecks(notes, worker = defaultWorker()) {
@@ -257,7 +264,7 @@ function saveProgress(res, body) {
   const data = JSON.parse(body || "{}");
   const step = data.step || "editing";
   if (!progressSteps.includes(step)) return sendJson(res, 400, { ok: false, error: "invalid_step", allowed: progressSteps });
-  const progress = writeProgress(data.agent || defaultWorker(), step, data.message || "", data.task || "");
+  const progress = writeProgress(normalizeAgentName(data.agent || defaultWorker()), step, data.message || "", data.task || "");
   sendJson(res, 200, { ok: true, progress });
   broadcastState();
 }
@@ -274,7 +281,7 @@ function saveChat(res, body) {
 }
 
 function writeProgress(agent, step, message, task = "") {
-  return writeProgressNote(agent, step, message, task);
+  return writeProgressNote(normalizeAgentName(agent), step, message, task);
 }
 
 function selectedFiles(file) {

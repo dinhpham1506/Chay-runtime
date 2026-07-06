@@ -4,13 +4,11 @@ import path from "node:path";
 import { parseArgs } from "../utils/args.js";
 import { writeJson } from "../utils/fs.js";
 import { loadPolicy } from "../core/policy.js";
+import { normalizeAgentName, normalizeAgentList } from "../core/agents.js";
 import { createProjectFiles } from "./init.js";
 import { installConfiguredIntegrations, agentIntegrationTargets } from "./integrations.js";
 
 const defaultSetupAgents = ["codex", "antigravity"];
-const agentAliases = {
-  anti: "antigravity"
-};
 
 export async function setupProject(argv) {
   const args = parseArgs(argv);
@@ -83,7 +81,7 @@ async function resolveSetup(args, policy) {
 function normalizeAnswers(args, policy) {
   const requestedAgents = list(args.agents, defaultSetupAgents);
   if (args.anti || args.antigravity) requestedAgents.push("antigravity");
-  const agents = validateAgents(requestedAgents.map(normalizeAgentName));
+  const agents = validateAgents(normalizeAgentList(requestedAgents));
   const main = normalizeAgentName(args.main || args.controller || agents[0]);
   if (!agents.includes(main)) {
     throw new Error(`--main must be included in --agents. main=${main}; agents=${agents.join(",")}. Alias: anti=antigravity.`);
@@ -137,11 +135,6 @@ function parseWorkerLlms(value, ready = null) {
     if (agent && llm) out[normalizeAgentName(agent)] = llm;
   }
   return out;
-}
-
-function normalizeAgentName(agent) {
-  const value = String(agent || "").trim().toLowerCase();
-  return agentAliases[value] || value;
 }
 
 async function ask(rl, question) {

@@ -225,12 +225,29 @@
       box-shadow: 0 4px 12px rgba(16, 32, 51, 0.06);
     }
     .agent-card b, .item b { display: block; }
+    .agent-card .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 10px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
     .agent-card p, .item p {
       margin: 7px 0 0;
       color: #334155;
       overflow-wrap: anywhere;
     }
     .section-block { margin-top: 18px; }
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+    .section-head .section-title { margin: 0; }
+    .section-head small { color: var(--muted); }
     .item {
       padding: 10px 0;
       border-top: 1px solid #edf2f7;
@@ -427,6 +444,7 @@
   </div>
 
   <script>
+    const agentAliases = { anti: "antigravity" };
     const steps = ["assigned", "reading", "planning", "editing", "validate_result", "testing", "patch_check", "done", "blocked"];
     const stepLabels = {
       assigned: "Assigned",
@@ -465,6 +483,8 @@
       chat: $("chat"),
       message: $("message")
     };
+    let currentState = null;
+    let clockTimer = null;
 
     document.addEventListener("click", (event) => {
       const button = event.target.closest("button[data-action]");
@@ -512,10 +532,9 @@
     }
 
     function render(state) {
+      currentState = state;
       els.stamp.textContent = new Date(state.generated_at).toLocaleTimeString();
-      els.runner.textContent = state.runner
-        ? `${state.runner.worker} running (${state.runner.engine}) pid ${state.runner.pid}`
-        : "";
+      renderRunnerClock();
       syncControls(state);
       els.flow.innerHTML = steps.map((step) => `<div class="lane"><h3><span>${stepLabels[step] || step}</span><code>${step}</code></h3><div id="c-${step}"></div></div>`).join("");
 
@@ -526,6 +545,7 @@
           `<b>${esc(agent.agent)}</b>`,
           `<small>${esc(agent.role)} / ${esc(agent.llm)}</small>`,
           `<p>${esc(agent.message || agent.step)}</p>`,
+          `<div class="meta"><span>${esc(stepLabels[step] || step)}</span><span class="live-age" data-at="${esc(agent.updated_at || "")}">${esc(ageText(agent.updated_at))}</span></div>`,
           "</div>"
         ].join(""));
       }
@@ -575,6 +595,20 @@
       }
     }
 
+    function normalizeAgentName(agent) {
+      const value = String(agent || "").trim().toLowerCase();
+      return agentAliases[value] || value;
+    }
+
+    function renderRunnerClock() {
+      const runner = currentState?.runner;
+      if (!runner) {
+        els.runner.textContent = "";
+        return;
+      }
+      els.runner.textContent = `${runner.worker} running (${runner.engine}) ${durationText(Date.now() - Date.parse(runner.started_at))} pid ${runner.pid}`;
+    }
+
     async function load() {
       try {
         render(await fetch("/api/state").then((response) => response.json()));
@@ -616,13 +650,20 @@
     }
 
     function renderTimeline(history) {
-      return history.slice(-20).reverse().map((item) => [
+      const rows = history.slice(-20);
+      return rows.slice().reverse().map((item, reversedIndex) => {
+        const index = rows.length - 1 - reversedIndex;
+        const next = rows[index + 1];
+        const ms = next?.updated_at ? Date.parse(next.updated_at) - Date.parse(item.updated_at) : Date.now() - Date.parse(item.updated_at);
+        const duration = Number.isFinite(ms) && ms >= 0 ? durationText(ms) : "";
+        return [
         "<div class=\"item\">",
         `<b>${esc(item.agent)} - ${esc(item.step)}</b>`,
         `<p>${esc(item.message || "")}</p>`,
-        `<small>${esc(new Date(item.updated_at).toLocaleTimeString())}</small>`,
+        `<small>${esc(new Date(item.updated_at).toLocaleTimeString())} · ${esc(next ? `took ${duration}` : `running ${duration}`)}</small>`,
         "</div>"
-      ].join("")).join("") || "<p class=\"muted\">No progress yet</p>";
+      ].join("");
+      }).join("") || "<p class=\"muted\">No progress yet</p>";
     }
 
     function renderLedger(ledger) {
@@ -646,8 +687,8 @@
 
     function runOptions() {
       return {
-        worker: els.workerName.value.trim() || "codex",
-        agent: els.agentName.value.trim() || els.workerName.value.trim() || "codex",
+        worker: normalizeAgentName(els.workerName.value.trim() || "codex"),
+        agent: normalizeAgentName(els.agentName.value.trim() || els.workerName.value.trim() || "codex"),
         maxRetries: Number(els.maxRetries.value || 3),
         isolate: els.isolate.checked,
         testCommand: els.testCommand.value.trim()
@@ -683,7 +724,7 @@
 
     async function updateProgress() {
       showResult(await api("/api/progress", {
-        agent: els.workerName.value.trim() || "codex",
+        agent: normalizeAgentName(els.workerName.value.trim() || "codex"),
         step: els.progressStep.value,
         message: els.progressMessage.value.trim() || els.progressStep.value
       }));
@@ -739,9 +780,33 @@
       }[char]));
     }
 
+    function durationText(ms) {
+      const total = Math.max(0, Math.floor(Number(ms || 0) / 1000));
+      const minutes = Math.floor(total / 60);
+      const seconds = total % 60;
+      return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    function ageText(value) {
+      if (!value) return "no timestamp";
+      const ms = Date.now() - Date.parse(value);
+      return Number.isFinite(ms) ? `updated ${durationText(ms)} ago` : "no timestamp";
+    }
+
+    function tickClocks() {
+      renderRunnerClock();
+      document.querySelectorAll(".live-age").forEach((node) => {
+        node.textContent = ageText(node.dataset.at);
+      });
+      if (currentState) {
+        els.timeline.innerHTML = renderTimeline(currentState.progress_history || []);
+      }
+    }
+
     load();
     connect();
     setInterval(load, 10000);
+    clockTimer = setInterval(tickClocks, 1000);
   </script>
 </body>
 </html>

@@ -10,6 +10,7 @@ import { validateResultNote } from "../core/validators.js";
 import { analyzeDiff, validateDiff } from "../core/diff.js";
 import { commandForAgent, isSupportedAgent, supportedAgentNames } from "../core/engineAdapters.js";
 import { buildTokenReport } from "../core/tokenReport.js";
+import { normalizeAgentName } from "../core/agents.js";
 import { resolveWorker } from "../core/host.js";
 
 const lockDir = ".chay/locks";
@@ -202,8 +203,8 @@ export async function dispatchWorker(argv) {
 }
 
 function resolveAgent(args, worker, work) {
-  if (args.agent) return args.agent;
-  if (work.worker?.agent) return work.worker.agent;
+  if (args.agent) return normalizeAgentName(args.agent);
+  if (work.worker?.agent) return normalizeAgentName(work.worker.agent);
   return worker;
 }
 

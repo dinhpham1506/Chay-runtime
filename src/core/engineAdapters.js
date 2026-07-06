@@ -1,3 +1,5 @@
+import { normalizeAgentName } from "./agents.js";
+
 const adapters = {
   codex: ({ prompt }) => commandOverride("CHAY_CODEX_COMMAND") || { command: "codex", args: ["exec", prompt] },
   claude: ({ prompt, worker }) => commandOverride("CHAY_CLAUDE_COMMAND") || { command: "claude", args: ["-p", prompt, "--agent", claudeAgentName(worker)] },
@@ -9,11 +11,11 @@ export function supportedAgentNames() {
 }
 
 export function isSupportedAgent(agent) {
-  return Boolean(adapters[agent]);
+  return Boolean(adapters[normalizeAgentName(agent)]);
 }
 
 export function commandForAgent(agent, context) {
-  return adapters[agent]?.(context) || null;
+  return adapters[normalizeAgentName(agent)]?.(context) || null;
 }
 
 function claudeAgentName(worker) {
