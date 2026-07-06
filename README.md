@@ -37,22 +37,18 @@ cr setup
 
 `cr setup` asks for at least two enabled agents, then asks which one is the main host/controller. It writes `memory/host_config.json`, installs the selected integrations, and prepares the Chạy Runtime folders.
 
-Non-interactive setup:
+Non-interactive setup, with any supported agent as main:
 
 ```bash
-cr setup \
-  --agents claude,antigravity \
-  --main claude \
-  --main-llm sonnet \
-  --workers antigravity \
-  --worker-llms antigravity:user-selected \
-  --skills repo_search,context_reading,solid_refactor,test_runner,patch_guard,minimal_patch
+cr setup --agents claude,codex,antigravity --main codex
 ```
 
 After setup, `cr workpack make ...` automatically uses `memory/host_config.json`
 for the default worker, controller, worker LLM, and skills unless flags override
 them. Any two supported agents can be selected from `claude`, `codex`, and
 `antigravity`; one is the main/controller and the rest are workers.
+If `--workers` is omitted, every enabled agent except `--main` becomes a worker.
+`--main-llm` and `--worker-llms` are optional model labels, not agent names.
 
 Current integration capability:
 
@@ -101,7 +97,7 @@ npm publish --access public
 ## Basic flow
 
 ```bash
-cr setup --agents claude,codex --main claude --main-llm sonnet --workers codex --worker-llms codex:gpt-5
+cr setup --agents claude,codex,antigravity --main codex
 cr task
 ```
 
@@ -140,7 +136,7 @@ Use Chạy Runtime as the runtime boundary. The main agent creates compact JSON 
 
 ```bash
 # main/controller agent
-cr setup --agents claude,codex --main claude --main-llm sonnet --workers codex --worker-llms codex:gpt-5 --skills repo_search,context_reading,solid_refactor,test_runner,patch_guard,minimal_patch
+cr setup --agents claude,codex,antigravity --main antigravity
 cr repo scan --root . --out .chay-index/project_map.json
 cr context plan \
   --task "Fix duplicate apply service" \
