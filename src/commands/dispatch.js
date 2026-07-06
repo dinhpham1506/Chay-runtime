@@ -90,7 +90,7 @@ export async function dispatchWorker(argv) {
       lastRun = await runAgent({ args, agent, prompt, promptFile: runPaths.promptFile, worker, logFile: runPaths.logFile, cwd: runCwd });
       if (!lastRun.ok) {
         syncIsolatedOutputs(isolation, { resultFile, diffFile, logFile });
-        writeProgress(worker, "blocked", lastRun.error || "Worker process failed");
+        writeProgress(worker, "blocked", workerRunErrorMessage(lastRun));
         return {
           ok: false,
           worker,
@@ -200,6 +200,12 @@ export async function dispatchWorker(argv) {
   } finally {
     releaseFileLocks(lock);
   }
+}
+
+function workerRunErrorMessage(run) {
+  if (run?.detail) return `${run.error || "worker_process_failed"}: ${run.detail}`;
+  if (run?.stderr) return `${run.error || "worker_process_failed"}: ${run.stderr}`;
+  return run?.error || "Worker process failed";
 }
 
 function resolveAgent(args, worker, work) {
