@@ -454,7 +454,7 @@
 
 <span class="c"># 2 · thiết lập ngay trong dự án của bạn</span>
 <span class="k">cd</span> du-an-cua-ban
-<span class="k">cr</span> setup --agents <span class="s">claude,codex,antigravity</span> --main <span class="s">codex</span>
+<span class="k">cr</span> setup --agents <span class="s">codex,anti</span> --main <span class="s">anti</span>
 
 <span class="c"># 3 · tạo task compact và giao cho worker</span>
 <span class="k">cr</span> task <span class="s">"Sửa lỗi apply job bị trùng"</span> --compact --max-notes <span class="s">2</span>
@@ -480,9 +480,9 @@
       <div class="doc-card reveal">
         <span class="doc-tag">Khởi tạo &amp; thiết lập</span>
         <code class="doc-cmd">cr init
-cr setup --agents claude,codex,antigravity --main codex
+cr setup --agents codex,anti --main anti
 cr doctor</code>
-        <p>Tạo cấu trúc thư mục dự án, hỏi/nhận danh sách agent rồi ghi <code>memory/host_config.json</code>. <code>--main</code> nhận <code>claude</code>, <code>codex</code> hoặc <code>antigravity</code>; nếu bỏ <code>--workers</code>, các agent còn lại tự làm worker.</p>
+        <p>Tạo cấu trúc thư mục dự án, hỏi/nhận danh sách agent rồi ghi <code>memory/host_config.json</code>. <code>--main</code> nhận <code>claude</code>, <code>codex</code> hoặc <code>antigravity</code>; <code>anti</code> là alias của <code>antigravity</code>.</p>
       </div>
       <div class="doc-card reveal">
         <span class="doc-tag">Task nhanh</span>

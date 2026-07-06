@@ -40,7 +40,7 @@ cr setup
 Non-interactive setup, with any supported agent as main:
 
 ```bash
-cr setup --agents claude,codex,antigravity --main codex
+cr setup --agents codex,anti --main anti
 ```
 
 After setup, `cr workpack make ...` automatically uses `memory/host_config.json`
@@ -48,6 +48,7 @@ for the default worker, controller, worker LLM, and skills unless flags override
 them. Any two supported agents can be selected from `claude`, `codex`, and
 `antigravity`; one is the main/controller and the rest are workers.
 If `--workers` is omitted, every enabled agent except `--main` becomes a worker.
+`anti` is accepted as a short alias for `antigravity`.
 `--main-llm` and `--worker-llms` are optional model labels, not agent names.
 
 Current integration capability:
@@ -97,7 +98,7 @@ npm publish --access public
 ## Basic flow
 
 ```bash
-cr setup --agents claude,codex,antigravity --main codex
+cr setup --agents codex,anti --main anti
 cr task
 ```
 
@@ -136,7 +137,7 @@ Use Chạy Runtime as the runtime boundary. The main agent creates compact JSON 
 
 ```bash
 # main/controller agent
-cr setup --agents claude,codex,antigravity --main antigravity
+cr setup --agents codex,anti --main anti
 cr repo scan --root . --out .chay-index/project_map.json
 cr context plan \
   --task "Fix duplicate apply service" \

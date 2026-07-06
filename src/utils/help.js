@@ -4,8 +4,8 @@ Chạy Runtime
 
 Usage:
   cr init
-  cr setup --agents claude,codex,antigravity --main codex
-  cr setup --agents codex,antigravity --main antigravity
+  cr setup --agents codex,anti --main anti
+  cr setup --agents claude,anti --main claude
   cr ui serve --port 7770
   cr task
   cr task "Fix duplicate apply bug"

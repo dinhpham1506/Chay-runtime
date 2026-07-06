@@ -33,6 +33,17 @@ assert.equal(genericWork.assigned_to, "claude");
 assert.ok(fs.existsSync(path.join(genericProject, ".claude", "agents", "chay-claude-worker.md")));
 assert.ok(fs.readFileSync(path.join(genericProject, ".claude", "agents", "chay-main.md"), "utf8").includes("chay-claude-worker"));
 
+const aliasProject = fs.mkdtempSync(path.join(os.tmpdir(), "chay-runtime-alias-"));
+runIn(aliasProject, "setup", "--agents", "codex,anti", "--main", "anti");
+const aliasHost = JSON.parse(fs.readFileSync(path.join(aliasProject, "memory", "host_config.json"), "utf8"));
+assert.deepEqual(aliasHost.enabled_agents, ["codex", "antigravity"]);
+assert.deepEqual(aliasHost.main, { agent: "antigravity", llm: "user-selected" });
+assert.equal(aliasHost.workers[0].agent, "codex");
+const duplicateAgents = runIn(aliasProject, "setup", "--agents", "codex,codex", "--main", "anti", { expectCode: 1 });
+assert.equal(duplicateAgents.ok, false);
+assert.ok(duplicateAgents.error.includes("2 distinct agents"));
+assert.ok(!duplicateAgents.error.includes("claude,codex"));
+
 run("doctor");
 run("setup", "--agents", "claude,codex", "--main", "claude", "--main-llm", "sonnet", "--workers", "codex", "--worker-llms", "codex:gpt-5", "--skills", "repo_search,solid_refactor,test_runner,minimal_patch");
 run("repo", "scan", "--root", ".", "--out", ".chay-index/project_map.json");
@@ -184,7 +195,7 @@ function runIn(cwd, ...input) {
     ].filter(Boolean).join("\n"));
   }
 
-  const text = result.stdout.trim();
+  const text = result.stdout.trim() || result.stderr.trim();
   assert.ok(text.startsWith("{"), `Expected JSON output for cr ${input.join(" ")}`);
   return JSON.parse(text);
 }
