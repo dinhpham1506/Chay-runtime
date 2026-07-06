@@ -45,7 +45,7 @@
   }
   a { color: inherit; text-decoration: none; }
   svg { display: block; }
-  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+  .wrap { width: min(100% - 48px, 1080px); margin: 0 auto; }
 
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
 
@@ -69,7 +69,10 @@
   .nav-links { display: flex; gap: 26px; align-items: center; }
   .nav-links > a { color: var(--muted); font-size: 14px; transition: color .16s; }
   .nav-links > a:hover { color: var(--text); }
-  @media (max-width: 720px) { .nav-links > a:not(.btn) { display: none; } }
+  @media (max-width: 720px) {
+    .wrap { width: min(100% - 32px, 1080px); }
+    .nav-links > a:not(.btn) { display: none; }
+  }
 
   /* ---- Buttons ---- */
   .btn {
@@ -221,14 +224,19 @@
   pre .s { color: var(--accent); }
 
   /* ---- Docs / CLI reference ---- */
-  .doc-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 46px; }
+  .doc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 46px; }
   @media (max-width: 760px) { .doc-grid { grid-template-columns: 1fr; } }
-  .doc-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-card); padding: 20px 22px; }
+  .doc-card { min-width: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--r-card); padding: 20px 22px; }
   .doc-card .doc-tag { font-family: var(--mono); font-size: 11.5px; color: var(--accent); letter-spacing: .06em; text-transform: uppercase; }
   .doc-card .doc-cmd { display: block; font-family: var(--mono); font-size: 13px; color: var(--text); background: var(--panel);
-    border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; margin: 10px 0 10px; overflow-x: auto; white-space: pre; }
+    border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; margin: 10px 0 10px;
+    max-width: 100%; overflow-wrap: anywhere; white-space: pre-wrap; word-break: break-word; }
   .doc-card .doc-cmd .f { color: var(--accent-2); }
   .doc-card p { color: var(--muted); font-size: 14px; line-height: 1.6; }
+  @media (max-width: 560px) {
+    .doc-card { padding: 18px 16px; }
+    .doc-card .doc-cmd { font-size: 12px; }
+  }
 
   /* ---- Safety list ---- */
   .safe-list { margin-top: 34px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 30px; }
