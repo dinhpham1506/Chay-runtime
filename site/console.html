@@ -323,126 +323,126 @@
       <span id="stamp" class="header-meta"></span>
       <span id="runner" class="header-meta" aria-live="polite"></span>
     </div>
-    <span id="streamStatus" class="live-pill disconnected" aria-live="polite">Connecting</span>
+    <span id="streamStatus" class="live-pill disconnected" aria-live="polite">Connecting / Đang kết nối</span>
   </header>
 
   <div class="layout">
-    <aside class="sidebar" aria-label="Task controls">
+    <aside class="sidebar" aria-label="Task controls / Điều khiển task">
       <section class="panel">
-        <h2>Worker run</h2>
-        <label for="taskText">Task for worker</label>
-        <textarea id="taskText" placeholder="Describe the task for the agent"></textarea>
+        <h2>Worker run / Chạy worker</h2>
+        <label for="taskText">Task for worker / Việc giao cho worker</label>
+        <textarea id="taskText" placeholder="Describe the task / Mô tả task"></textarea>
         <div class="form-grid">
           <div>
-            <label for="workerName">Worker</label>
+            <label for="workerName">Worker / Agent xử lý</label>
             <select id="workerName"></select>
           </div>
           <div>
-            <label for="agentName">Engine</label>
+            <label for="agentName">Engine / Bộ chạy</label>
             <select id="agentName"></select>
           </div>
           <div>
-            <label for="maxRetries">Retries</label>
+            <label for="maxRetries">Retries / Số lần thử</label>
             <input id="maxRetries" type="number" min="0" max="10" value="3">
           </div>
           <label class="check-row" for="isolate">
             <input id="isolate" type="checkbox">
-            Isolate
+            Isolate / Cô lập
           </label>
           <div class="field-full">
-            <label for="testCommand">Test command</label>
+            <label for="testCommand">Test command / Lệnh test</label>
             <input id="testCommand" placeholder="npm test">
-            <span class="field-help">Optional. Dispatch emits testing only when this is set.</span>
+            <span class="field-help">Optional / Tuỳ chọn. Dispatch emits testing only when this command is set / Dispatch chỉ ghi bước testing khi có lệnh này.</span>
           </div>
         </div>
         <div class="actions">
-          <button type="button" class="secondary" data-action="create-note">Create note</button>
-          <button type="button" data-action="create-task">Create + Run</button>
-          <button type="button" class="secondary" data-action="run-worker">Run worker</button>
+          <button type="button" class="secondary" data-action="create-note">Create note / Tạo ghi chú</button>
+          <button type="button" data-action="create-task">Create + Run / Tạo + chạy</button>
+          <button type="button" class="secondary" data-action="run-worker">Run worker / Chạy worker</button>
         </div>
       </section>
 
       <section class="panel">
-        <h2>Manual progress</h2>
-        <label for="progressStep">Step</label>
+        <h2>Manual progress / Ghi tiến độ</h2>
+        <label for="progressStep">Step / Bước</label>
         <select id="progressStep"></select>
-        <label for="progressMessage">Message</label>
-        <input id="progressMessage" placeholder="Editing backend structure">
+        <label for="progressMessage">Message / Tin nhắn</label>
+        <input id="progressMessage" placeholder="Editing backend structure / Đang sửa cấu trúc backend">
         <div class="actions">
-          <button type="button" class="secondary" data-action="update-progress">Write progress</button>
+          <button type="button" class="secondary" data-action="update-progress">Write progress / Ghi tiến độ</button>
         </div>
       </section>
 
       <section class="panel">
-        <h2>Efficiency</h2>
+        <h2>Efficiency / Hiệu suất</h2>
         <div id="quality"></div>
         <div class="actions">
-          <button type="button" class="secondary" data-action="eval-report">Refresh quality</button>
+          <button type="button" class="secondary" data-action="eval-report">Refresh quality / Cập nhật chất lượng</button>
         </div>
       </section>
 
       <section class="panel">
-        <h2>Token budget</h2>
+        <h2>Token budget / Ngân sách token</h2>
         <div id="tokens"></div>
         <div class="actions">
-          <button type="button" class="secondary" data-action="token-report">Refresh tokens</button>
+          <button type="button" class="secondary" data-action="token-report">Refresh tokens / Cập nhật token</button>
         </div>
       </section>
 
       <section class="panel">
-        <h2>Checks</h2>
+        <h2>Checks / Kiểm tra</h2>
         <div class="actions">
-          <button type="button" data-action="validate-output">Validate result</button>
-          <button type="button" class="secondary" data-action="patch-check">Patch check</button>
-          <button type="button" class="secondary" data-action="experience-snapshot">Experience</button>
+          <button type="button" data-action="validate-output">Validate result / Kiểm tra kết quả</button>
+          <button type="button" class="secondary" data-action="patch-check">Patch check / Kiểm tra patch</button>
+          <button type="button" class="secondary" data-action="experience-snapshot">Experience / Kinh nghiệm</button>
         </div>
         <div id="checks" class="log" aria-live="polite"></div>
         <div id="actionResult" class="log" aria-live="polite"></div>
       </section>
     </aside>
 
-    <main class="workspace" aria-label="Realtime workflow">
+    <main class="workspace" aria-label="Realtime workflow / Luồng realtime">
       <div id="flow" class="flow"></div>
 
       <section class="section-block">
-        <h2 class="section-title">Tasks</h2>
+        <h2 class="section-title">Tasks / Task</h2>
         <div id="tasks"></div>
       </section>
 
       <section class="section-block">
-        <h2 class="section-title">Worker result</h2>
+        <h2 class="section-title">Worker result / Kết quả worker</h2>
         <div id="results"></div>
       </section>
 
       <section class="section-block">
-        <h2 class="section-title">Timeline</h2>
+        <h2 class="section-title">Timeline / Dòng thời gian</h2>
         <div id="timeline"></div>
       </section>
 
       <section class="section-block">
-        <h2 class="section-title">Plan ledger</h2>
+        <h2 class="section-title">Plan ledger / Sổ kế hoạch</h2>
         <div id="ledger"></div>
       </section>
     </main>
 
-    <aside class="inspector" aria-label="Project context">
+    <aside class="inspector" aria-label="Project context / Context dự án">
       <section class="panel">
-        <h2>Selected files</h2>
+        <h2>Selected files / File đã chọn</h2>
         <div id="files" class="files"></div>
       </section>
 
       <section class="panel">
-        <h2>Experience</h2>
+        <h2>Experience / Kinh nghiệm</h2>
         <div id="experience"></div>
       </section>
 
       <section class="panel">
-        <h2>Chat</h2>
+        <h2>Chat / Trao đổi</h2>
         <div id="chat"></div>
-        <label for="message">Message</label>
-        <textarea id="message" placeholder="Send a note to main or codex"></textarea>
+        <label for="message">Message / Tin nhắn</label>
+        <textarea id="message" placeholder="Send a note / Gửi ghi chú"></textarea>
         <div class="actions">
-          <button type="button" data-action="send-chat">Send</button>
+          <button type="button" data-action="send-chat">Send / Gửi</button>
         </div>
       </section>
     </aside>
@@ -452,15 +452,15 @@
     const agentAliases = { anti: "antigravity" };
     const steps = ["assigned", "reading", "planning", "editing", "validate_result", "testing", "patch_check", "done", "blocked"];
     const stepLabels = {
-      assigned: "Assigned",
-      reading: "Reading",
-      planning: "Planning",
-      editing: "Editing",
-      validate_result: "Validate result",
-      testing: "Testing",
-      patch_check: "Patch check",
-      done: "Done",
-      blocked: "Blocked"
+      assigned: "Assigned / Đã giao",
+      reading: "Reading / Đọc ghi chú",
+      planning: "Planning / Lập kế hoạch",
+      editing: "Editing / Đang sửa",
+      validate_result: "Validate result / Kiểm tra kết quả",
+      testing: "Testing / Chạy test",
+      patch_check: "Patch check / Kiểm tra patch",
+      done: "Done / Hoàn tất",
+      blocked: "Blocked / Bị chặn"
     };
     const $ = (id) => document.getElementById(id);
     const els = {
@@ -515,7 +515,7 @@
       if (!action) return;
       const old = button.textContent;
       button.disabled = true;
-      button.textContent = "Working...";
+      button.textContent = "Working... / Đang chạy...";
       try {
         await action();
       } catch (error) {
@@ -562,13 +562,13 @@
         `<p>${esc(task.goal || "")}</p>`,
         `<small>${esc((task.files || []).join(", "))}</small>`,
         "</div>"
-      ].join("")).join("") || "<p class=\"muted\">No tasks</p>";
+      ].join("")).join("") || "<p class=\"muted\">No tasks / Chưa có task</p>";
 
       els.files.innerHTML = state.selected_files.map((file) => [
         "<div class=\"item\">",
         `${esc(file.path)}<br><small>${esc(file.role || "")}</small>`,
         "</div>"
-      ].join("")).join("") || "<p class=\"muted\">No context</p>";
+      ].join("")).join("") || "<p class=\"muted\">No context / Chưa có context</p>";
 
       els.timeline.innerHTML = renderTimeline(state.progress_history || []);
       els.results.innerHTML = renderResults(state.result_notes || []);
@@ -579,7 +579,7 @@
         `<b>${esc(message.from)} -> ${esc(message.to)}</b>`,
         `<p>${esc(message.message)}</p>`,
         "</div>"
-      ].join("")).join("") || "<p class=\"muted\">No messages</p>";
+      ].join("")).join("") || "<p class=\"muted\">No messages / Chưa có tin nhắn</p>";
 
       renderQuality(state.eval_report);
       renderTokens(state.token_report);
@@ -633,7 +633,7 @@
         els.runner.textContent = "";
         return;
       }
-      els.runner.textContent = `${runner.worker} running (${runner.engine}) ${durationText(Date.now() - Date.parse(runner.started_at))} pid ${runner.pid}`;
+      els.runner.textContent = `${runner.worker} running / đang chạy (${runner.engine}) ${durationText(Date.now() - Date.parse(runner.started_at))} pid ${runner.pid}`;
     }
 
     async function load() {
@@ -656,13 +656,13 @@
     function setStreamStatus(connected) {
       els.streamStatus.classList.toggle("connected", connected);
       els.streamStatus.classList.toggle("disconnected", !connected);
-      els.streamStatus.textContent = connected ? "Realtime connected" : "Realtime reconnecting";
+      els.streamStatus.textContent = connected ? "Realtime connected / Đã kết nối realtime" : "Realtime reconnecting / Đang kết nối lại";
     }
 
     function renderQuality(report) {
       els.quality.innerHTML = [
         `<div class="item"><b>${report.score}/100</b> ${esc(report.grade)}</div>`,
-        `<div class="item"><small>${esc(report.next_action)}</small></div>`,
+        `<div class="item"><small>next action / hành động tiếp: ${esc(report.next_action)}</small></div>`,
         ...report.cases.map((item) => `<div class="item">${item.ok ? "OK" : "FAIL"} ${esc(item.id)}<br><small>${esc(item.value)}</small></div>`)
       ].join("");
     }
@@ -670,9 +670,9 @@
     function renderTokens(report) {
       els.tokens.innerHTML = [
         `<div class="item"><b>${report.estimates.chay_context_tokens}</b> Chạy Runtime tokens</div>`,
-        `<div class="item"><b>${report.estimates.full_repo_tokens}</b> full repo estimate</div>`,
-        `<div class="item"><b>${report.estimates.savings_percent}%</b> savings</div>`,
-        `<div class="item">work ${report.notes.work_note.tokens}/${report.budgets.maxNoteTokens}<br>result ${report.notes.result_note.tokens}/${report.budgets.maxResultTokens}<br><small>${esc((report.violations || []).map((item) => item.type).join(", ") || "within budget")}</small></div>`
+        `<div class="item"><b>${report.estimates.full_repo_tokens}</b> full repo estimate / ước tính toàn repo</div>`,
+        `<div class="item"><b>${report.estimates.savings_percent}%</b> savings / tiết kiệm</div>`,
+        `<div class="item">work note / ghi chú việc ${report.notes.work_note.tokens}/${report.budgets.maxNoteTokens}<br>result note / ghi chú kết quả ${report.notes.result_note.tokens}/${report.budgets.maxResultTokens}<br><small>${esc((report.violations || []).map((item) => item.type).join(", ") || "within budget / trong ngân sách")}</small></div>`
       ].join("");
     }
 
@@ -687,24 +687,24 @@
         "<div class=\"item\">",
         `<b>${esc(item.agent)} - ${esc(item.step)}</b>`,
         `<p>${esc(item.message || "")}</p>`,
-        `<small>${esc(new Date(item.updated_at).toLocaleTimeString())} · ${esc(next ? `took ${duration}` : `running ${duration}`)}</small>`,
+        `<small>${esc(new Date(item.updated_at).toLocaleTimeString())} · ${esc(next ? `took / mất ${duration}` : `running / đang chạy ${duration}`)}</small>`,
         "</div>"
       ].join("");
-      }).join("") || "<p class=\"muted\">No progress yet</p>";
+      }).join("") || "<p class=\"muted\">No progress yet / Chưa có tiến độ</p>";
     }
 
     function renderResults(results) {
       return results.slice().reverse().map((result) => [
         "<div class=\"item\">",
         `<b>${esc(result.worker)} - ${esc(result.status)}</b>`,
-        `<p>${esc(result.summary || "No summary")}</p>`,
-        listBlock("changed", result.changed_files),
-        listBlock("findings", result.findings),
-        listBlock("risks", result.risks),
-        result.next_recommendation ? `<small>next: ${esc(result.next_recommendation)}</small>` : "",
+        `<p>${esc(result.summary || "No summary / Chưa có tóm tắt")}</p>`,
+        listBlock("changed / đã sửa", result.changed_files),
+        listBlock("findings / phát hiện", result.findings),
+        listBlock("risks / rủi ro", result.risks),
+        result.next_recommendation ? `<small>next / tiếp theo: ${esc(result.next_recommendation)}</small>` : "",
         `<small>${esc(result.file || "")}</small>`,
         "</div>"
-      ].join("")).join("") || "<p class=\"muted\">No result_note yet</p>";
+      ].join("")).join("") || "<p class=\"muted\">No result_note yet / Chưa có result_note</p>";
     }
 
     function listBlock(label, items) {
@@ -713,21 +713,21 @@
     }
 
     function renderLedger(ledger) {
-      if (!ledger) return "<p class=\"muted\">No ledger yet</p>";
+      if (!ledger) return "<p class=\"muted\">No ledger yet / Chưa có sổ kế hoạch</p>";
       return (ledger.steps_done || []).map((step) => [
         "<div class=\"item\">",
         `<b>#${step.step_index} ${esc(step.worker)}</b>`,
         `<p>${esc(step.result_summary)}</p>`,
         `<small>${esc((step.changed_files || []).join(", "))}</small>`,
         "</div>"
-      ].join("")).join("") || "<p class=\"muted\">No completed steps</p>";
+      ].join("")).join("") || "<p class=\"muted\">No completed steps / Chưa có bước hoàn tất</p>";
     }
 
     function renderExperience(experience) {
-      if (!experience) return "<p class=\"muted\">No snapshot yet</p>";
+      if (!experience) return "<p class=\"muted\">No snapshot yet / Chưa có snapshot</p>";
       return [
         `<div class="item"><b>${esc(experience.framework)}</b></div>`,
-        `<div class="item">memory refs ${esc((experience.spectrum?.memory?.refs || []).length)}<br>skills ${esc((experience.spectrum?.skills?.items || []).length)}<br>rules ${esc(experience.spectrum?.rules?.policy_ref || "")}</div>`
+        `<div class="item">memory refs / tham chiếu nhớ ${esc((experience.spectrum?.memory?.refs || []).length)}<br>skills / kỹ năng ${esc((experience.spectrum?.skills?.items || []).length)}<br>rules / luật ${esc(experience.spectrum?.rules?.policy_ref || "")}</div>`
       ].join("");
     }
 
@@ -834,9 +834,9 @@
     }
 
     function ageText(value) {
-      if (!value) return "no timestamp";
+      if (!value) return "no timestamp / chưa có thời gian";
       const ms = Date.now() - Date.parse(value);
-      return Number.isFinite(ms) ? `updated ${durationText(ms)} ago` : "no timestamp";
+      return Number.isFinite(ms) ? `updated / cập nhật ${durationText(ms)} ago / trước` : "no timestamp / chưa có thời gian";
     }
 
     function tickClocks() {
