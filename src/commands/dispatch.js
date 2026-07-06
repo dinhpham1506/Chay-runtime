@@ -105,7 +105,7 @@ export async function dispatchWorker(argv) {
         };
       }
 
-      writeProgress(worker, "testing", "Worker finished; validating result note");
+      writeProgress(worker, "validate_result", "Worker finished; validating result note");
       maybeWriteResultFromStdout(runPaths.resultFile, lastRun.stdout);
       validation = validateResultFile(runPaths.resultFile, policy, work, worker);
       if (validation.ok) break;
@@ -130,6 +130,27 @@ export async function dispatchWorker(argv) {
           next_action: "escalate_invalid_worker_output_to_human"
         };
       }
+    }
+
+    const test = await runTestCommand({ args, cwd: runCwd, logFile: runPaths.logFile, worker });
+    if (!test.ok) {
+      syncIsolatedOutputs(isolation, { resultFile, diffFile, logFile });
+      writeProgress(worker, "blocked", "Test command failed");
+      return {
+        ok: false,
+        worker,
+        agent,
+        work_note: workFile,
+        result_note: resultFile,
+        isolation: isolationSummary(isolation),
+        token_preflight: tokenPreflight,
+        attempts,
+        retry_limit: maxRetries,
+        validation,
+        test,
+        log: logFile,
+        next_action: "fix_tests_or_worker_patch"
+      };
     }
 
     writeProgress(worker, "patch_check", "Validating patch boundary");
@@ -169,6 +190,7 @@ export async function dispatchWorker(argv) {
       attempts,
       retry_limit: maxRetries,
       validation,
+      test,
       patch,
       plan_ledger: ledger.file,
       log: logFile,
@@ -246,12 +268,56 @@ function buildPrompt({ worker, workFile, resultFile, diffFile, retryInstruction,
     `The repo root is the current working directory.`,
     `Read memory/task_note.json, memory/context_package.json, ${workFile}, and only files listed in allowed_files when allowed_files is present.`,
     `Before editing, apply minimal_patch: reuse existing code, prefer native/standard features, avoid new dependencies, and make the smallest correct patch without removing validation, security, accessibility, or tests.`,
-    `Emit progress with cr progress update --agent ${worker} at each phase: reading, planning, editing, testing, patch_check, done or blocked.`,
+    `You may emit worker progress with cr progress update --agent ${worker} for reading, planning, editing, testing when you run tests, or blocked. Dispatch writes assigned, validate_result, patch_check, and done.`,
     `Before finishing, refresh the scoped diff with git diff --no-ext-diff -- . > ${diffFile}.`,
     `Write compact result_note JSON to ${resultFile}. Return only that result_note JSON.`,
     `The result_note must use the same work_id as ${workFile}, worker="${worker}", status completed|failed|blocked|partial, summary string, findings array.`,
     retryInstruction ? `Retry attempt ${attempt}. Previous output was invalid. ${retryInstruction}` : ""
   ].filter(Boolean).join("\n");
+}
+
+async function runTestCommand({ args, cwd, logFile, worker }) {
+  const command = args["test-command"];
+  if (!command) return { ok: true, skipped: true };
+  if (typeof command !== "string" || !command.trim()) {
+    return { ok: false, error: "test_command_required" };
+  }
+
+  writeProgress(worker, "testing", "Running test command");
+  fs.mkdirSync(path.dirname(logFile), { recursive: true });
+  return new Promise((resolve) => {
+    let stdout = "";
+    let stderr = "";
+    const startedAt = Date.now();
+    const child = spawn(command, [], {
+      cwd,
+      env: process.env,
+      shell: true,
+      stdio: ["ignore", "pipe", "pipe"]
+    });
+
+    child.stdout.on("data", (chunk) => {
+      const text = chunk.toString();
+      stdout += text;
+      appendLog(logFile, text);
+    });
+    child.stderr.on("data", (chunk) => {
+      const text = chunk.toString();
+      stderr += text;
+      appendLog(logFile, text);
+    });
+    child.on("error", (error) => resolve({ ok: false, error: "test_spawn_failed", detail: error.message, log: logFile }));
+    child.on("close", (code) => resolve({
+      ok: code === 0,
+      command,
+      exit_code: code,
+      stdout: compact(stdout),
+      stderr: compact(stderr),
+      duration_ms: Date.now() - startedAt,
+      log: logFile,
+      error: code === 0 ? undefined : "test_command_failed"
+    }));
+  });
 }
 
 async function runAgent({ args, agent, prompt, promptFile, worker, logFile, cwd = process.cwd() }) {

@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Chạy Runtime — Runtime chính sách cho các CLI code đa tác tử</title>
-<meta name="description" content="Runtime chính sách dựa trên ghi chú (note-based) cho các CLI code đa tác tử. Claude có thể điều phối, Codex và Antigravity có thể thực thi — trong ranh giới nghiêm ngặt, có thể kiểm toán." />
+<meta name="description" content="Runtime chính sách dựa trên ghi chú (note-based) cho các CLI code đa tác tử. Chọn main và worker từ Claude, Codex hoặc Antigravity — trong ranh giới nghiêm ngặt, có thể kiểm toán." />
 <meta property="og:title" content="Chạy Runtime" />
 <meta property="og:description" content="Runtime chính sách dựa trên ghi chú cho các CLI code đa tác tử: Claude, Codex và Antigravity." />
 <meta property="og:type" content="website" />
@@ -269,7 +269,7 @@
     <div class="nav-links">
       <a href="#features">Tính năng</a>
       <a href="#roles">Vai trò</a>
-      <a href="#progress">Tiến độ</a>
+      <a href="#progress">Console</a>
       <a href="#quickstart">Bắt đầu</a>
       <a href="#docs">Lệnh CLI</a>
       <a class="btn btn-icon" href="https://github.com/dinhpham1506/chay-runtime" target="_blank" rel="noopener" aria-label="Mở repo trên GitHub" title="GitHub">
@@ -286,8 +286,8 @@
     <h1>Giao việc cho AI,<br /><span class="glow">giữ ranh giới rõ ràng</span></h1>
     <p class="sub">
       Chạy Runtime là runtime chính sách dựa trên ghi chú (note-based) cho các CLI code đa tác tử.
-      Chọn Claude, Codex hoặc Antigravity làm main/worker — mọi bước đều đi qua ranh giới nghiêm ngặt,
-      được kiểm tra theo schema.
+      Tạo work note, dispatch worker, validate result_note, chạy test tuỳ chọn và kiểm tra patch boundary
+      trước khi báo done.
     </p>
 
     <div class="install">
@@ -303,6 +303,7 @@
       <a class="btn btn-primary" href="#quickstart">Bắt đầu ngay
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
       </a>
+      <a class="btn" href="#progress">Xem console realtime</a>
       <a class="btn" href="https://www.npmjs.com/package/chay-runtime" target="_blank" rel="noopener">Xem trên npm</a>
     </div>
   </div>
@@ -344,7 +345,7 @@
       <div class="card reveal">
         <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="m7 8 2 2-2 2M13 12h3"/></svg></div>
         <h3>Giao diện quy trình gốc</h3>
-        <p>Chạy <code>cr ui serve</code> để mở console trực tiếp: cột trạng thái, tiến độ task, file và chat qua SSE.</p>
+        <p>Chạy <code>cr ui serve</code> để tạo task, dispatch worker, validate result, patch check, token/eval report, chat và xem SSE realtime.</p>
       </div>
     </div>
   </div>
@@ -352,26 +353,26 @@
 
 <section id="roles" style="background: var(--surface);">
   <div class="wrap center reveal">
-    <span class="eyebrow">Dàn nhân vật</span>
-    <h2>Một main, nhiều worker có ranh giới</h2>
-    <p class="section-sub">Chọn agent nào điều phối, agent nào thực thi; runtime giữ tất cả đúng phạm vi.</p>
+    <span class="eyebrow">Vai trò agent</span>
+    <h2>Main và worker được cấu hình theo từng dự án</h2>
+    <p class="section-sub">Chọn agent nào điều phối, agent nào thực thi trong <code>cr setup</code>; runtime giữ tất cả đúng phạm vi.</p>
   </div>
   <div class="wrap">
     <div class="roles">
       <div class="role reveal">
-        <span class="tag">// chính · điều phối</span>
+        <span class="tag">// main hoặc worker</span>
         <h3>Claude</h3>
-        <p>Có thể làm main controller hoặc worker có ranh giới, tuỳ cấu hình trong <code>cr setup</code>.</p>
+        <p>Có integration controller đóng gói sẵn: <code>chay-main</code>, reviewer và worker agents. Cũng có thể được chọn làm worker.</p>
       </div>
       <div class="role reveal">
-        <span class="tag">// worker có ranh giới</span>
+        <span class="tag">// main hoặc worker</span>
         <h3>Codex</h3>
-        <p>Thực thi task qua <code>cr dispatch</code>, đọc work note, sửa scoped files và trả về <code>result_note</code>.</p>
+        <p>Có thể được chọn trong <code>host_config</code> làm main hoặc worker. Integration hiện cung cấp worker instruction/template.</p>
       </div>
       <div class="role reveal">
-        <span class="tag">// worker có ranh giới</span>
+        <span class="tag">// main hoặc worker</span>
         <h3>Antigravity</h3>
-        <p>Dùng cùng hợp đồng ghi chú, token preflight và patch boundary như các agent còn lại.</p>
+        <p>Có thể được chọn trong <code>host_config</code> làm main hoặc worker. Integration hiện cung cấp worker instruction/template.</p>
       </div>
     </div>
   </div>
@@ -379,13 +380,13 @@
 
 <section id="progress">
   <div class="wrap center reveal">
-    <span class="eyebrow">Tiến độ realtime</span>
-    <h2>Theo dõi từng bước của worker</h2>
-    <p class="section-sub"><code style="font-family:var(--mono);color:var(--accent-2)">cr dispatch</code> tự ghi các mốc tiến độ tối thiểu vào <code style="font-family:var(--mono);color:var(--accent-2)">memory/&lt;agent&gt;_progress.json</code> và timeline vào <code style="font-family:var(--mono);color:var(--accent-2)">memory/&lt;agent&gt;_progress_history.json</code>. Worker có thể bổ sung message chi tiết, nhưng bạn không phải gõ tay từng bước.</p>
+    <span class="eyebrow">Console realtime</span>
+    <h2>Không chỉ xem trạng thái, có thể thao tác trực tiếp</h2>
+    <p class="section-sub"><code style="font-family:var(--mono);color:var(--accent-2)">cr ui serve</code> mở dashboard local dùng API thật: tạo work note, chạy worker, ghi progress, validate output, patch check, token/eval report, experience snapshot và chat. State được đẩy qua SSE và watcher trên <code style="font-family:var(--mono);color:var(--accent-2)">memory/</code> + <code style="font-family:var(--mono);color:var(--accent-2)">.chay/tmp</code>.</p>
   </div>
   <div class="wrap reveal">
     <div class="progress-box">
-      <!-- Stepper: 7 bước happy-path trong 8 step hợp lệ của progressSteps -->
+      <!-- Stepper: 8 bước khi dispatch có --test-command; không có test command thì bỏ qua testing -->
       <div class="steps" id="stepper">
         <div class="step" data-step="0">
           <div class="marker">1</div>
@@ -405,14 +406,18 @@
         </div>
         <div class="step" data-step="4">
           <div class="marker">5</div>
-          <div class="txt"><div class="name">Validate kết quả</div><div class="cmd">dispatch writes: testing</div></div>
+          <div class="txt"><div class="name">Validate result_note</div><div class="cmd">dispatch writes: validate_result</div></div>
         </div>
         <div class="step" data-step="5">
           <div class="marker">6</div>
-          <div class="txt"><div class="name">Kiểm tra bản vá</div><div class="cmd">dispatch writes: patch_check</div></div>
+          <div class="txt"><div class="name">Chạy test</div><div class="cmd">--test-command: testing</div></div>
         </div>
         <div class="step" data-step="6">
           <div class="marker">7</div>
+          <div class="txt"><div class="name">Kiểm tra bản vá</div><div class="cmd">dispatch writes: patch_check</div></div>
+        </div>
+        <div class="step" data-step="7">
+          <div class="marker">8</div>
           <div class="txt"><div class="name">Hoàn tất</div><div class="cmd">dispatch writes: done</div></div>
         </div>
       </div>
@@ -427,7 +432,7 @@
     </div>
     <p class="blocked-note">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg>
-      Ngoài 7 bước happy-path còn step <code>blocked</code> — worker báo bị chặn khi không thể tiếp tục. Đủ 8 step hợp lệ: <code>assigned · reading · planning · editing · testing · patch_check · done · blocked</code>.
+      Console cũng có nút ghi progress thủ công để kiểm tra realtime. Không có <code>--test-command</code> thì dispatch bỏ qua step <code>testing</code>; khi lỗi sẽ chuyển sang <code>blocked</code>.
     </p>
   </div>
 </section>
@@ -458,7 +463,8 @@
 <span class="k">cr</span> task <span class="s">"Sửa lỗi apply job bị trùng"</span> --compact --max-notes <span class="s">2</span>
 
 <span class="c"># 4 · chạy worker, tự ghi progress + history realtime</span>
-<span class="k">cr</span> dispatch <span class="s">codex</span> --agent=<span class="s">codex</span> --max-retries <span class="s">3</span>
+<span class="k">cr</span> dispatch <span class="s">codex</span> --agent=<span class="s">codex</span> --max-retries <span class="s">3</span> \
+  --test-command <span class="s">"npm test"</span>
 
 <span class="c"># hoặc mở console rồi bấm Create + Run</span>
 <span class="k">cr</span> ui serve --port <span class="s">7770</span></pre>
@@ -510,8 +516,9 @@ cr context plan --task "..." --out memory/context_package.json</code>
       </div>
       <div class="doc-card reveal">
         <span class="doc-tag">Tiến độ</span>
-        <code class="doc-cmd">cr progress update --agent codex --step editing --message "..."</code>
-        <p>Ghi một mốc tiến độ vào <code>memory/&lt;agent&gt;_progress.json</code> và nối vào lịch sử <code>_progress_history.json</code>.</p>
+        <code class="doc-cmd">cr progress update --agent codex --step editing --message "..."
+cr progress update --agent codex --step validate_result --message "..."</code>
+        <p>Ghi một mốc tiến độ vào <code>memory/&lt;agent&gt;_progress.json</code> và nối vào lịch sử <code>_progress_history.json</code>. Console đọc các file này realtime qua SSE.</p>
       </div>
       <div class="doc-card reveal">
         <span class="doc-tag">Đo lường &amp; báo cáo</span>
@@ -526,8 +533,9 @@ cr eval report</code>
       </div>
       <div class="doc-card reveal">
         <span class="doc-tag">Điều phối</span>
-        <code class="doc-cmd">cr dispatch codex --agent=codex --max-retries 3</code>
-        <p>Chạy worker thật, ghi progress từng bước, validate + retry result_note, rồi kiểm tra patch boundary trước khi báo "done".</p>
+        <code class="doc-cmd">cr dispatch codex --agent=codex --max-retries 3
+cr dispatch codex --agent=codex --test-command "npm test"</code>
+        <p>Chạy worker thật, ghi progress từng bước, validate + retry result_note, chạy test command nếu có, rồi kiểm tra patch boundary trước khi báo "done".</p>
       </div>
       <div class="doc-card reveal">
         <span class="doc-tag">Nén trải nghiệm</span>
@@ -618,7 +626,8 @@ cr eval report</code>
     { step: 'reading',     msg: 'Reading work note and compact context' },
     { step: 'planning',    msg: 'Preparing bounded worker prompt' },
     { step: 'editing',     msg: 'Worker process running' },
-    { step: 'testing',     msg: 'Worker finished; validating result note' },
+    { step: 'validate_result', msg: 'Worker finished; validating result note' },
+    { step: 'testing',     msg: 'Running test command' },
     { step: 'patch_check', msg: 'Validating patch boundary' },
     { step: 'done',        msg: 'Worker result accepted' },
   ];

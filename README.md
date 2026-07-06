@@ -9,8 +9,7 @@ chay-runtime is a note-based policy runtime for multi-agent coding CLIs.
 - Boundary tools validate note size, output schema, patch size, and scope.
 - Architecture rules require workers to follow existing design patterns and SOLID principles.
 - Repo intelligence selects a small context package before agents read code.
-- Claude can act as the main controller.
-- Codex and Antigravity can act as bounded workers.
+- Claude, Codex, and Antigravity can be selected as main/controller or bounded worker roles in `cr setup`.
 
 ## Install local
 
@@ -55,17 +54,34 @@ for the default worker, controller, worker LLM, and skills unless flags override
 them. Any two supported agents can be selected from `claude`, `codex`, and
 `antigravity`; one is the main/controller and the rest are workers.
 
+Current integration capability:
+
+| Agent | `cr setup` role | Packaged integration |
+| --- | --- | --- |
+| Claude | main/controller or worker | Claude Code agents for `chay-main`, `chay-reviewer`, and `chay-<worker>-worker` |
+| Codex | main/controller or worker | Worker instruction/template for bounded `cr dispatch` tasks |
+| Antigravity | main/controller or worker | Worker instruction/template for bounded `cr dispatch` tasks |
+
+`host_config.json` can record any supported agent as main, but the packaged
+controller integration is currently most complete for Claude Code. Codex and
+Antigravity are supported as bounded worker templates unless you provide your
+own controller workflow around the generated notes.
+
 Native workflow UI:
 
 ```bash
 cr ui serve --port 7770
 ```
 
-Open `http://127.0.0.1:7770`. The UI shows workflow columns, agents, task state, selected files, and chat. The maintainable console template lives at `site/console.html`; `src/commands/ui.js` only serves the file and owns the local API.
-It polls `/api/state` and writes chat to `memory/chat/messages.json`.
-The same UI can create compact tasks, spawn `cr dispatch` in the background,
-stream progress over Server-Sent Events, and show the plan ledger / experience
-compression snapshot.
+Open `http://127.0.0.1:7770`. The UI shows workflow columns, agents, task state,
+selected files, checks, token/eval reports, and chat. The maintainable console
+template lives at `site/console.html`; `src/commands/ui.js` serves the file and
+owns the local API. It reads `/api/state`, streams updates through `/api/stream`
+with a file-watch/poll fallback, and writes chat to `memory/chat/messages.json`.
+The same UI can create compact tasks, spawn `cr dispatch` in the background with
+worker/engine/isolate/test-command options, write manual progress events, validate
+result notes, check patches, and show the plan ledger / experience compression
+snapshot.
 
 Progress API:
 
@@ -172,10 +188,10 @@ See [docs/c4-model.md](docs/c4-model.md) for the C4 system model, including the 
 
 `npm test` runs smoke projects in temp directories and verifies:
 - project initialization
-- arbitrary main/worker selection across Claude, Codex, and Antigravity
+- arbitrary main/worker selection across Claude, Codex, and Antigravity, including a non-Claude main configuration
 - repo scan and context planning
 - workpack generation for a smaller `codex` worker
-- dispatching a worker command with progress, result validation, retry cap, and patch check
+- dispatching a worker command with progress, result validation, optional test command, retry cap, and patch check
 - pre-dispatch token compaction before worker execution
 - compact experience compression work notes, plan ledger updates, and spectrum snapshots
 - user-selected controller LLM, worker LLM, and worker skills
@@ -257,7 +273,13 @@ When a worker returns invalid output, `cr boundary validate-output` returns a co
 `cr dispatch <worker>` automates that worker loop for configured agents. It reads
 `memory/<worker>_work_note.json`, runs the selected worker agent, writes live progress,
 accepts JSON returned on stdout or in `memory/<worker>_result_note.json`, retries invalid
-result notes up to `maxDispatchRetries` (default `3`), and then runs the patch boundary
-check before marking the worker done. Dispatch also creates short-lived file locks for
-`allowed_files`, which keeps overlapping workers from editing the same scoped file at
-the same time.
+result notes up to `maxDispatchRetries` (default `3`), optionally runs
+`--test-command "<command>"`, and then runs the patch boundary check before marking
+the worker done. Dispatch also creates short-lived file locks for `allowed_files`,
+which keeps overlapping workers from editing the same scoped file at the same time.
+
+Progress steps are explicit about what dispatch is doing:
+`assigned`, `reading`, `planning`, `editing`, `validate_result`, optional
+`testing`, `patch_check`, `done`, or `blocked`. `validate_result` means schema
+and contract validation for `result_note`; `testing` is only emitted when
+`--test-command` is provided.

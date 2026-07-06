@@ -1,6 +1,6 @@
 import { exists, readJson, writeJson } from "./fs.js";
 
-export const progressSteps = ["assigned", "reading", "planning", "editing", "testing", "patch_check", "done", "blocked"];
+export const progressSteps = ["assigned", "reading", "planning", "editing", "validate_result", "testing", "patch_check", "done", "blocked"];
 
 export function writeProgressNote(agent, step, message = "", task = "") {
   const progress = {

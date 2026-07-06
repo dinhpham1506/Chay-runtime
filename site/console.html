@@ -32,7 +32,7 @@
       color: var(--ink);
     }
 
-    button, textarea { font: inherit; }
+    button, textarea, input, select { font: inherit; }
     button {
       min-height: 44px;
       border: 0;
@@ -45,7 +45,12 @@
     }
     button:hover { background: #1d3148; }
     button:active { transform: translateY(1px); }
-    button:focus-visible, textarea:focus-visible {
+    button:disabled {
+      cursor: wait;
+      opacity: 0.68;
+      transform: none;
+    }
+    button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-visible {
       outline: 3px solid rgba(15, 118, 110, 0.26);
       outline-offset: 2px;
     }
@@ -55,15 +60,23 @@
     }
     button.secondary:hover { background: #d6dee9; }
 
-    textarea {
+    textarea, input, select {
       width: 100%;
-      min-height: 92px;
-      resize: vertical;
+      min-height: 44px;
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 10px 12px;
       color: var(--ink);
       background: #fff;
+    }
+    textarea {
+      min-height: 92px;
+      resize: vertical;
+    }
+    input[type="checkbox"] {
+      width: 18px;
+      min-height: 18px;
+      accent-color: var(--accent);
     }
     label {
       display: block;
@@ -104,6 +117,27 @@
       font-size: 12px;
       overflow-wrap: anywhere;
     }
+    .live-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 28px;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 999px;
+      padding: 3px 10px;
+      color: #dce8f6;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .live-pill::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #f59e0b;
+    }
+    .live-pill.connected::before { background: #19c37d; }
+    .live-pill.disconnected::before { background: #ef4444; }
 
     .layout {
       display: grid;
@@ -137,6 +171,27 @@
       margin-top: 10px;
     }
     .actions button { margin: 0; }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .field-full { grid-column: 1 / -1; }
+    .check-row {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--ink);
+      font-weight: 650;
+    }
+    .field-help {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
     .muted { color: var(--muted); }
 
     .flow {
@@ -158,8 +213,9 @@
       color: var(--muted);
       font-size: 12px;
       font-weight: 750;
-      text-transform: uppercase;
     }
+    .lane h3 span { display: block; color: var(--ink); font-size: 13px; }
+    .lane h3 code { color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; }
     .agent-card {
       margin: 10px;
       padding: 10px;
@@ -190,6 +246,14 @@
       background: var(--accent-soft);
       font-size: 12px;
       font-weight: 650;
+    }
+    .status.warn {
+      color: var(--warn);
+      background: #fff7ed;
+    }
+    .status.danger {
+      color: var(--danger);
+      background: #fff1f2;
     }
     .log {
       min-height: 96px;
@@ -242,18 +306,53 @@
       <span id="stamp" class="header-meta"></span>
       <span id="runner" class="header-meta" aria-live="polite"></span>
     </div>
-    <span class="header-meta">Realtime workflow, token budget, checks, and chat</span>
+    <span id="streamStatus" class="live-pill disconnected" aria-live="polite">Connecting</span>
   </header>
 
   <div class="layout">
     <aside class="sidebar" aria-label="Task controls">
       <section class="panel">
-        <h2>Create task</h2>
+        <h2>Worker run</h2>
         <label for="taskText">Task for worker</label>
         <textarea id="taskText" placeholder="Describe the task for the agent"></textarea>
+        <div class="form-grid">
+          <div>
+            <label for="workerName">Worker</label>
+            <input id="workerName" value="codex" autocomplete="off">
+          </div>
+          <div>
+            <label for="agentName">Engine</label>
+            <input id="agentName" value="codex" autocomplete="off">
+          </div>
+          <div>
+            <label for="maxRetries">Retries</label>
+            <input id="maxRetries" type="number" min="0" max="10" value="3">
+          </div>
+          <label class="check-row" for="isolate">
+            <input id="isolate" type="checkbox">
+            Isolate
+          </label>
+          <div class="field-full">
+            <label for="testCommand">Test command</label>
+            <input id="testCommand" placeholder="npm test">
+            <span class="field-help">Optional. Dispatch emits testing only when this is set.</span>
+          </div>
+        </div>
         <div class="actions">
+          <button type="button" class="secondary" data-action="create-note">Create note</button>
           <button type="button" data-action="create-task">Create + Run</button>
           <button type="button" class="secondary" data-action="run-worker">Run worker</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Manual progress</h2>
+        <label for="progressStep">Step</label>
+        <select id="progressStep"></select>
+        <label for="progressMessage">Message</label>
+        <input id="progressMessage" placeholder="Editing backend structure">
+        <div class="actions">
+          <button type="button" class="secondary" data-action="update-progress">Write progress</button>
         </div>
       </section>
 
@@ -281,6 +380,7 @@
           <button type="button" class="secondary" data-action="experience-snapshot">Experience</button>
         </div>
         <div id="checks" class="log" aria-live="polite"></div>
+        <div id="actionResult" class="log" aria-live="polite"></div>
       </section>
     </aside>
 
@@ -327,16 +427,36 @@
   </div>
 
   <script>
-    const steps = ["assigned", "reading", "planning", "editing", "testing", "patch_check", "done", "blocked"];
+    const steps = ["assigned", "reading", "planning", "editing", "validate_result", "testing", "patch_check", "done", "blocked"];
+    const stepLabels = {
+      assigned: "Assigned",
+      reading: "Reading",
+      planning: "Planning",
+      editing: "Editing",
+      validate_result: "Validate result",
+      testing: "Testing",
+      patch_check: "Patch check",
+      done: "Done",
+      blocked: "Blocked"
+    };
     const $ = (id) => document.getElementById(id);
     const els = {
       stamp: $("stamp"),
       runner: $("runner"),
+      streamStatus: $("streamStatus"),
       flow: $("flow"),
       taskText: $("taskText"),
+      workerName: $("workerName"),
+      agentName: $("agentName"),
+      maxRetries: $("maxRetries"),
+      isolate: $("isolate"),
+      testCommand: $("testCommand"),
+      progressStep: $("progressStep"),
+      progressMessage: $("progressMessage"),
       quality: $("quality"),
       tokens: $("tokens"),
       checks: $("checks"),
+      actionResult: $("actionResult"),
       tasks: $("tasks"),
       timeline: $("timeline"),
       ledger: $("ledger"),
@@ -353,8 +473,10 @@
     });
 
     const actions = {
+      "create-note": createNote,
       "create-task": createTask,
       "run-worker": runWorker,
+      "update-progress": updateProgress,
       "validate-output": validateOutput,
       "patch-check": patchCheck,
       "token-report": tokenReport,
@@ -365,8 +487,17 @@
 
     async function runButtonAction(button, action) {
       if (!action) return;
+      const old = button.textContent;
       button.disabled = true;
-      try { await action(); } finally { button.disabled = false; }
+      button.textContent = "Working...";
+      try {
+        await action();
+      } catch (error) {
+        showResult({ ok: false, error: error.message || String(error) });
+      } finally {
+        button.disabled = false;
+        button.textContent = old;
+      }
     }
 
     async function api(path, body) {
@@ -375,7 +506,9 @@
         headers: { "content-type": "application/json" },
         body: JSON.stringify(body)
       });
-      return response.json();
+      const data = await response.json();
+      if (!response.ok) data.http_status = response.status;
+      return data;
     }
 
     function render(state) {
@@ -383,7 +516,8 @@
       els.runner.textContent = state.runner
         ? `${state.runner.worker} running (${state.runner.engine}) pid ${state.runner.pid}`
         : "";
-      els.flow.innerHTML = steps.map((step) => `<div class="lane"><h3>${step}</h3><div id="c-${step}"></div></div>`).join("");
+      syncControls(state);
+      els.flow.innerHTML = steps.map((step) => `<div class="lane"><h3><span>${stepLabels[step] || step}</span><code>${step}</code></h3><div id="c-${step}"></div></div>`).join("");
 
       for (const agent of state.agents) {
         const step = steps.includes(agent.step) ? agent.step : "assigned";
@@ -425,6 +559,22 @@
       els.checks.textContent = JSON.stringify(state.checks, null, 2);
     }
 
+    function syncControls(state) {
+      const firstWorker = (state.agents || []).find((agent) => agent.role === "worker");
+      const worker = firstWorker?.agent || state.default_worker || "codex";
+      if (!els.workerName.dataset.touched) els.workerName.value = worker;
+      if (!els.agentName.dataset.touched) els.agentName.value = firstWorker?.agent || worker;
+      if (!els.progressStep.options.length) {
+        for (const step of state.progress_steps || steps) {
+          const option = document.createElement("option");
+          option.value = step;
+          option.textContent = `${stepLabels[step] || step} (${step})`;
+          els.progressStep.appendChild(option);
+        }
+        els.progressStep.value = "editing";
+      }
+    }
+
     async function load() {
       try {
         render(await fetch("/api/state").then((response) => response.json()));
@@ -435,9 +585,17 @@
 
     function connect() {
       const stream = new EventSource("/api/stream");
+      stream.onopen = () => setStreamStatus(true);
       stream.onmessage = (event) => {
         try { render(JSON.parse(event.data)); } catch {}
       };
+      stream.onerror = () => setStreamStatus(false);
+    }
+
+    function setStreamStatus(connected) {
+      els.streamStatus.classList.toggle("connected", connected);
+      els.streamStatus.classList.toggle("disconnected", !connected);
+      els.streamStatus.textContent = connected ? "Realtime connected" : "Realtime reconnecting";
     }
 
     function renderQuality(report) {
@@ -486,53 +644,89 @@
       ].join("");
     }
 
+    function runOptions() {
+      return {
+        worker: els.workerName.value.trim() || "codex",
+        agent: els.agentName.value.trim() || els.workerName.value.trim() || "codex",
+        maxRetries: Number(els.maxRetries.value || 3),
+        isolate: els.isolate.checked,
+        testCommand: els.testCommand.value.trim()
+      };
+    }
+
+    function showResult(data) {
+      els.actionResult.textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function createNote() {
+      const task = els.taskText.value.trim();
+      if (!task) return;
+      showResult({ ok: true, status: "creating_work_note" });
+      showResult(await api("/api/action", { action: "create_task", task, run: false, ...runOptions() }));
+      load();
+    }
+
     async function createTask() {
       const task = els.taskText.value.trim();
       if (!task) return;
-      els.checks.textContent = "Creating task...";
-      els.checks.textContent = JSON.stringify(await api("/api/action", { action: "create_task", task, worker: "codex" }), null, 2);
+      showResult({ ok: true, status: "creating_task_and_dispatching" });
+      showResult(await api("/api/action", { action: "create_task", task, run: true, ...runOptions() }));
       els.taskText.value = "";
       load();
     }
 
     async function runWorker() {
-      els.checks.textContent = "Dispatching worker...";
-      els.checks.textContent = JSON.stringify(await api("/api/action", { action: "run_worker", worker: "codex" }), null, 2);
+      showResult({ ok: true, status: "dispatching_worker" });
+      showResult(await api("/api/action", { action: "run_worker", ...runOptions() }));
+      load();
+    }
+
+    async function updateProgress() {
+      showResult(await api("/api/progress", {
+        agent: els.workerName.value.trim() || "codex",
+        step: els.progressStep.value,
+        message: els.progressMessage.value.trim() || els.progressStep.value
+      }));
+      els.progressMessage.value = "";
       load();
     }
 
     async function validateOutput() {
-      els.checks.textContent = JSON.stringify(await api("/api/action", { action: "validate_output" }), null, 2);
+      showResult(await api("/api/action", { action: "validate_output", worker: runOptions().worker }));
       load();
     }
 
     async function patchCheck() {
-      els.checks.textContent = "Generating scoped diff and checking patch...";
-      els.checks.textContent = JSON.stringify(await api("/api/action", { action: "patch_check" }), null, 2);
+      showResult({ ok: true, status: "checking_patch_boundary" });
+      showResult(await api("/api/action", { action: "patch_check", worker: runOptions().worker }));
       load();
     }
 
     async function tokenReport() {
-      els.checks.textContent = JSON.stringify(await api("/api/action", { action: "token_report" }), null, 2);
+      showResult(await api("/api/action", { action: "token_report", worker: runOptions().worker }));
       load();
     }
 
     async function evalReport() {
-      els.checks.textContent = JSON.stringify(await api("/api/action", { action: "eval_report" }), null, 2);
+      showResult(await api("/api/action", { action: "eval_report", worker: runOptions().worker }));
       load();
     }
 
     async function experienceSnapshot() {
-      els.checks.textContent = JSON.stringify(await api("/api/action", { action: "experience_snapshot" }), null, 2);
+      showResult(await api("/api/action", { action: "experience_snapshot", worker: runOptions().worker }));
       load();
     }
 
     async function sendChat() {
       const text = els.message.value.trim();
       if (!text) return;
-      await api("/api/chat", { from: "human", to: "main", message: text });
+      showResult(await api("/api/chat", { from: "human", to: "main", message: text }));
       els.message.value = "";
       load();
+    }
+
+    for (const control of [els.workerName, els.agentName]) {
+      control.addEventListener("input", () => { control.dataset.touched = "1"; });
     }
 
     function esc(value) {

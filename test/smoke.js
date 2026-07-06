@@ -77,10 +77,11 @@ fs.unlinkSync(path.join(project, ".chay", "locks", "src__applyService.js.json"))
 const bloatedWork = JSON.parse(fs.readFileSync(path.join(project, "memory", "codex_work_note.json"), "utf8"));
 bloatedWork.architecture_rules = Array.from({ length: 700 }, (_, index) => `Large architecture rule ${index}: follow local patterns and SOLID boundaries.`);
 fs.writeFileSync(path.join(project, "memory", "codex_work_note.json"), JSON.stringify(bloatedWork, null, 2));
-const dispatch = run("dispatch", "codex", "--command", workerCommand(), "--max-retries", "1");
+const dispatch = run("dispatch", "codex", "--command", workerCommand(), "--test-command", passTestCommand(), "--max-retries", "1");
 assert.equal(dispatch.ok, true);
 assert.equal(dispatch.worker, "codex");
 assert.equal(dispatch.validation.ok, true);
+assert.equal(dispatch.test.ok, true);
 assert.equal(dispatch.patch.ok, true);
 assert.equal(dispatch.token_preflight.compacted, true);
 const isolatedRejected = run("dispatch", "codex", "--command", isolatedWorkerCommand({ outside: true }), "--max-retries", "0", "--isolate", { expectCode: 2 });
@@ -95,7 +96,7 @@ assert.ok(fs.readFileSync(path.join(project, "src", "applyService.js"), "utf8").
 const dispatchProgress = JSON.parse(fs.readFileSync(path.join(project, "memory", "codex_progress.json"), "utf8"));
 assert.equal(dispatchProgress.step, "done");
 const dispatchHistory = JSON.parse(fs.readFileSync(path.join(project, "memory", "codex_progress_history.json"), "utf8"));
-for (const step of ["assigned", "reading", "planning", "editing", "testing", "patch_check", "done"]) {
+for (const step of ["assigned", "reading", "planning", "editing", "validate_result", "testing", "patch_check", "done"]) {
   assert.ok(dispatchHistory.some((item) => item.step === step), `missing progress step ${step}`);
 }
 assert.deepEqual(fs.readdirSync(path.join(project, ".chay", "locks")).filter((file) => file.endsWith(".json")), []);
@@ -158,6 +159,7 @@ run("progress", "update", "--agent", "codex", "--step", "editing", "--message", 
 const progress = JSON.parse(fs.readFileSync(path.join(project, "memory", "codex_progress.json"), "utf8"));
 assert.equal(progress.agent, "codex");
 assert.equal(progress.step, "editing");
+verifyUiTemplate();
 
 console.log(JSON.stringify({ ok: true, project }, null, 2));
 
@@ -211,6 +213,11 @@ function workerCommand() {
   return `${JSON.stringify(process.execPath)} -e ${JSON.stringify(script)}`;
 }
 
+function passTestCommand() {
+  const script = "console.log('smoke test command passed');";
+  return `${JSON.stringify(process.execPath)} -e ${JSON.stringify(script)}`;
+}
+
 function isolatedWorkerCommand(options = {}) {
   const script = [
     "const fs = require('node:fs');",
@@ -221,4 +228,17 @@ function isolatedWorkerCommand(options = {}) {
     "fs.writeFileSync('memory/codex_result_note.json', JSON.stringify({ work_id: work.work_id, worker: 'codex', status: 'completed', summary: 'Isolated worker completed.', findings: ['isolated command wrote result note'], changed_files: ['src/applyService.js'], risks: [], next_recommendation: 'review_patch' }, null, 2));"
   ].filter(Boolean).join(" ");
   return `${JSON.stringify(process.execPath)} -e ${JSON.stringify(script)}`;
+}
+
+function verifyUiTemplate() {
+  const html = fs.readFileSync(path.join(repoRoot, "site", "console.html"), "utf8");
+  const server = fs.readFileSync(path.join(repoRoot, "src", "commands", "ui.js"), "utf8");
+  const progress = fs.readFileSync(path.join(repoRoot, "src", "utils", "progress.js"), "utf8");
+  for (const text of ["workerName", "agentName", "testCommand", "progressStep", "streamStatus", "actionResult"]) {
+    assert.ok(html.includes(text), `missing console control: ${text}`);
+  }
+  assert.ok(progress.includes("validate_result"), "missing progress contract: validate_result");
+  for (const text of ["/api/stream", "testCommand", "worker_options", "stateSignature"]) {
+    assert.ok(server.includes(text), `missing UI server contract: ${text}`);
+  }
 }

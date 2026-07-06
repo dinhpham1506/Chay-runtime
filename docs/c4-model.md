@@ -29,8 +29,7 @@ flowchart LR
 ### External Actors
 
 - Human developer: starts tasks, reviews notes, and commits approved changes.
-- Claude Code: optional main/controller agent.
-- Codex and Antigravity: optional bounded worker agents.
+- Claude Code, Codex, and Antigravity: supported coding agents that can be selected as main/controller or bounded worker roles in `cr setup`. The packaged controller integration is currently most complete for Claude Code; Codex and Antigravity ship as bounded worker instruction/template integrations.
 - Chạy Console: local realtime workflow UI served by Chạy Runtime.
 - Target project repo: the codebase being worked on.
 

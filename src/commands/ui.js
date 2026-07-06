@@ -12,6 +12,7 @@ import { buildEvalReport } from "../core/evalReport.js";
 import { buildTokenReport } from "../core/tokenReport.js";
 import { validateResultNote, validateWorkNote } from "../core/validators.js";
 import { defaultWorker, resultNotePath, workNotePath } from "../core/host.js";
+import { progressSteps } from "../utils/progress.js";
 import { scanRepo } from "./repoScan.js";
 import { planContext } from "./contextPlan.js";
 import { makeWorkpack } from "./workpack.js";
@@ -70,6 +71,8 @@ function broadcastState() {
 }
 
 let watcherTimer = null;
+let pollTimer = null;
+let lastSignature = "";
 function startWatcher() {
   fs.mkdirSync("memory", { recursive: true });
   fs.mkdirSync(".chay/tmp", { recursive: true });
@@ -81,6 +84,15 @@ function startWatcher() {
   for (const dir of targets) {
     try { fs.watch(dir, { recursive: true }, schedule); } catch { /* recursive watch unsupported on this platform */ }
   }
+  if (!pollTimer) {
+    lastSignature = stateSignature(targets);
+    pollTimer = setInterval(() => {
+      const signature = stateSignature(targets);
+      if (signature === lastSignature) return;
+      lastSignature = signature;
+      broadcastState();
+    }, 700);
+  }
 }
 
 let runningWorker = null;
@@ -88,6 +100,9 @@ let runningWorker = null;
 function spawnWorker(worker, options = {}) {
   if (runningWorker) return { ok: false, error: "worker_busy", pid: runningWorker.pid };
   const engine = options.agent || process.env.CHAY_WORKER_ENGINE || worker;
+  const maxRetries = options.maxRetries ?? 3;
+  const workFile = workNotePath(worker);
+  if (!exists(workFile)) return { ok: false, error: "work_note_not_found", file: workFile };
   const cmdArgs = [
     cliPath,
     "dispatch",
@@ -95,9 +110,12 @@ function spawnWorker(worker, options = {}) {
     "--agent",
     engine,
     "--max-retries",
-    String(options.maxRetries || 3)
+    String(maxRetries)
   ];
   if (options.isolate) cmdArgs.push("--isolate");
+  if (typeof options.testCommand === "string" && options.testCommand.trim()) {
+    cmdArgs.push("--test-command", options.testCommand.trim());
+  }
   fs.mkdirSync(".chay/tmp", { recursive: true });
   const out = fs.openSync(".chay/tmp/ui-dispatch.log", "a");
   let child;
@@ -117,7 +135,7 @@ function spawnWorker(worker, options = {}) {
 async function runAction(res, body) {
   const data = JSON.parse(body || "{}");
   const worker = data.worker || defaultWorker();
-  if (data.action === "create_task") return createUiTask(res, data.task || "", worker);
+  if (data.action === "create_task") return createUiTask(res, data, worker);
   if (data.action === "run_worker") { const dispatch = spawnWorker(worker, data); return sendJson(res, dispatch.ok ? 200 : 409, dispatch); }
   if (data.action === "validate_output") return validateUiOutput(res, data.file || resultNotePath(worker));
   if (data.action === "patch_check") return patchUiCheck(res, data.diff || ".chay/tmp/current.diff", data.work || workNotePath(worker));
@@ -127,15 +145,17 @@ async function runAction(res, body) {
   sendJson(res, 400, { ok: false, error: "unknown_action" });
 }
 
-async function createUiTask(res, task, worker) {
+async function createUiTask(res, data, worker) {
+  const task = data.task || "";
   if (!task.trim()) return sendJson(res, 400, { ok: false, error: "task_required" });
   await scanRepo(["--root", ".", "--out", ".chay-index/project_map.json"]);
   await planContext(["--task", task, "--index", ".chay-index/project_map.json", "--out", "memory/context_package.json", "--max-notes", "2"]);
   const files = selectedFiles("memory/context_package.json").join(",");
   await makeWorkpack(["--worker", worker, "--goal", task, "--out", `memory/${worker}_work_note.json`, "--compact", ...(files ? ["--allowed-files", files] : [])]);
   writeProgress(worker, "assigned", "Task assigned from Chạy Runtime UI", task);
-  const dispatch = spawnWorker(worker);
+  const dispatch = data.run === false ? { ok: true, skipped: true } : spawnWorker(worker, data);
   sendJson(res, 200, { ok: true, task, worker, work_note: `memory/${worker}_work_note.json`, dispatch });
+  broadcastState();
 }
 
 function validateUiOutput(res, file) {
@@ -192,7 +212,27 @@ function buildState() {
   const progressHistory = notes.filter((note) => note.kind === "progress_history" && Array.isArray(note.data)).flatMap((note) => note.data).slice(-80);
   const policy = loadPolicy();
   const worker = defaultWorker();
-  return { generated_at: new Date().toISOString(), runner: runningWorker, agents: agentsFrom(host, notes, progress), tasks: taskList(notes, context), selected_files: context.selected_files || [], progress_history: progressHistory, plan_ledger: optionalJson("memory/plan_ledger.json"), experience: optionalJson("memory/experience_spectrum.json"), chat: readChat(), checks: buildChecks(notes, worker), token_report: buildTokenReport(policy, { worker }), eval_report: buildEvalReport(policy, { worker }) };
+  return {
+    generated_at: new Date().toISOString(),
+    runner: runningWorker,
+    default_worker: worker,
+    progress_steps: progressSteps,
+    capabilities: {
+      realtime: "sse_plus_file_watch",
+      actions: ["create_task", "run_worker", "validate_output", "patch_check", "token_report", "eval_report", "experience_snapshot"],
+      worker_options: ["agent", "maxRetries", "isolate", "testCommand"]
+    },
+    agents: agentsFrom(host, notes, progress),
+    tasks: taskList(notes, context),
+    selected_files: context.selected_files || [],
+    progress_history: progressHistory,
+    plan_ledger: optionalJson("memory/plan_ledger.json"),
+    experience: optionalJson("memory/experience_spectrum.json"),
+    chat: readChat(),
+    checks: buildChecks(notes, worker),
+    token_report: buildTokenReport(policy, { worker }),
+    eval_report: buildEvalReport(policy, { worker })
+  };
 }
 
 function agentsFrom(host, notes, progress) {
@@ -215,17 +255,22 @@ function buildChecks(notes, worker = defaultWorker()) {
 
 function saveProgress(res, body) {
   const data = JSON.parse(body || "{}");
-  const progress = writeProgress(data.agent || defaultWorker(), data.step || "editing", data.message || "", data.task || "");
+  const step = data.step || "editing";
+  if (!progressSteps.includes(step)) return sendJson(res, 400, { ok: false, error: "invalid_step", allowed: progressSteps });
+  const progress = writeProgress(data.agent || defaultWorker(), step, data.message || "", data.task || "");
   sendJson(res, 200, { ok: true, progress });
+  broadcastState();
 }
 
 function saveChat(res, body) {
   const data = JSON.parse(body || "{}");
+  if (!String(data.message || "").trim()) return sendJson(res, 400, { ok: false, error: "message_required" });
   const chat = readChat();
   const message = { id: `msg_${Date.now()}`, from: data.from || "human", to: data.to || "main", message: compact(data.message || ""), created_at: new Date().toISOString() };
   chat.push(message);
   writeJson("memory/chat/messages.json", chat.slice(-200));
   sendJson(res, 200, { ok: true, message });
+  broadcastState();
 }
 
 function writeProgress(agent, step, message, task = "") {
@@ -253,4 +298,26 @@ function retryInstruction(violations, policy) { return `Return result_note JSON 
 
 function readConsoleHtml() {
   return readText(consoleHtmlPath);
+}
+
+function stateSignature(dirs) {
+  return dirs.flatMap((dir) => listFiles(dir)).map((file) => {
+    try {
+      const stat = fs.statSync(file);
+      return `${file}:${stat.size}:${Math.floor(stat.mtimeMs)}`;
+    } catch {
+      return `${file}:missing`;
+    }
+  }).join("|");
+}
+
+function listFiles(dir) {
+  if (!fs.existsSync(dir)) return [];
+  const out = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const file = path.join(dir, entry.name);
+    if (entry.isDirectory()) out.push(...listFiles(file));
+    else out.push(file);
+  }
+  return out.sort();
 }

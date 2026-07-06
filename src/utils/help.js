@@ -29,6 +29,7 @@ Patch guard:
 
 Progress:
   cr progress update --agent codex --step editing --message "Updating backend structure"
+  cr progress update --agent codex --step validate_result --message "Validating result note"
 
 Tokens:
   cr token report --worker codex
@@ -43,6 +44,7 @@ Work package:
 Dispatch:
   cr dispatch codex --agent=codex --max-retries 3
   cr dispatch codex --command "your-worker-command"
+  cr dispatch codex --agent=codex --test-command "npm test"
   cr dispatch codex --agent=codex --isolate
   cr dispatch antigravity --agent=antigravity --isolate
 
