@@ -14,6 +14,7 @@ import { validateResultNote, validateWorkNote } from "../core/validators.js";
 import { normalizeAgentName } from "../core/agents.js";
 import { defaultWorker, resultNotePath, workNotePath } from "../core/host.js";
 import { supportedAgentNames } from "../core/engineAdapters.js";
+import { agentRuntimeStatus } from "../core/runtimeStatus.js";
 import { progressSteps } from "../utils/progress.js";
 import { scanRepo } from "./repoScan.js";
 import { planContext } from "./contextPlan.js";
@@ -145,6 +146,7 @@ async function runAction(res, body) {
   if (data.action === "token_report") return sendJson(res, 200, buildTokenReport(loadPolicy(), { worker }));
   if (data.action === "eval_report") return sendJson(res, 200, buildEvalReport(loadPolicy(), { worker }));
   if (data.action === "experience_snapshot") return experienceUiSnapshot(res);
+  if (data.action === "runtime_status") return sendJson(res, 200, { ok: true, agents: agentRuntimeStatus({ auth: true }) });
   sendJson(res, 400, { ok: false, error: "unknown_action" });
 }
 
@@ -222,6 +224,7 @@ function buildState() {
     default_worker: worker,
     available_agents: supportedAgentNames(),
     available_workers: availableWorkers(host),
+    agent_runtime: quickRuntimeStatus(),
     progress_steps: progressSteps,
     capabilities: {
       realtime: "sse_plus_file_watch",
@@ -240,6 +243,14 @@ function buildState() {
     token_report: buildTokenReport(policy, { worker }),
     eval_report: buildEvalReport(policy, { worker })
   };
+}
+
+let runtimeCache = { at: 0, data: [] };
+function quickRuntimeStatus() {
+  const now = Date.now();
+  if (now - runtimeCache.at < 30000) return runtimeCache.data;
+  runtimeCache = { at: now, data: agentRuntimeStatus({ auth: false }) };
+  return runtimeCache.data;
 }
 
 function agentsFrom(host, notes, progress) {

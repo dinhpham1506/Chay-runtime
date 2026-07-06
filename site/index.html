@@ -355,7 +355,7 @@
   <div class="wrap center reveal">
     <span class="eyebrow">Vai trò agent</span>
     <h2>Main và worker được cấu hình theo từng dự án</h2>
-    <p class="section-sub">Chọn agent nào điều phối, agent nào thực thi trong <code>cr setup</code>; runtime giữ tất cả đúng phạm vi.</p>
+    <p class="section-sub">Chọn agent nào điều phối, agent nào thực thi trong <code>cr setup</code>; runtime giữ tất cả đúng phạm vi. Model label được truyền vào engine khi dispatch, nhưng đăng nhập vẫn thuộc CLI thật trên máy.</p>
   </div>
   <div class="wrap">
     <div class="roles">
@@ -367,12 +367,12 @@
       <div class="role reveal">
         <span class="tag">// main hoặc worker</span>
         <h3>Codex</h3>
-        <p>Có thể được chọn trong <code>host_config</code> làm main hoặc worker. Integration hiện cung cấp worker instruction/template.</p>
+        <p>Có thể được chọn trong <code>host_config</code> làm main hoặc worker. Dispatch truyền model qua <code>codex exec --model</code> khi bạn cấu hình worker LLM.</p>
       </div>
       <div class="role reveal">
         <span class="tag">// main hoặc worker</span>
         <h3>Antigravity</h3>
-        <p>Có thể được chọn trong <code>host_config</code> làm main hoặc worker. Integration hiện cung cấp worker instruction/template.</p>
+        <p>Có thể được chọn trong <code>host_config</code> làm main hoặc worker. Dispatch truyền model qua <code>antigravity run --model</code> khi bạn cấu hình worker LLM.</p>
       </div>
     </div>
   </div>
@@ -382,7 +382,7 @@
   <div class="wrap center reveal">
     <span class="eyebrow">Console realtime</span>
     <h2>Không chỉ xem trạng thái, có thể thao tác trực tiếp</h2>
-    <p class="section-sub"><code style="font-family:var(--mono);color:var(--accent-2)">cr ui serve</code> mở dashboard local dùng API thật: tạo work note, chạy worker, ghi progress, validate output, patch check, token/eval report, experience snapshot và chat. State được đẩy qua SSE và watcher trên <code style="font-family:var(--mono);color:var(--accent-2)">memory/</code> + <code style="font-family:var(--mono);color:var(--accent-2)">.chay/tmp</code>.</p>
+    <p class="section-sub"><code style="font-family:var(--mono);color:var(--accent-2)">cr ui serve</code> mở dashboard local dùng API thật: tạo work note, chạy worker, ghi progress, validate output, patch check, token/eval report, runtime/auth status, experience snapshot và chat. State được đẩy qua SSE và watcher trên <code style="font-family:var(--mono);color:var(--accent-2)">memory/</code> + <code style="font-family:var(--mono);color:var(--accent-2)">.chay/tmp</code>.</p>
   </div>
   <div class="wrap reveal">
     <div class="progress-box">
@@ -482,7 +482,7 @@
         <code class="doc-cmd">cr init
 cr setup --agents codex,anti --main anti
 cr doctor</code>
-        <p>Tạo cấu trúc thư mục dự án, hỏi/nhận danh sách agent rồi ghi <code>memory/host_config.json</code>. <code>--main</code> nhận <code>claude</code>, <code>codex</code> hoặc <code>antigravity</code>; <code>anti</code> là alias của <code>antigravity</code>.</p>
+        <p>Tạo cấu trúc thư mục dự án, hỏi/nhận danh sách agent rồi ghi <code>memory/host_config.json</code>. <code>--main</code> nhận <code>claude</code>, <code>codex</code> hoặc <code>antigravity</code>; <code>anti</code> là alias của <code>antigravity</code>. <code>cr doctor</code> kiểm tra CLI, login, model/provider và reachability.</p>
       </div>
       <div class="doc-card reveal">
         <span class="doc-tag">Task nhanh</span>

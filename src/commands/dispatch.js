@@ -41,6 +41,7 @@ export async function dispatchWorker(argv) {
   }
   const work = readJson(workFile);
   const agent = resolveAgent(args, worker, work);
+  const model = resolveModel(args, work);
   const maxRetries = nonNegativeInt(args["max-retries"] ?? policy.maxDispatchRetries ?? 3);
   const resultFile = args.out || `memory/${worker}_result_note.json`;
   const diffFile = args.diff || ".chay/tmp/current.diff";
@@ -54,7 +55,7 @@ export async function dispatchWorker(argv) {
     throw new Error(`--agent must be one of: ${supportedAgentNames().join(", ")}`);
   }
 
-  writeProgress(worker, "assigned", `Dispatching ${worker} via ${agent}`);
+  writeProgress(worker, "assigned", `Dispatching ${worker} via ${agent}${model ? ` model ${model}` : ""}`);
   const lock = acquireFileLocks(worker, work);
   if (!lock.ok) {
     writeProgress(worker, "blocked", `File lock conflict: ${lock.file}`);
@@ -87,7 +88,7 @@ export async function dispatchWorker(argv) {
         writeProgress(worker, "planning", "Retrying invalid result note");
       }
       writeProgress(worker, "editing", "Worker process running");
-      lastRun = await runAgent({ args, agent, prompt, promptFile: runPaths.promptFile, worker, logFile: runPaths.logFile, cwd: runCwd });
+      lastRun = await runAgent({ args, agent, model, prompt, promptFile: runPaths.promptFile, worker, logFile: runPaths.logFile, cwd: runCwd });
       if (!lastRun.ok) {
         syncIsolatedOutputs(isolation, { resultFile, diffFile, logFile });
         writeProgress(worker, "blocked", workerRunErrorMessage(lastRun));
@@ -95,6 +96,7 @@ export async function dispatchWorker(argv) {
           ok: false,
           worker,
           agent,
+          model: model || "user-selected",
           work_note: workFile,
           result_note: resultFile,
           isolation: isolationSummary(isolation),
@@ -184,6 +186,7 @@ export async function dispatchWorker(argv) {
       ok: true,
       worker,
       agent,
+      model: model || "user-selected",
       work_note: workFile,
       result_note: resultFile,
       isolation: isolationSummary(isolation),
@@ -212,6 +215,16 @@ function resolveAgent(args, worker, work) {
   if (args.agent) return normalizeAgentName(args.agent);
   if (work.worker?.agent) return normalizeAgentName(work.worker.agent);
   return worker;
+}
+
+function resolveModel(args, work) {
+  const model = args.model || args.llm || args["worker-llm"] || work.worker?.llm || "";
+  return selectedModel(model);
+}
+
+function selectedModel(model) {
+  const value = String(model || "").trim();
+  return value && value !== "user-selected" ? value : "";
 }
 
 function acquireFileLocks(worker, work) {
@@ -327,9 +340,9 @@ async function runTestCommand({ args, cwd, logFile, worker }) {
   });
 }
 
-async function runAgent({ args, agent, prompt, promptFile, worker, logFile, cwd = process.cwd() }) {
+async function runAgent({ args, agent, model, prompt, promptFile, worker, logFile, cwd = process.cwd() }) {
   const command = args.command || process.env.CHAY_DISPATCH_COMMAND;
-  const spec = command ? { command, args: [], shell: true } : commandForAgent(agent, { prompt, promptFile, worker });
+  const spec = command ? { command, args: [], shell: true } : commandForAgent(agent, { prompt, promptFile, worker, model });
   if (!spec) return { ok: false, error: `agent_cli_not_configured:${agent}` };
 
   fs.mkdirSync(path.dirname(logFile), { recursive: true });

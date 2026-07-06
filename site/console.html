@@ -437,6 +437,14 @@
       </section>
 
       <section class="panel">
+        <h2>Runtime / Bộ chạy</h2>
+        <div id="runtime"></div>
+        <div class="actions">
+          <button type="button" class="secondary" data-action="runtime-status">Check auth / Kiểm tra đăng nhập</button>
+        </div>
+      </section>
+
+      <section class="panel">
         <h2>Chat / Trao đổi</h2>
         <div id="chat"></div>
         <label for="message">Message / Tin nhắn</label>
@@ -486,6 +494,7 @@
       ledger: $("ledger"),
       files: $("files"),
       experience: $("experience"),
+      runtime: $("runtime"),
       chat: $("chat"),
       message: $("message")
     };
@@ -508,6 +517,7 @@
       "token-report": tokenReport,
       "eval-report": evalReport,
       "experience-snapshot": experienceSnapshot,
+      "runtime-status": runtimeStatus,
       "send-chat": sendChat
     };
 
@@ -574,6 +584,7 @@
       els.results.innerHTML = renderResults(state.result_notes || []);
       els.ledger.innerHTML = renderLedger(state.plan_ledger);
       els.experience.innerHTML = renderExperience(state.experience);
+      els.runtime.innerHTML = renderRuntime(state.agent_runtime || []);
       els.chat.innerHTML = state.chat.map((message) => [
         "<div class=\"item\">",
         `<b>${esc(message.from)} -> ${esc(message.to)}</b>`,
@@ -731,6 +742,22 @@
       ].join("");
     }
 
+    function renderRuntime(items) {
+      if (!items.length) return "<p class=\"muted\">No runtime status / Chưa có trạng thái runtime</p>";
+      return items.map((item) => {
+        const statusClass = item.cli?.found ? "status" : "status danger";
+        const auth = item.auth || {};
+        return [
+          "<div class=\"item\">",
+          `<b>${esc(agentLabel(item.agent))}</b> <span class="${statusClass}">${esc(item.cli?.found ? "CLI found / Có CLI" : "CLI missing / Thiếu CLI")}</span>`,
+          `<p>${esc(item.cli?.summary || "")}</p>`,
+          `<small>auth / đăng nhập: ${esc(auth.status || "not_checked")} · ${esc(auth.summary || auth.hint || "")}</small>`,
+          auth.hint ? `<br><small>hint / gợi ý: ${esc(auth.hint)}</small>` : "",
+          "</div>"
+        ].join("");
+      }).join("");
+    }
+
     function runOptions() {
       return {
         worker: normalizeAgentName(els.workerName.value.trim() || "codex"),
@@ -801,6 +828,11 @@
 
     async function experienceSnapshot() {
       showResult(await api("/api/action", { action: "experience_snapshot", worker: runOptions().worker }));
+      load();
+    }
+
+    async function runtimeStatus() {
+      showResult(await api("/api/action", { action: "runtime_status", worker: runOptions().worker }));
       load();
     }
 

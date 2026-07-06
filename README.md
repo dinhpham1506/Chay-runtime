@@ -50,6 +50,11 @@ them. Any two supported agents can be selected from `claude`, `codex`, and
 If `--workers` is omitted, every enabled agent except `--main` becomes a worker.
 `anti` is accepted as a short alias for `antigravity`.
 `--main-llm` and `--worker-llms` are optional model labels, not agent names.
+When a worker model is set, `cr dispatch` passes it to the selected engine with
+`--model` for Codex, Claude, and Antigravity. The model label does not log in to
+that provider; the matching CLI must already be installed and authenticated.
+Run `cr doctor` to see CLI presence, auth status, configured model/provider, and
+provider reachability.
 
 Current integration capability:
 
@@ -71,8 +76,8 @@ cr ui serve --port 7770
 ```
 
 Open `http://127.0.0.1:7770`. The UI shows workflow columns, agents, task state,
-selected files, checks, token/eval reports, and chat. The maintainable console
-template lives at `site/console.html`; `src/commands/ui.js` serves the file and
+selected files, runtime CLI status, checks, token/eval reports, and chat. The
+maintainable console template lives at `site/console.html`; `src/commands/ui.js` serves the file and
 owns the local API. It reads `/api/state`, streams updates through `/api/stream`
 with a file-watch/poll fallback, and writes chat to `memory/chat/messages.json`.
 The same UI can create compact tasks, spawn `cr dispatch` in the background with
@@ -217,7 +222,9 @@ This creates `.claude/settings.json` and these agents:
 cr integration install --target codex
 ```
 
-Then use `CHAY_CODEX_INSTRUCTIONS.md` as the worker instruction.
+Then use `CHAY_CODEX_INSTRUCTIONS.md` as the worker instruction. Dispatch uses
+`codex exec --model <worker.llm>` when the work note has a model other than
+`user-selected`.
 
 ## Antigravity integration
 
@@ -225,7 +232,9 @@ Then use `CHAY_CODEX_INSTRUCTIONS.md` as the worker instruction.
 cr integration install --target antigravity
 ```
 
-Then use `CHAY_ANTIGRAVITY_INSTRUCTIONS.md` as the worker instruction.
+Then use `CHAY_ANTIGRAVITY_INSTRUCTIONS.md` as the worker instruction. Dispatch
+uses `antigravity run --prompt-file <file> --model <worker.llm>` when the work
+note has a model other than `user-selected`.
 
 ## Safety model
 

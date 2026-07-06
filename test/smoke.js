@@ -4,10 +4,16 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { commandForAgent } from "../src/core/engineAdapters.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const cli = path.join(repoRoot, "bin", "cr.js");
 const project = fs.mkdtempSync(path.join(os.tmpdir(), "chay-runtime-smoke-"));
+
+assert.deepEqual(commandForAgent("codex", { prompt: "hi", model: "gpt-5" }).args, ["exec", "--model", "gpt-5", "hi"]);
+assert.deepEqual(commandForAgent("claude", { prompt: "hi", worker: "codex", model: "sonnet" }).args, ["-p", "hi", "--agent", "chay-codex-worker", "--model", "sonnet"]);
+assert.deepEqual(commandForAgent("anti", { promptFile: "prompt.txt", model: "gemini-pro" }).args, ["run", "--prompt-file", "prompt.txt", "--model", "gemini-pro"]);
+assert.deepEqual(commandForAgent("antigravity", { promptFile: "prompt.txt", model: "user-selected" }).args, ["run", "--prompt-file", "prompt.txt"]);
 
 assert.ok(fs.existsSync(path.join(repoRoot, "site", "console.html")));
 assert.ok(!fs.readFileSync(path.join(repoRoot, "src", "commands", "ui.js"), "utf8").includes("function html()"));
@@ -245,12 +251,12 @@ function verifyUiTemplate() {
   const html = fs.readFileSync(path.join(repoRoot, "site", "console.html"), "utf8");
   const server = fs.readFileSync(path.join(repoRoot, "src", "commands", "ui.js"), "utf8");
   const progress = fs.readFileSync(path.join(repoRoot, "src", "utils", "progress.js"), "utf8");
-  for (const text of ["workerName", "agentName", "testCommand", "progressStep", "streamStatus", "actionResult", "durationText", "live-age", "Worker result"]) {
+  for (const text of ["workerName", "agentName", "testCommand", "progressStep", "streamStatus", "actionResult", "durationText", "live-age", "Worker result", "runtime-status"]) {
     assert.ok(html.includes(text), `missing console control: ${text}`);
   }
   assert.ok(progress.includes("validate_result"), "missing progress contract: validate_result");
   assert.ok(fs.readFileSync(path.join(repoRoot, "src", "core", "agents.js"), "utf8").includes("anti: \"antigravity\""));
-  for (const text of ["/api/stream", "testCommand", "worker_options", "stateSignature"]) {
+  for (const text of ["/api/stream", "testCommand", "worker_options", "stateSignature", "agent_runtime", "runtime_status"]) {
     assert.ok(server.includes(text), `missing UI server contract: ${text}`);
   }
   assert.ok(server.includes("available_agents"));

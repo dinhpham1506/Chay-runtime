@@ -10,7 +10,7 @@ Usage:
   cr task
   cr task "Fix duplicate apply bug"
   cr task "Fix duplicate apply bug" --compact --max-notes 2
-  cr doctor
+  cr doctor                    # checks CLI presence, auth, configured model/provider, reachability
 
 Boundary:
   cr boundary check-note --file memory/task_note.json
