@@ -490,6 +490,11 @@ cr doctor</code>
         <p>Gộp việc tạo <code>task_note</code>, <code>context_package</code> và <code>work_note</code> vào một lệnh duy nhất.</p>
       </div>
       <div class="doc-card reveal">
+        <span class="doc-tag">Console realtime</span>
+        <code class="doc-cmd">cr ui serve --port 7770</code>
+        <p>Mở dashboard local để thao tác trực tiếp: tạo task, chạy worker, ghi progress, validate result, patch check, xem token/eval report, chat và theo dõi SSE realtime.</p>
+      </div>
+      <div class="doc-card reveal">
         <span class="doc-tag">Ranh giới (Boundary)</span>
         <code class="doc-cmd">cr boundary check-note --file memory/task_note.json --kind task
 cr boundary validate-output --file memory/codex_result_note.json</code>
