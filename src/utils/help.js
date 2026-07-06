@@ -4,7 +4,8 @@ Chạy Runtime
 
 Usage:
   cr init
-  cr setup --agents claude,codex --main claude --main-llm sonnet --workers codex --worker-llms codex:gpt-5 --skills repo_search,solid_refactor,test_runner,minimal_patch
+  cr setup --agents claude,codex --main claude --workers codex
+  cr setup --agents codex,antigravity --main codex --workers antigravity
   cr ui serve --port 7770
   cr task
   cr task "Fix duplicate apply bug"
@@ -30,18 +31,20 @@ Progress:
   cr progress update --agent codex --step editing --message "Updating backend structure"
 
 Tokens:
-  cr token report
+  cr token report --worker codex
 
 Efficiency:
   cr eval report
 
 Work package:
-  cr workpack make --controller claude --controller-llm sonnet --worker codex --worker-llm gpt-5 --skills repo_search,solid_refactor,test_runner,minimal_patch --goal "Fix bug" --out memory/codex_work_note.json
-  cr workpack make --worker codex --goal "Fix bug" --compact --out memory/codex_work_note.json
+  cr workpack make --controller claude --controller-llm sonnet --worker codex --worker-llm gpt-5 --skills repo_search,solid_refactor,test_runner,minimal_patch --goal "Fix bug"
+  cr workpack make --worker antigravity --goal "Fix bug" --compact
 
 Dispatch:
   cr dispatch codex --agent=codex --max-retries 3
   cr dispatch codex --command "your-worker-command"
+  cr dispatch codex --agent=codex --isolate
+  cr dispatch antigravity --agent=antigravity --isolate
 
 Experience compression:
   cr experience snapshot --out memory/experience_spectrum.json

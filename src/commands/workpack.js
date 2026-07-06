@@ -2,10 +2,12 @@ import { parseArgs } from "../utils/args.js";
 import { exists, readJson, writeJson } from "../utils/fs.js";
 import { loadPolicy } from "../core/policy.js";
 import { promptText } from "../utils/prompt.js";
+import { defaultWorker } from "../core/host.js";
 
 export async function makeWorkpack(argv) {
   const args = parseArgs(argv);
-  const worker = args.worker || await promptText("Worker agent [codex]: ") || "codex";
+  const fallbackWorker = defaultWorker();
+  const worker = args.worker || await promptText(`Worker agent [${fallbackWorker}]: `) || fallbackWorker;
   const goal = args.goal || args._?.join(" ") || await promptText("Goal/task: ");
   if (!goal) throw new Error("--goal is required");
 

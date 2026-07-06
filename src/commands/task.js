@@ -5,6 +5,7 @@ import { scanRepo } from "./repoScan.js";
 import { planContext } from "./contextPlan.js";
 import { makeWorkpack } from "./workpack.js";
 import { checkNote } from "./boundary.js";
+import { defaultWorker as defaultHostWorker } from "../core/host.js";
 
 export async function createTask(argv) {
   const args = parseArgs(argv);
@@ -54,7 +55,5 @@ function selectedFiles(contextFile) {
 }
 
 function defaultWorker() {
-  if (!exists("memory/host_config.json")) return "codex";
-  const host = readJson("memory/host_config.json");
-  return host.workers?.[0]?.agent || "codex";
+  return defaultHostWorker();
 }

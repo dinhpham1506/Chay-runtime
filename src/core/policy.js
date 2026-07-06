@@ -10,6 +10,8 @@ export function loadPolicy(file = "policies/chay_policy.json") {
       maxDeletedLines: 200,
       maxTotalDiffLines: 500,
       maxCommandsPerTask: 8,
+      maxDispatchRetries: 3,
+      maxTokenCompactionPasses: 2,
       maxSubagents: 2,
       maxSubagentDepth: 1,
       architectureRules: [

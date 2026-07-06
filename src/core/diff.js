@@ -11,7 +11,7 @@ export function analyzeDiff(diffText) {
   }
 
   return {
-    changedFiles: Array.from(files),
+    changedFiles: Array.from(files).map(normalizeRelativePath),
     changedFileCount: files.size,
     addedLines: added,
     deletedLines: deleted,
@@ -21,7 +21,7 @@ export function analyzeDiff(diffText) {
 
 export function validateDiff(diff, work, policy, diffText = "") {
   const violations = [];
-  const allowed = new Set(work.allowed_files || work.allowedFiles || []);
+  const allowed = new Set((work.allowed_files || work.allowedFiles || []).map(normalizeRelativePath));
 
   if (diff.changedFileCount > policy.maxChangedFiles) {
     violations.push({ type: "max_changed_files_exceeded", value: diff.changedFileCount, max: policy.maxChangedFiles });
@@ -38,7 +38,8 @@ export function validateDiff(diff, work, policy, diffText = "") {
 
   if (allowed.size > 0) {
     for (const file of diff.changedFiles) {
-      const ok = Array.from(allowed).some((allowedFile) => file.endsWith(allowedFile) || file === allowedFile);
+      const normalizedFile = normalizeRelativePath(file);
+      const ok = Array.from(allowed).some((allowedFile) => isAllowedPath(normalizedFile, allowedFile));
       if (!ok) violations.push({ type: "changed_file_outside_scope", file });
     }
   }
@@ -49,6 +50,16 @@ export function validateDiff(diff, work, policy, diffText = "") {
     ok: violations.length === 0,
     violations
   };
+}
+
+function isAllowedPath(file, allowedFile) {
+  if (!allowedFile) return false;
+  if (file === allowedFile) return true;
+  return allowedFile.endsWith("/") && file.startsWith(allowedFile);
+}
+
+function normalizeRelativePath(file) {
+  return String(file || "").replace(/\\/g, "/").replace(/^\.\/+/, "");
 }
 
 function findForbiddenPatternHits(diffText, policy) {

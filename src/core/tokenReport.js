@@ -2,15 +2,17 @@ import fs from "node:fs";
 import path from "node:path";
 import { estimateTokens } from "../utils/tokens.js";
 import { exists, readJson, readText } from "../utils/fs.js";
+import { defaultWorker, resultNotePath, workNotePath } from "./host.js";
 
-export function buildTokenReport(policy) {
+export function buildTokenReport(policy, options = {}) {
+  const worker = options.worker || defaultWorker();
   const context = optionalJson("memory/context_package.json") || {};
   const selected = Array.isArray(context.selected_files) ? context.selected_files : [];
   const notes = {
     task_note: fileTokens("memory/task_note.json"),
     context_package: fileTokens("memory/context_package.json"),
-    work_note: fileTokens("memory/codex_work_note.json"),
-    result_note: fileTokens("memory/codex_result_note.json")
+    work_note: fileTokens(options.workFile || workNotePath(worker)),
+    result_note: fileTokens(options.resultFile || resultNotePath(worker))
   };
   const selectedFiles = selected.map((file) => fileTokens(file.path)).filter((item) => item.exists);
   const selectedFileTokens = sum(selectedFiles.map((file) => file.tokens));
@@ -18,7 +20,8 @@ export function buildTokenReport(policy) {
   const chayTokens = sum(Object.values(notes).map((note) => note.tokens)) + selectedFileTokens;
 
   return {
-    ok: notes.work_note.tokens <= policy.maxNoteTokens && notes.result_note.tokens <= policy.maxResultTokens,
+    ok: budgetViolations(notes, policy).length === 0,
+    worker,
     budgets: {
       maxNoteTokens: policy.maxNoteTokens,
       maxResultTokens: policy.maxResultTokens

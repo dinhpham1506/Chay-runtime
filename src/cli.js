@@ -25,14 +25,14 @@ export async function main(argv) {
     return;
   }
 
-  if (cmd === "init") return initProject(rest);
-  if (cmd === "setup") return setupProject(rest);
+  if (cmd === "init") return initProject([subcmd, ...rest].filter(Boolean));
+  if (cmd === "setup") return setupProject([subcmd, ...rest].filter(Boolean));
   if (cmd === "task") return createTask([subcmd, ...rest].filter(Boolean));
   if (cmd === "ui" && subcmd === "serve") return serveUi(rest);
   if (cmd === "token" && subcmd === "report") return tokenReport(rest);
   if (cmd === "eval" && subcmd === "report") return evalReport(rest);
   if (cmd === "progress" && subcmd === "update") return updateProgress(rest);
-  if (cmd === "doctor") return doctor(rest);
+  if (cmd === "doctor") return doctor([subcmd, ...rest].filter(Boolean));
 
   if (cmd === "boundary" && subcmd === "check-note") return checkNote(rest);
   if (cmd === "boundary" && subcmd === "validate-output") return validateOutput(rest);

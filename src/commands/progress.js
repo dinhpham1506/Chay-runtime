@@ -1,9 +1,10 @@
 import { parseArgs } from "../utils/args.js";
 import { progressSteps, writeProgressNote } from "../utils/progress.js";
+import { defaultWorker } from "../core/host.js";
 
 export async function updateProgress(argv) {
   const args = parseArgs(argv);
-  const agent = args.agent || args.worker || "codex";
+  const agent = args.agent || args.worker || defaultWorker();
   const step = args.step || "working";
   if (!progressSteps.includes(step)) throw new Error(`--step must be one of: ${progressSteps.join(", ")}`);
 

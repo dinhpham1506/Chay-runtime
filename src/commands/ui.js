@@ -11,6 +11,7 @@ import { loadPolicy } from "../core/policy.js";
 import { buildEvalReport } from "../core/evalReport.js";
 import { buildTokenReport } from "../core/tokenReport.js";
 import { validateResultNote, validateWorkNote } from "../core/validators.js";
+import { defaultWorker, resultNotePath, workNotePath } from "../core/host.js";
 import { scanRepo } from "./repoScan.js";
 import { planContext } from "./contextPlan.js";
 import { makeWorkpack } from "./workpack.js";
@@ -86,7 +87,7 @@ let runningWorker = null;
 
 function spawnWorker(worker, options = {}) {
   if (runningWorker) return { ok: false, error: "worker_busy", pid: runningWorker.pid };
-  const engine = options.agent || process.env.CHAY_WORKER_ENGINE || "codex";
+  const engine = options.agent || process.env.CHAY_WORKER_ENGINE || worker;
   const cmdArgs = [
     cliPath,
     "dispatch",
@@ -96,6 +97,7 @@ function spawnWorker(worker, options = {}) {
     "--max-retries",
     String(options.maxRetries || 3)
   ];
+  if (options.isolate) cmdArgs.push("--isolate");
   fs.mkdirSync(".chay/tmp", { recursive: true });
   const out = fs.openSync(".chay/tmp/ui-dispatch.log", "a");
   let child;
@@ -114,12 +116,13 @@ function spawnWorker(worker, options = {}) {
 
 async function runAction(res, body) {
   const data = JSON.parse(body || "{}");
-  if (data.action === "create_task") return createUiTask(res, data.task || "", data.worker || "codex");
-  if (data.action === "run_worker") { const dispatch = spawnWorker(data.worker || "codex", data); return sendJson(res, dispatch.ok ? 200 : 409, dispatch); }
-  if (data.action === "validate_output") return validateUiOutput(res, data.file || "memory/codex_result_note.json");
-  if (data.action === "patch_check") return patchUiCheck(res, data.diff || ".chay/tmp/current.diff", data.work || "memory/codex_work_note.json");
-  if (data.action === "token_report") return sendJson(res, 200, buildTokenReport(loadPolicy()));
-  if (data.action === "eval_report") return sendJson(res, 200, buildEvalReport(loadPolicy()));
+  const worker = data.worker || defaultWorker();
+  if (data.action === "create_task") return createUiTask(res, data.task || "", worker);
+  if (data.action === "run_worker") { const dispatch = spawnWorker(worker, data); return sendJson(res, dispatch.ok ? 200 : 409, dispatch); }
+  if (data.action === "validate_output") return validateUiOutput(res, data.file || resultNotePath(worker));
+  if (data.action === "patch_check") return patchUiCheck(res, data.diff || ".chay/tmp/current.diff", data.work || workNotePath(worker));
+  if (data.action === "token_report") return sendJson(res, 200, buildTokenReport(loadPolicy(), { worker }));
+  if (data.action === "eval_report") return sendJson(res, 200, buildEvalReport(loadPolicy(), { worker }));
   if (data.action === "experience_snapshot") return experienceUiSnapshot(res);
   sendJson(res, 400, { ok: false, error: "unknown_action" });
 }
@@ -171,8 +174,8 @@ function experienceUiSnapshot(res) {
 }
 
 function refreshDiff(diffFile, work) {
-  const allowed = Array.isArray(work.allowed_files) && work.allowed_files.length > 0 ? work.allowed_files : ["."];
-  const result = spawnSync("git", ["diff", "--no-ext-diff", "--", ...allowed], { encoding: "utf8" });
+  const pathspec = [".", ":(exclude).chay", ":(exclude)memory", ":(exclude)audit"];
+  const result = spawnSync("git", ["diff", "--no-ext-diff", "--", ...pathspec], { encoding: "utf8" });
   if (result.status !== 0) {
     return { ok: false, error: "git_diff_failed", stderr: compact(result.stderr) };
   }
@@ -188,7 +191,8 @@ function buildState() {
   const progress = notes.filter((note) => note.kind === "progress" && !Array.isArray(note.data)).map((note) => note.data);
   const progressHistory = notes.filter((note) => note.kind === "progress_history" && Array.isArray(note.data)).flatMap((note) => note.data).slice(-80);
   const policy = loadPolicy();
-  return { generated_at: new Date().toISOString(), runner: runningWorker, agents: agentsFrom(host, notes, progress), tasks: taskList(notes, context), selected_files: context.selected_files || [], progress_history: progressHistory, plan_ledger: optionalJson("memory/plan_ledger.json"), experience: optionalJson("memory/experience_spectrum.json"), chat: readChat(), checks: buildChecks(notes), token_report: buildTokenReport(policy), eval_report: buildEvalReport(policy) };
+  const worker = defaultWorker();
+  return { generated_at: new Date().toISOString(), runner: runningWorker, agents: agentsFrom(host, notes, progress), tasks: taskList(notes, context), selected_files: context.selected_files || [], progress_history: progressHistory, plan_ledger: optionalJson("memory/plan_ledger.json"), experience: optionalJson("memory/experience_spectrum.json"), chat: readChat(), checks: buildChecks(notes, worker), token_report: buildTokenReport(policy, { worker }), eval_report: buildEvalReport(policy, { worker }) };
 }
 
 function agentsFrom(host, notes, progress) {
@@ -204,14 +208,14 @@ function taskList(notes, context) {
   return notes.filter((note) => ["work", "result"].includes(note.kind)).map((note) => ({ id: note.data.work_id, agent: note.data.assigned_to || note.data.worker, status: note.data.status || "assigned", goal: compact(note.data.goal || context.task || ""), summary: compact(note.data.summary || ""), files: note.data.changed_files || note.data.allowed_files || [] }));
 }
 
-function buildChecks(notes) {
-  const work = optionalJson("memory/codex_work_note.json");
-  return { work_note: work ? validateWorkNote(work, loadPolicy()) : null, result_exists: exists("memory/codex_result_note.json"), diff_exists: exists(".chay/tmp/current.diff") };
+function buildChecks(notes, worker = defaultWorker()) {
+  const work = optionalJson(workNotePath(worker));
+  return { work_note: work ? validateWorkNote(work, loadPolicy()) : null, result_exists: exists(resultNotePath(worker)), diff_exists: exists(".chay/tmp/current.diff") };
 }
 
 function saveProgress(res, body) {
   const data = JSON.parse(body || "{}");
-  const progress = writeProgress(data.agent || "codex", data.step || "editing", data.message || "", data.task || "");
+  const progress = writeProgress(data.agent || defaultWorker(), data.step || "editing", data.message || "", data.task || "");
   sendJson(res, 200, { ok: true, progress });
 }
 
@@ -250,4 +254,3 @@ function retryInstruction(violations, policy) { return `Return result_note JSON 
 function readConsoleHtml() {
   return readText(consoleHtmlPath);
 }
-

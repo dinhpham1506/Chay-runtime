@@ -42,15 +42,18 @@ Non-interactive setup:
 
 ```bash
 cr setup \
-  --agents claude,codex \
+  --agents claude,antigravity \
   --main claude \
   --main-llm sonnet \
-  --workers codex \
-  --worker-llms codex:gpt-5 \
+  --workers antigravity \
+  --worker-llms antigravity:user-selected \
   --skills repo_search,context_reading,solid_refactor,test_runner,patch_guard,minimal_patch
 ```
 
-After setup, `cr workpack make --worker codex ...` automatically uses `memory/host_config.json` for controller, worker LLM, and skills unless flags override them.
+After setup, `cr workpack make ...` automatically uses `memory/host_config.json`
+for the default worker, controller, worker LLM, and skills unless flags override
+them. Any two supported agents can be selected from `claude`, `codex`, and
+`antigravity`; one is the main/controller and the rest are workers.
 
 Native workflow UI:
 
@@ -96,16 +99,18 @@ cr task "Fix duplicate job apply bug" --compact --max-notes 2
 Manual flow:
 
 ```bash
+WORKER=codex
 cr repo scan --root . --out .chay-index/project_map.json
 cr context plan --task "Fix duplicate job apply bug" --out memory/context_package.json
 cr workpack make \
-  --worker codex \
+  --worker "$WORKER" \
   --goal "Fix duplicate job apply bug" \
   --compact \
-  --out memory/codex_work_note.json
+  --out "memory/${WORKER}_work_note.json"
 cr boundary check-note --file memory/task_note.json
-cr boundary check-note --file memory/codex_work_note.json --kind work
-cr dispatch codex --agent=codex --max-retries 3
+cr boundary check-note --file "memory/${WORKER}_work_note.json" --kind work
+cr dispatch "$WORKER" --agent="$WORKER" --max-retries 3
+cr dispatch "$WORKER" --agent="$WORKER" --max-retries 3 --isolate
 cr experience snapshot --out memory/experience_spectrum.json
 ```
 
@@ -165,30 +170,32 @@ npm run build
 
 See [docs/c4-model.md](docs/c4-model.md) for the C4 system model, including the realtime Chạy Console.
 
-`npm test` runs a smoke project in a temp directory and verifies:
+`npm test` runs smoke projects in temp directories and verifies:
 - project initialization
+- arbitrary main/worker selection across Claude, Codex, and Antigravity
 - repo scan and context planning
 - workpack generation for a smaller `codex` worker
 - dispatching a worker command with progress, result validation, retry cap, and patch check
+- pre-dispatch token compaction before worker execution
 - compact experience compression work notes, plan ledger updates, and spectrum snapshots
 - user-selected controller LLM, worker LLM, and worker skills
 - realtime Chạy Console state without raw logs
 - task/work/result note validation
 - audit Markdown compilation
 - patch boundary rejection for out-of-scope files and forbidden anti-patterns
-- Claude integration creates `chay-main`, `chay-codex-worker`, and `chay-reviewer`
+- Claude integration creates `chay-main`, `chay-reviewer`, and `chay-<worker>-worker`
 
 `npm run build` runs the smoke test and `npm pack --dry-run`.
 
 ## Claude Code integration
 
 ```bash
-cr integration install --target claude
+cr integration install --target claude --workers codex,antigravity
 ```
 
 This creates `.claude/settings.json` and these agents:
 - `chay-main`: controller that prepares notes and dispatches work
-- `chay-codex-worker`: bounded worker for scoped code edits
+- `chay-<worker>-worker`: bounded worker for scoped code edits
 - `chay-reviewer`: compact result-note reviewer
 
 ## Codex integration
@@ -215,14 +222,35 @@ Chạy Runtime rejects:
 - patches that change too many files
 - patches that add too many lines
 - edits outside allowed files
+- isolated worker edits outside allowed files before they reach the real project
 - agents reading audit Markdown
 - worker notes that omit architecture/SOLID rules
 - large free-form result logs
+
+The default dispatch path is a runtime guardrail, not an OS security sandbox:
+it validates the worker result and full diff before accepting the patch. Use
+`cr dispatch <worker> --isolate` to run the worker in a temporary scoped
+workspace. Isolated dispatch copies only runtime notes, policy/schema files,
+selected context files, and `allowed_files` into the workspace, validates the
+full sandbox diff, then copies only `allowed_files` back to the real project
+after the patch boundary passes.
+
+Isolated dispatch prevents accidental out-of-scope writes from being copied
+back into the real project. A hostile process with the same user permissions can
+still read or write files outside the temporary workspace, so use an OS/container
+sandbox for hard security boundaries.
 
 Default token budgets are bounded but not overly tight:
 - task/work notes: `maxNoteTokens` 1200
 - result notes: `maxResultTokens` 900
 - context planning: 5 selected files unless `--max-notes` is provided
+- dispatch token compaction: `maxTokenCompactionPasses` 2
+
+Before dispatching a worker, `cr dispatch` runs a token preflight loop. If the
+task/context/work notes exceed policy budgets, it compacts the context package
+and work note into policy references before spawning the worker. Use
+`--no-auto-compact` to fail fast instead, or `--skip-token-check` when a human
+has intentionally accepted a larger context.
 
 When a worker returns invalid output, `cr boundary validate-output` returns a compact `retry_instruction`. The main/controller agent should send that instruction back to the worker and loop until the worker returns valid `result_note` JSON or reports `blocked`.
 

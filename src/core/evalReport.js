@@ -2,11 +2,13 @@ import { exists, readJson, readText } from "../utils/fs.js";
 import { analyzeDiff, validateDiff } from "./diff.js";
 import { buildTokenReport } from "./tokenReport.js";
 import { validateResultNote } from "./validators.js";
+import { defaultWorker, resultNotePath, workNotePath } from "./host.js";
 
-export function buildEvalReport(policy) {
-  const resultNote = optionalJson("memory/codex_result_note.json");
-  const workNote = optionalJson("memory/codex_work_note.json");
-  const tokenReport = buildTokenReport(policy);
+export function buildEvalReport(policy, options = {}) {
+  const worker = options.worker || defaultWorker();
+  const resultNote = optionalJson(options.resultFile || resultNotePath(worker));
+  const workNote = optionalJson(options.workFile || workNotePath(worker));
+  const tokenReport = buildTokenReport(policy, { worker, workFile: options.workFile, resultFile: options.resultFile });
   const resultValidation = resultNote ? validateResultNote(resultNote, policy) : missingValidation("result_note_missing");
   const patch = buildPatchCase(workNote, policy);
   const retryCount = countRetries();
@@ -30,6 +32,7 @@ export function buildEvalReport(policy) {
     score: capScore(score(cases), status, workResultMatch, resultValidation.ok, patch.ok),
     grade: grade(capScore(score(cases), status, workResultMatch, resultValidation.ok, patch.ok)),
     formula: "task_completed + work_result_match + valid_result + valid_patch_scope + test_signal + low_retry + token_efficiency",
+    worker,
     metrics: {
       task_status: status,
       work_result_match: workResultMatch,

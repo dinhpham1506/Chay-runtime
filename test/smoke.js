@@ -20,6 +20,19 @@ fs.writeFileSync(path.join(project, "src", "applyService.js"), [
   ""
 ].join("\n"));
 
+const genericProject = fs.mkdtempSync(path.join(os.tmpdir(), "chay-runtime-generic-"));
+fs.mkdirSync(path.join(genericProject, "src"), { recursive: true });
+fs.writeFileSync(path.join(genericProject, "src", "genericService.js"), "export const generic = true;\n");
+runIn(genericProject, "setup", "--agents", "claude,antigravity", "--main", "antigravity", "--workers", "claude");
+runIn(genericProject, "workpack", "make", "--goal", "Generic worker task", "--allowed-files", "src/genericService.js");
+const genericHost = JSON.parse(fs.readFileSync(path.join(genericProject, "memory", "host_config.json"), "utf8"));
+const genericWork = JSON.parse(fs.readFileSync(path.join(genericProject, "memory", "claude_work_note.json"), "utf8"));
+assert.deepEqual(genericHost.main, { agent: "antigravity", llm: "user-selected" });
+assert.equal(genericHost.workers[0].agent, "claude");
+assert.equal(genericWork.assigned_to, "claude");
+assert.ok(fs.existsSync(path.join(genericProject, ".claude", "agents", "chay-claude-worker.md")));
+assert.ok(fs.readFileSync(path.join(genericProject, ".claude", "agents", "chay-main.md"), "utf8").includes("chay-claude-worker"));
+
 run("doctor");
 run("setup", "--agents", "claude,codex", "--main", "claude", "--main-llm", "sonnet", "--workers", "codex", "--worker-llms", "codex:gpt-5", "--skills", "repo_search,solid_refactor,test_runner,minimal_patch");
 run("repo", "scan", "--root", ".", "--out", ".chay-index/project_map.json");
@@ -61,11 +74,24 @@ const lockedDispatch = run("dispatch", "codex", "--command", workerCommand(), "-
 assert.equal(lockedDispatch.ok, false);
 assert.equal(lockedDispatch.lock.error, "file_lock_conflict");
 fs.unlinkSync(path.join(project, ".chay", "locks", "src__applyService.js.json"));
+const bloatedWork = JSON.parse(fs.readFileSync(path.join(project, "memory", "codex_work_note.json"), "utf8"));
+bloatedWork.architecture_rules = Array.from({ length: 700 }, (_, index) => `Large architecture rule ${index}: follow local patterns and SOLID boundaries.`);
+fs.writeFileSync(path.join(project, "memory", "codex_work_note.json"), JSON.stringify(bloatedWork, null, 2));
 const dispatch = run("dispatch", "codex", "--command", workerCommand(), "--max-retries", "1");
 assert.equal(dispatch.ok, true);
 assert.equal(dispatch.worker, "codex");
 assert.equal(dispatch.validation.ok, true);
 assert.equal(dispatch.patch.ok, true);
+assert.equal(dispatch.token_preflight.compacted, true);
+const isolatedRejected = run("dispatch", "codex", "--command", isolatedWorkerCommand({ outside: true }), "--max-retries", "0", "--isolate", { expectCode: 2 });
+assert.equal(isolatedRejected.ok, false);
+assert.equal(isolatedRejected.isolation.mode, "copy_workspace_v1");
+assert.ok(isolatedRejected.patch.violations.some((item) => item.type === "changed_file_outside_scope"));
+assert.equal(fs.existsSync(path.join(project, "src", "outside.js")), false);
+const isolatedDispatch = run("dispatch", "codex", "--command", isolatedWorkerCommand(), "--max-retries", "0", "--isolate");
+assert.equal(isolatedDispatch.ok, true);
+assert.equal(isolatedDispatch.isolation.mode, "copy_workspace_v1");
+assert.ok(fs.readFileSync(path.join(project, "src", "applyService.js"), "utf8").includes("ISOLATED_POLICY"));
 const dispatchProgress = JSON.parse(fs.readFileSync(path.join(project, "memory", "codex_progress.json"), "utf8"));
 assert.equal(dispatchProgress.step, "done");
 const dispatchHistory = JSON.parse(fs.readFileSync(path.join(project, "memory", "codex_progress_history.json"), "utf8"));
@@ -74,7 +100,7 @@ for (const step of ["assigned", "reading", "planning", "editing", "testing", "pa
 }
 assert.deepEqual(fs.readdirSync(path.join(project, ".chay", "locks")).filter((file) => file.endsWith(".json")), []);
 const ledger = JSON.parse(fs.readFileSync(path.join(project, "memory", "plan_ledger.json"), "utf8"));
-assert.equal(ledger.steps_done.length, 1);
+assert.equal(ledger.steps_done.length, 2);
 assert.equal(ledger.last_agent_used, "codex");
 const experience = run("experience", "snapshot", "--out", "memory/experience_spectrum.json");
 assert.equal(experience.ok, true);
@@ -136,9 +162,13 @@ assert.equal(progress.step, "editing");
 console.log(JSON.stringify({ ok: true, project }, null, 2));
 
 function run(...input) {
+  return runIn(project, ...input);
+}
+
+function runIn(cwd, ...input) {
   const options = typeof input.at(-1) === "object" ? input.pop() : {};
   const result = spawnSync(process.execPath, [cli, ...input], {
-    cwd: project,
+    cwd,
     encoding: "utf8"
   });
   const expected = options.expectCode ?? 0;
@@ -178,5 +208,17 @@ function workerCommand() {
     "fs.mkdirSync('.chay/tmp', { recursive: true });",
     "fs.writeFileSync('.chay/tmp/current.diff', ['diff --git a/src/applyService.js b/src/applyService.js', '--- a/src/applyService.js', '+++ b/src/applyService.js', '@@ -0,0 +1 @@', '+export const APPLY_POLICY = \\'single_responsibility\\';', ''].join('\\n'));"
   ].join(" ");
+  return `${JSON.stringify(process.execPath)} -e ${JSON.stringify(script)}`;
+}
+
+function isolatedWorkerCommand(options = {}) {
+  const script = [
+    "const fs = require('node:fs');",
+    "const work = JSON.parse(fs.readFileSync('memory/codex_work_note.json', 'utf8'));",
+    "fs.writeFileSync('src/applyService.js', fs.readFileSync('src/applyService.js', 'utf8') + '\\nexport const ISOLATED_POLICY = true;\\n');",
+    options.outside ? "fs.writeFileSync('src/outside.js', 'export const OUTSIDE_SCOPE = true;\\n');" : "",
+    "fs.mkdirSync('memory', { recursive: true });",
+    "fs.writeFileSync('memory/codex_result_note.json', JSON.stringify({ work_id: work.work_id, worker: 'codex', status: 'completed', summary: 'Isolated worker completed.', findings: ['isolated command wrote result note'], changed_files: ['src/applyService.js'], risks: [], next_recommendation: 'review_patch' }, null, 2));"
+  ].filter(Boolean).join(" ");
   return `${JSON.stringify(process.execPath)} -e ${JSON.stringify(script)}`;
 }

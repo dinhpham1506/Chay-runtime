@@ -13,7 +13,7 @@
     "url": "https://github.com/dinhpham1506/chay-runtime/issues"
   },
   "bin": {
-    "cr": "./bin/cr.js"
+    "cr": "bin/cr.js"
   },
   "files": [
     "bin",

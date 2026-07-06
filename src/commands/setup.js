@@ -5,7 +5,7 @@ import { parseArgs } from "../utils/args.js";
 import { writeJson } from "../utils/fs.js";
 import { loadPolicy } from "../core/policy.js";
 import { createProjectFiles } from "./init.js";
-import { installIntegrationFiles, agentIntegrationTargets } from "./integrations.js";
+import { installConfiguredIntegrations, agentIntegrationTargets } from "./integrations.js";
 
 export async function setupProject(argv) {
   const args = parseArgs(argv);
@@ -14,7 +14,7 @@ export async function setupProject(argv) {
   const root = process.cwd();
 
   createProjectFiles(root);
-  const installed = answers.agents.map((agent) => installIntegrationFiles(agent, root));
+  const installed = installConfiguredIntegrations(answers, root);
 
   const config = {
     host_id: `host_${Date.now()}`,
