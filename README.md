@@ -127,7 +127,7 @@ cr workpack make \
   --out "memory/${WORKER}_work_note.json"
 cr boundary check-note --file memory/task_note.json
 cr boundary check-note --file "memory/${WORKER}_work_note.json" --kind work
-cr dispatch "$WORKER" --agent="$WORKER" --max-retries 3
+cr dispatch "$WORKER" --agent="$WORKER" --model gpt-5 --max-retries 3
 cr dispatch "$WORKER" --agent="$WORKER" --max-retries 3 --isolate
 cr experience snapshot --out memory/experience_spectrum.json
 ```

@@ -345,7 +345,7 @@
       <div class="card reveal">
         <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="m7 8 2 2-2 2M13 12h3"/></svg></div>
         <h3>Giao diện quy trình gốc</h3>
-        <p>Chạy <code>cr ui serve</code> để tạo task, dispatch worker, validate result, patch check, token/eval report, chat và xem SSE realtime.</p>
+        <p>Chạy <code>cr ui serve</code> để tạo task, dispatch worker, validate result, patch check, token/eval report, runtime/auth status, chat và xem SSE realtime.</p>
       </div>
     </div>
   </div>
@@ -492,7 +492,7 @@ cr doctor</code>
       <div class="doc-card reveal">
         <span class="doc-tag">Console realtime</span>
         <code class="doc-cmd">cr ui serve --port 7770</code>
-        <p>Mở dashboard local để thao tác trực tiếp: tạo task, chạy worker, ghi progress, validate result, patch check, xem token/eval report, chat và theo dõi SSE realtime.</p>
+        <p>Mở dashboard local để thao tác trực tiếp: tạo task, chạy worker, ghi progress, validate result, patch check, xem token/eval report, runtime/auth status, chat và theo dõi SSE realtime.</p>
       </div>
       <div class="doc-card reveal">
         <span class="doc-tag">Ranh giới (Boundary)</span>
@@ -535,9 +535,9 @@ cr eval report</code>
       </div>
       <div class="doc-card reveal">
         <span class="doc-tag">Điều phối</span>
-        <code class="doc-cmd">cr dispatch codex --agent=codex --max-retries 3
-cr dispatch codex --agent=codex --test-command "npm test"</code>
-        <p>Chạy worker thật, ghi progress từng bước, validate + retry result_note, chạy test command nếu có, rồi kiểm tra patch boundary trước khi báo "done".</p>
+        <code class="doc-cmd">cr dispatch codex --agent=codex --model gpt-5 --max-retries 3
+cr dispatch antigravity --agent=anti --model gemini-pro --isolate</code>
+        <p>Chạy worker thật, truyền model vào engine đã chọn, ghi progress từng bước, validate + retry result_note, chạy test command nếu có, rồi kiểm tra patch boundary trước khi báo "done".</p>
       </div>
       <div class="doc-card reveal">
         <span class="doc-tag">Nén trải nghiệm</span>

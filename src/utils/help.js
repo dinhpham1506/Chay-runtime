@@ -10,7 +10,7 @@ Usage:
   cr task
   cr task "Fix duplicate apply bug"
   cr task "Fix duplicate apply bug" --compact --max-notes 2
-  cr doctor                    # checks CLI presence, auth, configured model/provider, reachability
+  cr doctor                    # checks CLI, login/auth, model/provider, reachability
 
 Boundary:
   cr boundary check-note --file memory/task_note.json
@@ -43,10 +43,11 @@ Work package:
 
 Dispatch:
   cr dispatch codex --agent=codex --max-retries 3
+  cr dispatch codex --agent=codex --model gpt-5 --max-retries 3
   cr dispatch codex --command "your-worker-command"
   cr dispatch codex --agent=codex --test-command "npm test"
   cr dispatch codex --agent=codex --isolate
-  cr dispatch antigravity --agent=antigravity --isolate
+  cr dispatch antigravity --agent=anti --model gemini-pro --isolate
 
 Experience compression:
   cr experience snapshot --out memory/experience_spectrum.json
