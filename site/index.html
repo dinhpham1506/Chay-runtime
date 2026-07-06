@@ -13,29 +13,31 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23171717' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/></svg>" />
 <style>
-  /* ---- Tokens (monochrome) ---- */
+  /* ---- Tokens ---- */
   :root {
-    --bg: #0a0a0a;
-    --surface: #141414;
-    --card: #1a1a1a;
-    --border: #2a2a2a;
-    --border-bright: #444444;
-    --text: #fafafa;
-    --muted: #a1a1a1;
-    --accent: #f5f5f5;
-    --accent-soft: rgba(245,245,245,.08);
-    --accent-2: #d4d4d4;
-    --danger: #EF4444;
+    --bg: #08100f;
+    --surface: #101716;
+    --card: #151d1b;
+    --panel: #0c1413;
+    --border: #26322f;
+    --border-bright: #416256;
+    --text: #f4f7f2;
+    --muted: #9daea7;
+    --accent: #42e0a4;
+    --accent-soft: rgba(66, 224, 164, .12);
+    --accent-2: #f0c46a;
+    --danger: #ff6b6b;
     --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
     --sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    --r-ctrl: 10px;
-    --r-card: 18px;
+    --r-ctrl: 8px;
+    --r-card: 8px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
     font-family: var(--sans);
-    background: var(--bg);
+    background:
+      linear-gradient(180deg, #07100f 0%, var(--bg) 42%, #0a0c0f 100%);
     color: var(--text);
     line-height: 1.65;
     -webkit-font-smoothing: antialiased;
@@ -58,11 +60,11 @@
   nav {
     position: sticky; top: 0; z-index: 50;
     backdrop-filter: blur(12px);
-    background: rgba(10,10,10,.72);
+    background: rgba(8, 16, 15, .86);
     border-bottom: 1px solid var(--border);
   }
   .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 62px; }
-  .brand { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-weight: 700; letter-spacing: -.02em; }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-weight: 700; letter-spacing: 0; }
   .brand .logo { color: var(--accent); }
   .nav-links { display: flex; gap: 26px; align-items: center; }
   .nav-links > a { color: var(--muted); font-size: 14px; transition: color .16s; }
@@ -78,33 +80,35 @@
   }
   .btn:hover { transform: translateY(-1px); border-color: var(--border-bright); }
   .btn svg { width: 16px; height: 16px; }
-  .btn-primary { background: var(--accent); border: 1px solid var(--accent); color: #0a0a0a; }
-  .btn-primary:hover { box-shadow: 0 10px 30px -10px var(--accent); }
+  .btn-primary { background: var(--accent); border: 1px solid var(--accent); color: #06100d; }
+  .btn-primary:hover { box-shadow: 0 12px 34px -16px var(--accent); }
   .btn-icon { padding: 9px; color: var(--muted); }
   .btn-icon:hover { color: var(--text); }
   .btn-icon svg { width: 20px; height: 20px; }
 
   /* ---- Hero ---- */
-  header.hero { position: relative; padding: 96px 0 84px; text-align: center; overflow: hidden; }
+  header.hero { position: relative; padding: 104px 0 92px; text-align: center; overflow: hidden; }
   #bg-fx { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -2;
-    opacity: .55; pointer-events: none; }
+    opacity: .38; pointer-events: none; }
   .hero::before {
     content: ""; position: absolute; inset: 0; z-index: -1;
     background:
-      radial-gradient(620px 320px at 50% -8%, rgba(255,255,255,.08), transparent 70%),
-      radial-gradient(520px 300px at 82% 12%, rgba(255,255,255,.04), transparent 70%);
+      linear-gradient(180deg, rgba(66,224,164,.08), transparent 36%),
+      linear-gradient(90deg, rgba(66,224,164,.045) 1px, transparent 1px),
+      linear-gradient(180deg, rgba(240,196,106,.035) 1px, transparent 1px);
+    background-size: auto, 72px 72px, 72px 72px;
   }
   .pill {
     display: inline-flex; align-items: center; gap: 9px; font-family: var(--mono);
     padding: 6px 14px; border-radius: 999px; font-size: 12.5px; color: var(--muted);
-    border: 1px solid var(--border); background: var(--surface); margin-bottom: 28px;
+    border: 1px solid rgba(66,224,164,.24); background: rgba(16,23,22,.86); margin-bottom: 28px;
   }
   .pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
     box-shadow: 0 0 10px var(--accent); animation: pulse 2.2s ease-in-out infinite; }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
   h1 { font-family: var(--mono); font-size: clamp(32px, 5.6vw, 56px); line-height: 1.1;
-    letter-spacing: -.03em; font-weight: 800; }
-  h1 .glow { color: var(--accent); text-shadow: 0 0 22px rgba(255,255,255,.35); }
+    letter-spacing: 0; font-weight: 800; }
+  h1 .glow { color: var(--accent-2); text-shadow: 0 0 18px rgba(240,196,106,.24); }
   .sub { max-width: 660px; margin: 24px auto 0; color: var(--muted); font-size: clamp(16px, 2.4vw, 19px); }
   .cta-row { display: flex; gap: 14px; justify-content: center; margin-top: 34px; flex-wrap: wrap; }
 
@@ -112,7 +116,7 @@
   .install {
     max-width: 560px; margin: 40px auto 0;
     display: flex; align-items: center; gap: 12px;
-    background: #0d0d0d; border: 1px solid var(--border); border-radius: 14px;
+    background: rgba(12,20,19,.94); border: 1px solid rgba(66,224,164,.22); border-radius: var(--r-card);
     padding: 15px 16px; font-family: var(--mono); font-size: 14.5px; text-align: left;
   }
   .install .prompt { color: var(--accent); user-select: none; }
@@ -131,7 +135,7 @@
   section { padding: 78px 0; }
   .eyebrow { font-family: var(--mono); color: var(--accent); font-weight: 600; font-size: 12.5px;
     letter-spacing: .1em; text-transform: uppercase; }
-  h2 { font-family: var(--mono); font-size: clamp(25px, 3.8vw, 36px); letter-spacing: -.02em;
+  h2 { font-family: var(--mono); font-size: clamp(25px, 3.8vw, 36px); letter-spacing: 0;
     margin-top: 12px; font-weight: 800; line-height: 1.15; }
   .section-sub { color: var(--muted); margin-top: 14px; max-width: 640px; font-size: 17px; }
   .center { text-align: center; }
@@ -145,9 +149,9 @@
     padding: 24px; transition: transform .16s ease, border-color .16s; }
   .card:hover { transform: translateY(-3px); border-color: var(--border-bright); }
   .card .ico { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 11px;
-    background: var(--accent-soft); border: 1px solid rgba(255,255,255,.14); margin-bottom: 16px; color: var(--accent); }
+    background: var(--accent-soft); border: 1px solid rgba(66,224,164,.2); margin-bottom: 16px; color: var(--accent); }
   .card .ico svg { width: 21px; height: 21px; }
-  .card h3 { font-family: var(--mono); font-size: 16px; margin-bottom: 8px; letter-spacing: -.01em; }
+  .card h3 { font-family: var(--mono); font-size: 16px; margin-bottom: 8px; letter-spacing: 0; }
   .card p { color: var(--muted); font-size: 14.5px; }
   .card code { font-family: var(--mono); font-size: 12.5px; color: var(--accent-2); background: var(--surface);
     padding: 1px 5px; border-radius: 5px; }
@@ -156,7 +160,7 @@
   .roles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 46px; }
   @media (max-width: 760px) { .roles { grid-template-columns: 1fr; } }
   .role { border: 1px solid var(--border); border-radius: var(--r-card); padding: 26px;
-    background: linear-gradient(180deg, var(--card), var(--surface)); }
+    background: linear-gradient(180deg, var(--card), var(--panel)); }
   .role .tag { font-family: var(--mono); font-size: 11.5px; color: var(--accent); letter-spacing: .04em; }
   .role h3 { font-family: var(--mono); font-size: 20px; margin: 8px 0 6px; }
   .role p { color: var(--muted); font-size: 14.5px; }
@@ -173,7 +177,7 @@
   .step .marker { width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center;
     border: 2px solid var(--border-bright); background: var(--surface); color: var(--muted);
     font-family: var(--mono); font-size: 12px; font-weight: 700; transition: all .3s; }
-  .step.active .marker, .step.done .marker { border-color: var(--accent); background: var(--accent); color: #0a0a0a; }
+  .step.active .marker, .step.done .marker { border-color: var(--accent); background: var(--accent); color: #06100d; }
   .step .marker svg { width: 15px; height: 15px; }
   .step .txt .name { font-family: var(--mono); font-size: 14px; font-weight: 600; }
   .step .txt .cmd { font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
@@ -183,7 +187,7 @@
     width: 2px; background: var(--border); }
   .step.done::after { background: var(--accent); }
   /* terminal panel */
-  .term { border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; background: #0d0d0d; align-self: stretch; }
+  .term { border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; background: var(--panel); align-self: stretch; }
   .term .bar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface); }
   .term .bar .dots { display: flex; gap: 6px; }
   .term .bar .dots i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
@@ -205,14 +209,14 @@
 
   /* ---- Code block ---- */
   .codewrap { margin-top: 46px; border: 1px solid var(--border); border-radius: var(--r-card);
-    overflow: hidden; background: #0d0d0d; }
+    overflow: hidden; background: var(--panel); }
   .codebar { display: flex; align-items: center; gap: 8px; padding: 12px 16px;
     border-bottom: 1px solid var(--border); background: var(--surface); }
   .codebar .dots { display: flex; gap: 6px; }
   .codebar .dots i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
   .codebar .fname { margin-left: 8px; font-family: var(--mono); font-size: 12.5px; color: var(--muted); }
   pre { margin: 0; padding: 22px; overflow-x: auto; font-family: var(--mono); font-size: 13.5px; line-height: 1.8; }
-  pre .c { color: #64748b; }
+  pre .c { color: #6f827b; }
   pre .k { color: var(--accent-2); }
   pre .s { color: var(--accent); }
 
@@ -221,7 +225,7 @@
   @media (max-width: 760px) { .doc-grid { grid-template-columns: 1fr; } }
   .doc-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-card); padding: 20px 22px; }
   .doc-card .doc-tag { font-family: var(--mono); font-size: 11.5px; color: var(--accent); letter-spacing: .06em; text-transform: uppercase; }
-  .doc-card .doc-cmd { display: block; font-family: var(--mono); font-size: 13px; color: var(--text); background: #0d0d0d;
+  .doc-card .doc-cmd { display: block; font-family: var(--mono); font-size: 13px; color: var(--text); background: var(--panel);
     border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; margin: 10px 0 10px; overflow-x: auto; white-space: pre; }
   .doc-card .doc-cmd .f { color: var(--accent-2); }
   .doc-card p { color: var(--muted); font-size: 14px; line-height: 1.6; }
@@ -234,8 +238,8 @@
   .safe-list li svg { width: 18px; height: 18px; color: var(--accent); flex-shrink: 0; margin-top: 3px; }
 
   /* ---- CTA band ---- */
-  .band { text-align: center; border: 1px solid var(--border); border-radius: 22px; padding: 58px 24px;
-    background: radial-gradient(520px 240px at 50% 0%, rgba(255,255,255,.06), transparent 70%), var(--card); }
+  .band { text-align: center; border: 1px solid rgba(66,224,164,.2); border-radius: var(--r-card); padding: 58px 24px;
+    background: linear-gradient(180deg, rgba(66,224,164,.08), rgba(240,196,106,.04)), var(--card); }
   .band h2 { margin-top: 0; }
 
   /* ---- Footer ---- */
@@ -274,7 +278,7 @@
     <h1>Giao việc cho AI,<br /><span class="glow">giữ ranh giới rõ ràng</span></h1>
     <p class="sub">
       Chạy Runtime là runtime chính sách dựa trên ghi chú (note-based) cho các CLI code đa tác tử.
-      Claude có thể điều phối, Codex và Antigravity có thể thực thi — mọi bước đều đi qua ranh giới nghiêm ngặt,
+      Chọn Claude, Codex hoặc Antigravity làm main/worker — mọi bước đều đi qua ranh giới nghiêm ngặt,
       được kiểm tra theo schema.
     </p>
 
@@ -341,25 +345,25 @@
 <section id="roles" style="background: var(--surface);">
   <div class="wrap center reveal">
     <span class="eyebrow">Dàn nhân vật</span>
-    <h2>Một điều phối viên, nhiều worker có ranh giới</h2>
-    <p class="section-sub">Phân vai giữa các CLI và để runtime giữ mọi tác tử đúng phạm vi.</p>
+    <h2>Một main, nhiều worker có ranh giới</h2>
+    <p class="section-sub">Chọn agent nào điều phối, agent nào thực thi; runtime giữ tất cả đúng phạm vi.</p>
   </div>
   <div class="wrap">
     <div class="roles">
       <div class="role reveal">
         <span class="tag">// chính · điều phối</span>
         <h3>Claude</h3>
-        <p>Lập kế hoạch cho task, tạo ghi chú gọn, giao việc có phạm vi và duyệt ghi chú kết quả.</p>
+        <p>Có thể làm main controller hoặc worker có ranh giới, tuỳ cấu hình trong <code>cr setup</code>.</p>
       </div>
       <div class="role reveal">
         <span class="tag">// worker có ranh giới</span>
         <h3>Codex</h3>
-        <p>Chỉ đọc ghi chú công việc của mình cùng các file được phép, rồi trả về <code>result_note</code> đã hợp lệ.</p>
+        <p>Thực thi task qua <code>cr dispatch</code>, đọc work note, sửa scoped files và trả về <code>result_note</code>.</p>
       </div>
       <div class="role reveal">
         <span class="tag">// worker có ranh giới</span>
         <h3>Antigravity</h3>
-        <p>Một worker sandbox khác, tuân theo cùng một hợp đồng ghi chú + ranh giới.</p>
+        <p>Dùng cùng hợp đồng ghi chú, token preflight và patch boundary như các agent còn lại.</p>
       </div>
     </div>
   </div>
@@ -667,15 +671,15 @@ cr eval report</code>
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const hero = canvas.parentElement;
-    const GREEN = '245,245,245', BLUE = '140,140,140';
+    const GREEN = '66,224,164', BLUE = '240,196,106';
     let W = 0, H = 0, dpr = 1, running = true;
 
     // controller (center) + workers around it
     let nodes = [], packets = [];
     function layout() {
-      const cx = W * 0.5, cy = H * 0.46;
+      const cx = W * 0.5, cy = H * 0.64;
       nodes = [{ x: cx, y: cy, r: 6, main: true, phase: 0 }];
-      const workers = 5, R = Math.min(W, H) * 0.34;
+      const workers = 5, R = Math.min(W, H) * 0.28;
       for (let i = 0; i < workers; i++) {
         const a = (-Math.PI / 2) + (i / workers) * Math.PI * 2;
         nodes.push({ x: cx + Math.cos(a) * R * (1 + (i % 2) * 0.18),
@@ -706,7 +710,7 @@ cr eval report</code>
       for (let i = 1; i < nodes.length; i++) {
         const n = nodes[i];
         const g = ctx.createLinearGradient(main.x, main.y, n.x, n.y);
-        g.addColorStop(0, 'rgba(' + GREEN + ',0.14)');
+        g.addColorStop(0, 'rgba(' + GREEN + ',0.10)');
         g.addColorStop(1, 'rgba(' + BLUE + ',0.05)');
         ctx.strokeStyle = g; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(main.x, main.y); ctx.lineTo(n.x, n.y); ctx.stroke();
@@ -720,9 +724,9 @@ cr eval report</code>
         const x = main.x + (n.x - main.x) * p.t;
         const y = main.y + (n.y - main.y) * p.t;
         ctx.beginPath(); ctx.arc(x, y, 2, 0, 6.2832);
-        ctx.fillStyle = 'rgba(' + p.c + ',0.9)'; ctx.fill();
+        ctx.fillStyle = 'rgba(' + p.c + ',0.72)'; ctx.fill();
         ctx.beginPath(); ctx.arc(x, y, 6, 0, 6.2832);
-        ctx.fillStyle = 'rgba(' + p.c + ',0.12)'; ctx.fill();
+        ctx.fillStyle = 'rgba(' + p.c + ',0.08)'; ctx.fill();
       }
 
       // nodes
@@ -731,9 +735,9 @@ cr eval report</code>
         const pulse = 0.5 + 0.5 * Math.sin(now * 1.6 + n.phase);
         const col = n.main ? GREEN : BLUE;
         ctx.beginPath(); ctx.arc(n.x, n.y, n.r + (n.main ? 4 : 2) * pulse, 0, 6.2832);
-        ctx.fillStyle = 'rgba(' + col + ',' + (n.main ? 0.14 : 0.10) + ')'; ctx.fill();
+        ctx.fillStyle = 'rgba(' + col + ',' + (n.main ? 0.10 : 0.07) + ')'; ctx.fill();
         ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, 6.2832);
-        ctx.fillStyle = 'rgba(' + col + ',0.95)'; ctx.fill();
+        ctx.fillStyle = 'rgba(' + col + ',0.76)'; ctx.fill();
       }
       requestAnimationFrame(frame);
     }
