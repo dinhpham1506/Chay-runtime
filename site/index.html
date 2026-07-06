@@ -372,7 +372,7 @@
       <div class="role reveal">
         <span class="tag">// main hoặc worker</span>
         <h3>Antigravity</h3>
-        <p>Có thể được chọn trong <code>host_config</code> làm main hoặc worker. Dispatch truyền model qua <code>antigravity run --model</code> khi bạn cấu hình worker LLM.</p>
+        <p>Có thể được chọn trong <code>host_config</code> làm main hoặc worker. Login chạy qua Antigravity IDE; non-interactive dispatch cần <code>CHAY_ANTIGRAVITY_COMMAND</code>.</p>
       </div>
     </div>
   </div>
@@ -536,8 +536,8 @@ cr eval report</code>
       <div class="doc-card reveal">
         <span class="doc-tag">Điều phối</span>
         <code class="doc-cmd">cr dispatch codex --agent=codex --model gpt-5 --max-retries 3
-cr dispatch antigravity --agent=anti --model gemini-pro --isolate</code>
-        <p>Chạy worker thật, truyền model vào engine đã chọn, ghi progress từng bước, validate + retry result_note, chạy test command nếu có, rồi kiểm tra patch boundary trước khi báo "done".</p>
+CHAY_ANTIGRAVITY_COMMAND="your-worker-command" cr dispatch antigravity --agent=anti</code>
+        <p>Chạy worker thật, truyền model vào engine hỗ trợ headless, ghi progress từng bước, validate + retry result_note, chạy test command nếu có, rồi kiểm tra patch boundary trước khi báo "done".</p>
       </div>
       <div class="doc-card reveal">
         <span class="doc-tag">Nén trải nghiệm</span>

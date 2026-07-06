@@ -12,8 +12,7 @@ const project = fs.mkdtempSync(path.join(os.tmpdir(), "chay-runtime-smoke-"));
 
 assert.deepEqual(commandForAgent("codex", { prompt: "hi", model: "gpt-5" }).args, ["exec", "--model", "gpt-5", "hi"]);
 assert.deepEqual(commandForAgent("claude", { prompt: "hi", worker: "codex", model: "sonnet" }).args, ["-p", "hi", "--agent", "chay-codex-worker", "--model", "sonnet"]);
-assert.deepEqual(commandForAgent("anti", { promptFile: "prompt.txt", model: "gemini-pro" }).args, ["run", "--prompt-file", "prompt.txt", "--model", "gemini-pro"]);
-assert.deepEqual(commandForAgent("antigravity", { promptFile: "prompt.txt", model: "user-selected" }).args, ["run", "--prompt-file", "prompt.txt"]);
+assert.equal(commandForAgent("anti", { promptFile: "prompt.txt", model: "gemini-pro" }), null);
 
 assert.ok(fs.existsSync(path.join(repoRoot, "site", "console.html")));
 assert.ok(!fs.readFileSync(path.join(repoRoot, "src", "commands", "ui.js"), "utf8").includes("function html()"));

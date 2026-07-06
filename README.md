@@ -50,11 +50,13 @@ them. Any two supported agents can be selected from `claude`, `codex`, and
 If `--workers` is omitted, every enabled agent except `--main` becomes a worker.
 `anti` is accepted as a short alias for `antigravity`.
 `--main-llm` and `--worker-llms` are optional model labels, not agent names.
-When a worker model is set, `cr dispatch` passes it to the selected engine with
-`--model` for Codex, Claude, and Antigravity. The model label does not log in to
-that provider; the matching CLI must already be installed and authenticated.
-Run `cr doctor` to see CLI presence, auth status, configured model/provider, and
-provider reachability.
+When a worker model is set, `cr dispatch` passes it to Codex and Claude with
+`--model`. Antigravity IDE currently exposes GUI chat and login, not a stable
+non-interactive `run --prompt-file --model` command; use
+`CHAY_ANTIGRAVITY_COMMAND` if you have a local wrapper that writes the required
+result note. The model label does not log in to that provider; the matching CLI
+or IDE must already be installed and authenticated. Run `cr doctor` to see CLI
+presence, auth status, configured model/provider, and provider reachability.
 
 Current integration capability:
 
@@ -232,9 +234,11 @@ Then use `CHAY_CODEX_INSTRUCTIONS.md` as the worker instruction. Dispatch uses
 cr integration install --target antigravity
 ```
 
-Then use `CHAY_ANTIGRAVITY_INSTRUCTIONS.md` as the worker instruction. Dispatch
-uses `antigravity run --prompt-file <file> --model <worker.llm>` when the work
-note has a model other than `user-selected`.
+Then use `CHAY_ANTIGRAVITY_INSTRUCTIONS.md` as the worker instruction. Login is
+managed in Antigravity IDE via the Command Palette command `Log in to IDE`.
+For non-interactive `cr dispatch`, provide `CHAY_ANTIGRAVITY_COMMAND` as a local
+wrapper that reads `CHAY_DISPATCH_PROMPT_FILE` and writes the required result
+note JSON.
 
 ## Safety model
 

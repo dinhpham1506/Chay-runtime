@@ -3,7 +3,7 @@ import { normalizeAgentName } from "./agents.js";
 const adapters = {
   codex: ({ prompt, model }) => commandOverride("CHAY_CODEX_COMMAND") || { command: "codex", args: ["exec", ...modelArgs(model), prompt] },
   claude: ({ prompt, worker, model }) => commandOverride("CHAY_CLAUDE_COMMAND") || { command: "claude", args: ["-p", prompt, "--agent", claudeAgentName(worker), ...modelArgs(model)] },
-  antigravity: ({ promptFile, model }) => commandOverride("CHAY_ANTIGRAVITY_COMMAND") || { command: "antigravity", args: ["run", "--prompt-file", promptFile, ...modelArgs(model)] }
+  antigravity: () => commandOverride("CHAY_ANTIGRAVITY_COMMAND")
 };
 
 export function supportedAgentNames() {

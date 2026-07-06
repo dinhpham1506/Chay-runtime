@@ -1,5 +1,8 @@
 import { spawnSync } from "node:child_process";
+import fs from "node:fs";
 import { normalizeAgentName } from "./agents.js";
+
+const antigravityIdePath = "/Applications/Antigravity IDE.app/Contents/Resources/app/bin/antigravity-ide";
 
 const runtimeChecks = {
   codex: {
@@ -16,9 +19,10 @@ const runtimeChecks = {
   },
   antigravity: {
     command: "antigravity",
+    fallbackCommand: antigravityIdePath,
     versionArgs: ["--version"],
-    loginHint: "Install and sign in to Antigravity, or set CHAY_ANTIGRAVITY_COMMAND.",
-    auth: () => ({ status: "unknown", summary: "auth check is not implemented for Antigravity CLI" })
+    loginHint: "Open Antigravity IDE, then run Command Palette: Log in to IDE.",
+    auth: antigravityAuthStatus
   }
 };
 
@@ -31,7 +35,7 @@ export function runtimeStatus(agent, options = {}) {
   const check = runtimeChecks[normalized];
   if (!check) return { agent: normalized, ok: false, cli: { found: false }, auth: { status: "unsupported" } };
 
-  const cli = commandStatus(check.command, check.versionArgs);
+  const cli = commandStatus(check.command, check.versionArgs, check.fallbackCommand);
   const auth = options.auth && cli.found ? check.auth() : {
     status: "not_checked",
     summary: "auth not checked in realtime UI",
@@ -41,7 +45,7 @@ export function runtimeStatus(agent, options = {}) {
   return {
     agent: normalized,
     ok: cli.found && !authBlocksRun(auth),
-    command: check.command,
+    command: cli.command || check.command,
     cli,
     auth
   };
@@ -51,9 +55,12 @@ function authBlocksRun(auth) {
   return ["missing", "failed"].includes(auth.status) || auth.reachability === "fail";
 }
 
-function commandStatus(command, args) {
+function commandStatus(command, args, fallbackCommand = "") {
   const result = spawnSync(command, args, { encoding: "utf8", timeout: 3000 });
   if (result.error?.code === "ENOENT") {
+    if (fallbackCommand && fs.existsSync(fallbackCommand)) {
+      return commandStatus(fallbackCommand, args);
+    }
     return { found: false, status: "missing", summary: `${command} not found in PATH` };
   }
   if (result.error) {
@@ -61,9 +68,18 @@ function commandStatus(command, args) {
   }
   return {
     found: result.status === 0,
+    command,
     status: result.status === 0 ? "ok" : "error",
     summary: compact(firstLine(result.stdout) || firstLine(result.stderr) || `${command} exited ${result.status}`),
     exit_code: result.status
+  };
+}
+
+function antigravityAuthStatus() {
+  return {
+    status: "gui_only",
+    summary: "Antigravity IDE manages login in the GUI; no terminal auth status command is exposed.",
+    hint: "Use Cmd+Shift+P in Antigravity IDE, then run: Log in to IDE"
   };
 }
 

@@ -47,7 +47,7 @@ Dispatch:
   cr dispatch codex --command "your-worker-command"
   cr dispatch codex --agent=codex --test-command "npm test"
   cr dispatch codex --agent=codex --isolate
-  cr dispatch antigravity --agent=anti --model gemini-pro --isolate
+  CHAY_ANTIGRAVITY_COMMAND="your-antigravity-worker-command" cr dispatch antigravity --agent=anti
 
 Experience compression:
   cr experience snapshot --out memory/experience_spectrum.json
