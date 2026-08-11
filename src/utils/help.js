@@ -3,47 +3,32 @@ export function printHelp() {
 Chạy Runtime
 
 Usage:
-  cr start                    # easiest setup wizard + login checks
-  cr start --agents codex,anti --main codex
-  cr start --agents codex,claude,anti --main claude --skip-login
-  cr start --advanced         # also ask model labels and skills
-  cr check                    # checks CLI, login/auth, model/provider, reachability
-  cr setup                    # configure without forcing login
-  cr auth                     # check Codex, Claude, and Antigravity auth
-  cr auth --agent codex --login
-  cr auth --agents codex,claude --login
-  cr login codex
+  cr start                    # initialize external IDE AI workflow
   cr config codex,claude,anti,github-copilot,cursor,kiro
   cr config check
-  cr go                       # resume current task into memory/ai_handoff.json
-  cr go "Fix duplicate apply bug"
   cr go "Fix duplicate apply bug" --files src/applyService.js
-  cr graph "User applies to job" --files src/applyService.js
-  cr boundary check-graph --file memory/feature_graph.json
-  cr handoff                  # writes memory/ai_handoff.json for a new IDE AI session
-  cr task
-  cr task "Fix duplicate apply bug"
-  cr task --from-graph memory/feature_graph.json --compact
-  cr task "Fix duplicate apply bug" --files src/applyService.js --compact
-  cr run
-  cr run codex --max-retries 3
-  cr verify                   # alias: cr eval report
+  cr go "Fix duplicate apply bug" --max-files 3
+  cr go                       # refresh memory/ai_handoff.json for a new IDE session
+  cr verify
+  cr handoff
   cr ui serve --port 7770
 
-Simple aliases:
-  cr scan                     # alias: cr repo scan
-  cr plan "Fix duplicate apply bug"
-  cr pack "Fix bug" --files src/applyService.js --compact
-  cr run codex                # alias: cr dispatch codex
-  cr check                    # alias: cr doctor
+Artifacts:
+  memory/ai_handoff.json      # read this first in the IDE AI
+  memory/folder_structure.md  # folder/code target contract in Markdown
+  memory/feature_graph.json   # user flow, sequence, code targets
+  .chay/ide/CHAY_IDE_INSTRUCTIONS.md
 
-Setup:
-  cr init
-  cr setup --agents codex,anti --main anti
-  cr setup --agents claude,anti --main claude
-  cr doctor
+Selection:
+  cr go "Task" --files src/file.js
+  cr go "Task" --max-files 2
+  cr go "Task" --include-database
+  # Database/migration files are skipped by default unless the task is database-related.
 
-Boundary:
+Checks:
+  cr check                    # CLI/auth/runtime status
+  cr auth
+  cr login codex
   cr boundary check-graph --file memory/feature_graph.json
   cr boundary check-note --file memory/task_note.json
   cr boundary validate-output --file memory/codex_result_note.json --schema schemas/result_note.schema.json
@@ -69,12 +54,13 @@ Tokens:
 Efficiency:
   cr eval report
 
-Work package:
+Legacy bounded worker mode:
+  cr setup --agents codex,anti --main anti
+  cr task "Fix bug" --files src/file.js --compact
+  cr run
   cr pack "Fix bug"
   cr pack "Fix bug" --worker codex --files src/applyService.js --compact
   cr workpack make --worker codex --goal "Fix bug" --allowed-files src/applyService.js --compact
-
-Dispatch:
   cr dispatch codex --agent=codex --max-retries 3
   cr dispatch codex --agent=codex --model <optional-model> --max-retries 3
   cr dispatch codex --command "your-worker-command"

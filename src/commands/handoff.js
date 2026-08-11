@@ -14,6 +14,7 @@ export async function createHandoff(argv = []) {
   const workFile = args.work || workNotePath(worker);
   const resultFile = args.result || resultNotePath(worker);
   const graphFile = args.graph || "memory/feature_graph.json";
+  const folderStructureFile = args["folder-structure"] || args["folder-structure-out"] || "memory/folder_structure.md";
   const contextFile = args.context || "memory/context_package.json";
   const diffFile = args.diff || ".chay/tmp/current.diff";
 
@@ -29,6 +30,7 @@ export async function createHandoff(argv = []) {
     purpose: "Fast resume context for a new IDE AI session. Read this first before scanning source.",
     read_order: [
       out,
+      exists(folderStructureFile) ? folderStructureFile : null,
       graph ? graphFile : null,
       "memory/task_note.json",
       context ? contextFile : null,
@@ -44,6 +46,7 @@ export async function createHandoff(argv = []) {
     },
     source_of_truth: {
       feature_graph: graph ? graphFile : null,
+      folder_structure_md: exists(folderStructureFile) ? folderStructureFile : null,
       feature_id: graph?.feature_id || work?.feature_graph?.feature_id || null,
       goal: graph?.goal || work?.goal || context?.task || "",
       implementation_order: graph?.implementation_order || [

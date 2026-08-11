@@ -10,7 +10,7 @@ chay-runtime is a note-based policy runtime for multi-agent coding CLIs.
 - Feature graphs define the user flow source of truth before code changes.
 - Architecture rules require workers to follow existing design patterns and SOLID principles.
 - Repo intelligence selects a small context package before agents read code.
-- Claude, Codex, and Antigravity can be selected as main/controller or bounded worker roles in `cr start` / `cr setup`.
+- `cr start` boots the external IDE AI handoff workflow; legacy main/worker agent setup stays behind `cr setup`.
 
 ## Why it is useful
 
@@ -22,10 +22,10 @@ turns coding agents into a bounded workflow:
   acceptance checks before a worker edits code.
 - The repo scan picks a small set of relevant files instead of handing the whole
   project to every agent.
-- Any supported agent can be the main/controller or a worker: Codex, Claude, or
-  Antigravity.
-- Workers get a scoped work note, allowed files, policy rules, and an output
-  contract.
+- Codex, Claude, Antigravity, Cursor, GitHub Copilot, Kiro, or another IDE AI
+  can read the compact handoff and code outside the runtime.
+- The IDE AI gets a scoped work note, allowed files, policy rules, and an
+  output contract.
 - The runtime validates result JSON, patch scope, forbidden patterns, retry
   behavior, progress notes, and optional tests before treating the work as done.
 - Humans get audit notes and a local UI without exposing raw prompts, logs, or
@@ -45,7 +45,8 @@ cr go "User applies to job"
 ```
 
 `cr go` writes the feature graph, user-flow diagram, sequence diagram, scoped
-work note, and compact IDE handoff. If you already know the file scope, pass
+work note, and compact IDE handoff. `cr start` does not split work into
+subagents or ask for a main/worker pair. If you already know the file scope, pass
 `--files src/file.js`; otherwise Chạy Runtime scans the repo and selects a small
 context package. Open your IDE AI and tell it:
 
@@ -82,7 +83,8 @@ cr check
 
 ## Add to a project
 
-Install the toolkit, then run setup inside the project you want agents to work on:
+Install the toolkit, then bootstrap Chạy Runtime inside the project you want IDE
+AI to work on:
 
 ```bash
 npm install -g chay-runtime@latest
@@ -94,25 +96,25 @@ If `cr start` prints `Unknown command: start`, your shell is running an older
 global `cr`. Update it with `npm install -g chay-runtime@latest`, or in a local
 checkout run `npm link` from this repository and then retry `cr start`.
 
-`cr start` is the easiest onboarding flow. It asks which agents to enable
-(`codex`, `claude`, and/or `anti`), asks which one is the main host/controller,
-writes `memory/host_config.json`, installs the selected integrations, prepares
-the Chạy Runtime folders, and checks login/auth status. For CLI agents it can
-open the native login flow; for Antigravity it points you to the IDE login
-because Antigravity manages auth in the GUI.
-It does not ask you to pick a model by default; model labels stay
-`user-selected` unless you pass flags or run `cr start --advanced`.
+`cr start` prepares the Chạy Runtime folders, writes
+`.chay/ide/CHAY_IDE_INSTRUCTIONS.md`, and writes `memory/ide_config.json` in
+external IDE AI mode. It does not ask you to choose multiple agents, does not
+create a main/worker split, and does not run Supabase or database setup.
 
-Use `cr setup` when you only want to configure files without forcing login.
-
-Non-interactive setup, with any supported agent as main:
+Configure the IDEs you actually use:
 
 ```bash
-cr start --agents codex,anti --main anti
-cr start --agents codex,claude,anti --main claude --skip-login
+cr config codex,claude,anti,github-copilot,cursor,kiro
 ```
 
-After setup, `cr task`, `cr pack`, and `cr run` automatically use `memory/host_config.json`
+If you still need the old bounded worker automation, use `cr setup` explicitly:
+
+```bash
+cr setup --agents codex,anti --main anti
+cr setup --agents codex,claude,anti --main claude
+```
+
+After legacy setup, `cr task`, `cr pack`, and `cr run` automatically use `memory/host_config.json`
 for the default worker, controller, worker LLM, and skills unless flags override
 them. Any two supported agents can be selected from `claude`, `codex`, and
 `antigravity`; one is the main/controller and the rest are workers.
@@ -132,7 +134,7 @@ alias for `antigravity`.
 
 Current integration capability:
 
-| Agent | `cr start` / `cr setup` role | Packaged integration |
+| Agent | `cr setup` legacy role | Packaged integration |
 | --- | --- | --- |
 | Claude | main/controller or worker | Claude Code agents for `chay-main`, `chay-reviewer`, and `chay-<worker>-worker` |
 | Codex | main/controller or worker | Worker instruction/template for bounded `cr run` tasks |
@@ -167,12 +169,12 @@ The public/deployable UI is a static landing page:
 site/index.html
 ```
 
-It should teach the short CLI path only:
+It should teach the short IDE handoff path only:
 
 ```bash
 cr start
-cr task "Fix bug" --files src/file.js --compact
-cr run
+cr go "Fix bug" --files src/file.js
+cr verify
 ```
 
 The realtime operator console is intentionally local because it reads and writes
@@ -203,9 +205,18 @@ npm publish --access public
 ## Basic flow
 
 ```bash
-cr start --agents codex,anti --main anti
-cr task "Fix duplicate job apply bug"
-cr run
+cr start
+cr config codex,claude,anti,github-copilot,cursor,kiro
+cr go "Fix duplicate job apply bug"
+```
+
+`cr go` selects at most 3 files by default and skips database/migration files
+unless the task is clearly database-related. If it cannot choose a safe app file,
+pass scope explicitly:
+
+```bash
+cr go "Fix duplicate job apply bug" --files src/applyService.js
+cr go "Update RLS policy" --include-database
 ```
 
 With a known file scope:
@@ -248,7 +259,7 @@ Use Chạy Runtime as the runtime boundary. The main agent creates compact JSON 
 
 ```bash
 # main/controller agent
-cr start --agents codex,anti --main anti
+cr setup --agents codex,anti --main anti
 cr scan
 cr plan "Fix duplicate apply service"
 

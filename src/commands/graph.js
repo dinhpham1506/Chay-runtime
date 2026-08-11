@@ -1,12 +1,13 @@
 import { parseArgs } from "../utils/args.js";
-import { exists, readJson, writeJson } from "../utils/fs.js";
+import { exists, readJson, writeJson, writeText } from "../utils/fs.js";
 import { loadPolicy } from "../core/policy.js";
-import { createFeatureGraph, validateFeatureGraph } from "../core/featureGraph.js";
+import { createFeatureGraph, folderStructureMarkdown, validateFeatureGraph } from "../core/featureGraph.js";
 
 export async function createGraph(argv) {
   const args = parseArgs(argv);
   const goal = args.goal || args._?.join(" ");
   const out = args.out || "memory/feature_graph.json";
+  const folderStructureOut = args["folder-structure-out"] || "memory/folder_structure.md";
   const policy = loadPolicy(args.policy);
 
   if (args.check) {
@@ -23,11 +24,13 @@ export async function createGraph(argv) {
   });
   const result = validateFeatureGraph(graph, policy, { requireExistingFiles: Boolean(args["require-existing"]) });
   writeJson(out, graph);
+  writeText(folderStructureOut, folderStructureMarkdown(graph));
 
   console.log(JSON.stringify({
     ok: result.ok,
     out,
     graph: out,
+    folder_structure: folderStructureOut,
     feature_id: graph.feature_id,
     code_targets: graph.code_targets,
     validation: result,

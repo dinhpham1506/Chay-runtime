@@ -9,7 +9,7 @@ import { makeWorkpack } from "./commands/workpack.js";
 import { dispatch } from "./commands/dispatch.js";
 import { snapshotExperience } from "./commands/experience.js";
 import { installIntegration } from "./commands/integrations.js";
-import { setupProject } from "./commands/setup.js";
+import { setupProject, startProject } from "./commands/setup.js";
 import { authAgents } from "./commands/auth.js";
 import { createGraph } from "./commands/graph.js";
 import { createHandoff } from "./commands/handoff.js";
@@ -31,7 +31,7 @@ export async function main(argv) {
   }
 
   if (cmd === "init") return initProject([subcmd, ...rest].filter(Boolean));
-  if (cmd === "start" || cmd === "wizard") return setupProject([subcmd, ...rest].filter(Boolean), { friendly: true, login: true });
+  if (cmd === "start" || cmd === "wizard") return startProject([subcmd, ...rest].filter(Boolean));
   if (cmd === "setup") return setupProject([subcmd, ...rest].filter(Boolean));
   if (cmd === "auth") return authAgents([subcmd, ...rest].filter(Boolean));
   if (cmd === "login") return authAgents([subcmd, ...rest, "--login"].filter(Boolean));

@@ -5,11 +5,42 @@ import { parseArgs } from "../utils/args.js";
 import { writeJson } from "../utils/fs.js";
 import { loadPolicy } from "../core/policy.js";
 import { normalizeAgentName, normalizeAgentList } from "../core/agents.js";
+import { runtimeStatus, supportedRuntimeAgents } from "../core/runtimeStatus.js";
 import { createProjectFiles } from "./init.js";
 import { installConfiguredIntegrations, agentIntegrationTargets } from "./integrations.js";
 import { ensureAgentAuth } from "./auth.js";
+import { configureIdeTargets } from "./ide.js";
 
 const defaultSetupAgents = ["codex", "claude", "antigravity"];
+
+export async function startProject(argv = []) {
+  const args = parseArgs(argv);
+  const root = process.cwd();
+  createProjectFiles(root);
+
+  const targetArg = args.target || args.targets || args.agents || args.agent || args._?.join(",") || "manual";
+  const ide = configureIdeTargets(targetArg, root);
+  const availableCliAgents = supportedRuntimeAgents().map((agent) => runtimeStatus(agent, { auth: Boolean(args.auth) }));
+
+  console.log(JSON.stringify({
+    ok: true,
+    mode: "external_ide_ai",
+    message: "Chạy Runtime started",
+    initialized: ["policies", "schemas", "memory/task_note.json", "audit", ".chay-index", ".chay/tmp"],
+    ide_config: ide.config_file,
+    instruction_file: ide.instruction_file,
+    targets: ide.targets,
+    available_cli_agents: availableCliAgents,
+    next_prompt: "Read memory/ai_handoff.json and .chay/ide/CHAY_IDE_INSTRUCTIONS.md, then continue the task without editing outside allowed files.",
+    next_actions: [
+      ide.targets.includes("manual") ? "cr config codex,claude,anti,github-copilot,cursor,kiro" : "cr config check",
+      "cr go \"Describe the feature\"",
+      "Open your IDE AI and ask it to read memory/ai_handoff.json",
+      "cr verify",
+      "cr handoff"
+    ]
+  }, null, 2));
+}
 
 export async function setupProject(argv, options = {}) {
   const args = parseArgs(argv);

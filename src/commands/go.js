@@ -10,6 +10,7 @@ export async function go(argv = []) {
   const args = parseArgs(argv);
   const task = args.task || args._?.join(" ");
   const graphFile = args.graph || "memory/feature_graph.json";
+  const folderStructureFile = args["folder-structure-out"] || "memory/folder_structure.md";
   const handoffFile = args.handoff || "memory/ai_handoff.json";
   const contextFile = args.context || "memory/context_package.json";
 
@@ -31,17 +32,48 @@ export async function go(argv = []) {
   const workerArgs = args.worker ? ["--worker", args.worker] : [];
   const compactArgs = args.compact === false || args["no-compact"] ? [] : ["--compact"];
   const indexFile = args.index || ".chay-index/project_map.json";
-  const maxNotes = args["max-notes"] || "5";
+  const maxFiles = args["max-files"] || args["max-notes"] || "3";
 
   await quiet(() => scanRepo(["--root", args.root || ".", "--out", indexFile]));
-  await quiet(() => planContext(["--task", task, "--index", indexFile, "--out", contextFile, "--max-notes", maxNotes]));
+  await quiet(() => planContext([
+    "--task",
+    task,
+    "--index",
+    indexFile,
+    "--out",
+    contextFile,
+    "--max-files",
+    maxFiles,
+    ...(args["include-database"] ? ["--include-database"] : [])
+  ]));
   const plannedFiles = selectedFiles(contextFile);
+  if (!explicitFiles && plannedFiles.length === 0) {
+    console.log(JSON.stringify({
+      ok: false,
+      command: "go",
+      mode: "needs_file_scope",
+      task,
+      context: contextFile,
+      selected_files: [],
+      error: "no_safe_code_targets_selected",
+      message: "No non-database code targets matched the task. Database/migration files are skipped by default to avoid unsafe scope.",
+      next_action: `Run cr go ${JSON.stringify(task)} --files path/to/file.js, or pass --include-database for migration/database tasks.`,
+      examples: [
+        `cr go ${JSON.stringify(task)} --files src/applyService.js`,
+        `cr go ${JSON.stringify(task)} --include-database`
+      ]
+    }, null, 2));
+    process.exitCode = 2;
+    return;
+  }
   const files = explicitFiles || plannedFiles.join(",");
 
   await quiet(() => createGraph([
     task,
     "--out",
     graphFile,
+    "--folder-structure-out",
+    folderStructureFile,
     ...(files ? ["--files", files] : []),
     ...(args["require-existing"] ? ["--require-existing"] : [])
   ]));
@@ -58,6 +90,8 @@ export async function go(argv = []) {
   await quiet(() => createHandoff([
     "--out",
     handoffFile,
+    "--folder-structure",
+    folderStructureFile,
     ...workerArgs
   ]));
 
@@ -68,12 +102,13 @@ export async function go(argv = []) {
     handoffFile,
     contextFile,
     selectedFiles: files ? files.split(",").map((file) => file.trim()).filter(Boolean) : plannedFiles,
-    created: [graphFile, contextFile, handoffFile],
+    folderStructureFile,
+    created: [graphFile, folderStructureFile, contextFile, handoffFile],
     message: explicitFiles ? "Created feature contract from explicit files." : "Created feature contract from repo scan and context plan."
   });
 }
 
-function printGoResult({ mode, task, graphFile, handoffFile, contextFile, selectedFiles, created, message }) {
+function printGoResult({ mode, task, graphFile, folderStructureFile = "memory/folder_structure.md", handoffFile, contextFile, selectedFiles, created, message }) {
   console.log(JSON.stringify({
     ok: true,
     command: "go",
@@ -82,16 +117,18 @@ function printGoResult({ mode, task, graphFile, handoffFile, contextFile, select
     task,
     created,
     graph: graphFile,
+    folder_structure: folderStructureFile,
     context: contextFile,
     handoff: handoffFile,
     selected_files: selectedFiles,
     read_order: [
       handoffFile,
+      folderStructureFile,
       graphFile,
       "memory/task_note.json",
       contextFile
     ],
-    next_prompt: `Read ${handoffFile} first. Follow the user_flow and sequence_diagram. Edit only selected/allowed files. Update the result_note JSON.`,
+    next_prompt: `Read ${handoffFile} first, then ${folderStructureFile}. Follow the user_flow and sequence_diagram. Edit only selected/allowed files. Update the result_note JSON.`,
     next_commands: ["cr verify", "cr handoff"]
   }, null, 2));
 }

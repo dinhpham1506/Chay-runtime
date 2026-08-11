@@ -188,6 +188,35 @@ export function folderStructureFromTargets(files) {
   }));
 }
 
+export function folderStructureMarkdown(graph) {
+  const lines = [
+    "# Folder Structure",
+    "",
+    `Feature: ${graph?.feature_id || ""}`,
+    `Goal: ${graph?.goal || ""}`,
+    "",
+    "Read this before editing. Preserve the existing folders and local design patterns.",
+    ""
+  ];
+
+  const groups = Array.isArray(graph?.folder_structure) ? graph.folder_structure : [];
+  if (groups.length === 0) {
+    lines.push("No code targets selected yet. Run `cr go \"Task\" --files path/to/file.js` or edit `memory/feature_graph.json` with explicit `code_targets`.");
+    return `${lines.join("\n")}\n`;
+  }
+
+  for (const group of groups) {
+    lines.push(`## ${group.folder || "."}`, "");
+    for (const target of group.code_targets || []) {
+      lines.push(`- ${target}`);
+    }
+    if (group.rule) lines.push("", `Rule: ${group.rule}`);
+    lines.push("");
+  }
+
+  return `${lines.join("\n")}\n`;
+}
+
 export function mermaidSequence(goal) {
   return [
     "sequenceDiagram",

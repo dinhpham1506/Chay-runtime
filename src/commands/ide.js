@@ -43,27 +43,42 @@ function configIde(args) {
   const invalid = targets.filter((target) => !knownIdeTargets.includes(target));
   if (invalid.length > 0) throw new Error(`Unknown IDE target: ${invalid.join(", ")}. Supported: ${knownIdeTargets.join(", ")}`);
 
+  const configured = configureIdeTargets(targets);
+
+  console.log(JSON.stringify({
+    ok: true,
+    mode: "external_ide_ai",
+    targets: configured.targets,
+    config: configured.config_file,
+    instruction_file: configured.instruction_file,
+    next_prompt: "Read memory/ai_handoff.json and .chay/ide/CHAY_IDE_INSTRUCTIONS.md, then continue the task without editing outside allowed files.",
+    next_commands: ["cr go \"Describe the feature\"", "cr verify", "cr handoff"]
+  }, null, 2));
+}
+
+export function configureIdeTargets(targets, root = process.cwd()) {
+  const normalizedTargets = targetList(Array.isArray(targets) ? targets.join(",") : targets);
+  const invalid = normalizedTargets.filter((target) => !knownIdeTargets.includes(target));
+  if (invalid.length > 0) throw new Error(`Unknown IDE target: ${invalid.join(", ")}. Supported: ${knownIdeTargets.join(", ")}`);
+
   const instructionFile = ".chay/ide/CHAY_IDE_INSTRUCTIONS.md";
   const configFile = "memory/ide_config.json";
-  writeText(instructionFile, instructionMarkdown(targets));
-  writeJson(configFile, {
+  writeText(`${root}/${instructionFile}`, instructionMarkdown(normalizedTargets));
+  writeJson(`${root}/${configFile}`, {
     configured_at: new Date().toISOString(),
     mode: "external_ide_ai",
-    targets,
+    targets: normalizedTargets,
     instruction_file: instructionFile,
     handoff_file: "memory/ai_handoff.json",
     rule: "IDE AI works outside Chạy Runtime. Chạy Runtime owns contracts, handoff, and verification."
   });
 
-  console.log(JSON.stringify({
-    ok: true,
-    mode: "external_ide_ai",
-    targets,
-    config: configFile,
+  return {
+    targets: normalizedTargets,
+    config_file: configFile,
     instruction_file: instructionFile,
-    next_prompt: "Read memory/ai_handoff.json and .chay/ide/CHAY_IDE_INSTRUCTIONS.md, then continue the task without editing outside allowed files.",
-    next_commands: ["cr go \"Describe the feature\"", "cr verify", "cr handoff"]
-  }, null, 2));
+    handoff_file: "memory/ai_handoff.json"
+  };
 }
 
 function readIdeConfig() {
