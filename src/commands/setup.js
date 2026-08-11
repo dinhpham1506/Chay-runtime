@@ -29,6 +29,7 @@ export async function startProject(argv = []) {
     initialized: ["chay-memory/task_note.json", ".chay/tmp"],
     ide_config: ide.config_file,
     instruction_file: ide.instruction_file,
+    rule_pack: ide.rule_pack,
     targets: ide.targets,
     available_cli_agents: availableCliAgents,
     next_prompt: "Read chay-memory/ai_handoff.json, chay-memory/feature_flow.md, and .chay/ide/CHAY_IDE_INSTRUCTIONS.md, then continue the task without editing outside allowed files.",

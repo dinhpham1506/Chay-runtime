@@ -107,6 +107,22 @@ Configure the IDEs you actually use:
 cr config codex,claude,anti,github-copilot,cursor,kiro
 ```
 
+`cr start` and `cr config` also install IDE project rules so the IDE AI does
+not need a long pasted prompt every time:
+
+- `chay-memory/rules/chay-runtime.md`
+- `.codex/rules/chay-runtime.md`
+- `.cursor/rules/chay-runtime.mdc`
+- `.github/instructions/chay-runtime.instructions.md`
+- `.kiro/steering/chay-runtime.md`
+- `.windsurf/rules/chay-runtime.md`
+
+Reinstall only the rule pack with:
+
+```bash
+cr rules install
+```
+
 If you still need the old bounded worker automation, use `cr setup` explicitly:
 
 ```bash
@@ -290,7 +306,7 @@ layers:
 - Rules: `policy_ref` pointing to the packaged `runtime_default_policy`.
 
 Use `cr pack "Task" --compact` to avoid copying long policy/rule text into
-each work note, and `cr experience snapshot` to inspect the chay-memory/skills/rules
+each work note, and `cr experience snapshot` to inspect the chay-memory/rules
 that a worker should use. See [docs/experience-compression.md](docs/experience-compression.md).
 
 ## Test and build

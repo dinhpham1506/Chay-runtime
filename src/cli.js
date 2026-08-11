@@ -8,7 +8,7 @@ import { checkPatch } from "./commands/patchCheck.js";
 import { makeWorkpack } from "./commands/workpack.js";
 import { dispatch } from "./commands/dispatch.js";
 import { snapshotExperience } from "./commands/experience.js";
-import { installIntegration } from "./commands/integrations.js";
+import { installIdeRulePack, installIntegration } from "./commands/integrations.js";
 import { setupProject, startProject } from "./commands/setup.js";
 import { authAgents } from "./commands/auth.js";
 import { createGraph } from "./commands/graph.js";
@@ -65,6 +65,11 @@ export async function main(argv) {
   if (cmd === "dispatch") return dispatch([subcmd, ...rest].filter(Boolean));
   if (cmd === "experience" && subcmd === "snapshot") return snapshotExperience(rest);
   if (cmd === "integration" && subcmd === "install") return installIntegration(rest);
+  if ((cmd === "rules" || cmd === "rule" || cmd === "skill") && (!subcmd || subcmd === "install" || subcmd === "add")) {
+    const result = installIdeRulePack(process.cwd());
+    console.log(JSON.stringify({ ok: true, command: "rules install", alias_used: cmd === "skill" ? "skill" : undefined, ...result }, null, 2));
+    return;
+  }
 
   throw new Error(`Unknown command: ${[cmd, subcmd].filter(Boolean).join(" ")}`);
 }

@@ -1,22 +1,25 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { copyDir } from "../utils/fs.js";
+import { copyDir, writeText } from "../utils/fs.js";
 import { parseArgs } from "../utils/args.js";
 import { normalizeAgentName } from "../core/agents.js";
 
 const agentTargets = ["claude", "codex", "antigravity"];
-const targets = [...agentTargets];
+const ideRuleTargets = ["ide-rules", "rules", "skill", "cursor", "github-copilot", "kiro", "windsurf", "manual"];
+const targets = [...agentTargets, ...ideRuleTargets];
 
 export async function installIntegration(argv) {
   const args = parseArgs(argv);
-  if (!args.target) throw new Error("--target is required: claude | codex | antigravity");
+  if (!args.target) throw new Error("--target is required: claude | codex | antigravity | cursor | github-copilot | kiro | windsurf | skill");
   const target = normalizeAgentName(args.target);
   if (!targets.includes(target)) {
-    throw new Error("--target must be claude, codex, antigravity, or anti");
+    throw new Error("--target must be claude, codex, antigravity, cursor, github-copilot, kiro, windsurf, manual, or skill");
   }
 
-  const installed = installIntegrationFiles(target, process.cwd());
+  const installed = ideRuleTargets.includes(target)
+    ? installIdeRulePack(process.cwd()).installed
+    : installIntegrationFiles(target, process.cwd());
   const workers = configuredWorkers(args);
   if (target === "claude") configureClaudeAgents(process.cwd(), workers);
 
@@ -32,6 +35,7 @@ export async function installIntegration(argv) {
 export function installIntegrationFiles(target, root = process.cwd()) {
   const normalized = normalizeAgentName(target);
   if (!targets.includes(normalized)) throw new Error(`Unknown integration target: ${target}`);
+  if (ideRuleTargets.includes(normalized)) return installIdeRulePack(root).installed;
   const pkgRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
   const src = path.join(pkgRoot, "templates", normalized);
 
@@ -39,8 +43,37 @@ export function installIntegrationFiles(target, root = process.cwd()) {
   return normalized;
 }
 
+export function installIdeRulePack(root = process.cwd()) {
+  const pkgRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+  const src = path.join(pkgRoot, "templates", "ide-rules");
+  copyDir(src, root);
+  const installed = [
+    "chay-memory/rules/chay-runtime.md",
+    ".cursor/rules/chay-runtime.mdc",
+    ".github/instructions/chay-runtime.instructions.md",
+    ".kiro/steering/chay-runtime.md",
+    ".windsurf/rules/chay-runtime.md",
+    ".codex/rules/chay-runtime.md"
+  ];
+  writeText(path.join(root, "chay-memory/rules/README.md"), [
+    "# Chay Runtime Rules",
+    "",
+    "This folder contains IDE-facing project rules installed by Chay Runtime.",
+    "",
+    "Source of truth:",
+    "- chay-runtime.md",
+    "",
+    "Reinstall with:",
+    "- cr rules install",
+    "- cr config codex,cursor,github-copilot,kiro",
+    ""
+  ].join("\n"));
+  return { installed };
+}
+
 export function installConfiguredIntegrations(answers, root = process.cwd()) {
   const installed = answers.agents.map((agent) => installIntegrationFiles(agent, root));
+  installIdeRulePack(root);
   if (answers.agents.includes("claude")) {
     configureClaudeAgents(root, answers.workers || []);
   }

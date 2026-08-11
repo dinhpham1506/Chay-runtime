@@ -190,7 +190,7 @@ flowchart TB
 - `chay-memory/task_note.json`: compact task intent and constraints.
 - `chay-memory/context_package.json`: selected files and repo context for the worker.
 - `chay-memory/plan_ledger.json`: runtime-owned task continuity ledger, written only after dispatch validation and patch checks pass.
-- `chay-memory/experience_spectrum.json`: inspectable chay-memory/skills/rules compression snapshot.
+- `chay-memory/experience_spectrum.json`: inspectable chay-memory/rules compression snapshot.
 - `chay-memory/<worker>_work_note.json`: bounded worker contract, allowed files, architecture rules, and output schema.
 - `chay-memory/<worker>_progress.json`: live workflow step and short status message.
 - `chay-memory/<worker>_result_note.json`: compact worker result note.

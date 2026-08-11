@@ -1,0 +1,10 @@
+---
+description: Use Chay Runtime handoff and feature-flow files before coding.
+alwaysApply: true
+---
+
+# Chay Runtime
+
+When this project contains `chay-memory/` or `.chay/`, read `chay-memory/rules/chay-runtime.md` before coding.
+
+Never choose files only from generic words like `user`; follow `feature_flow.md`, `folder_structure.md`, and graph `code_targets`.

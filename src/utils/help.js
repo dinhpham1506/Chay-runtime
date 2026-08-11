@@ -5,6 +5,7 @@ Chạy Runtime
 Usage:
   cr start                    # initialize external IDE AI workflow
   cr config codex,claude,anti,github-copilot,cursor,kiro
+  cr rules install             # install IDE project rules into this project
   cr config check
   cr go "Fix duplicate apply bug" --files src/applyService.js
   cr go "Fix duplicate apply bug" --max-files 3
@@ -15,6 +16,7 @@ Usage:
 
 Artifacts:
   chay-memory/ai_handoff.json      # read this first in the IDE AI
+  chay-memory/rules/chay-runtime.md # shared IDE project rules
   chay-memory/feature_flow.md      # human-readable feature contract and rationale
   chay-memory/folder_structure.md  # folder/code target contract in Markdown
   chay-memory/user_flow.puml       # PlantUML user flow
@@ -75,9 +77,13 @@ Experience compression:
   cr experience snapshot --out chay-memory/experience_spectrum.json
 
 Integrations:
+  cr rules install
   cr integration install --target claude
   cr integration install --target codex
   cr integration install --target antigravity
+  cr integration install --target cursor
+  cr integration install --target github-copilot
+  cr integration install --target kiro
   cr integration install --target anti
 `);
 }
