@@ -39,6 +39,7 @@ the task small, reviewable, and recoverable.
 The short path is:
 
 ```bash
+npm install -g chay-runtime@latest
 cr start
 cr go "User applies to job"
 ```
@@ -75,6 +76,7 @@ Or during development:
 
 ```bash
 npm link
+which cr
 cr check
 ```
 
@@ -83,10 +85,14 @@ cr check
 Install the toolkit, then run setup inside the project you want agents to work on:
 
 ```bash
-npm install -g chay-runtime
+npm install -g chay-runtime@latest
 cd your-project
 cr start
 ```
+
+If `cr start` prints `Unknown command: start`, your shell is running an older
+global `cr`. Update it with `npm install -g chay-runtime@latest`, or in a local
+checkout run `npm link` from this repository and then retry `cr start`.
 
 `cr start` is the easiest onboarding flow. It asks which agents to enable
 (`codex`, `claude`, and/or `anti`), asks which one is the main host/controller,
