@@ -3,7 +3,7 @@
   "goal": "Replace this with the user task",
   "requirements": [
     "Use compact JSON notes",
-    "Do not read .chay audit markdown",
+    "Read chay-memory Markdown/JSON contracts before source files",
     "Keep patches small"
   ],
   "constraints": [

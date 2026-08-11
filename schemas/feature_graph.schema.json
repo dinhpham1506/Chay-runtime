@@ -45,6 +45,20 @@
     },
     "error_nodes": { "type": "array", "items": { "type": "string" } },
     "code_targets": { "type": "array", "items": { "type": "string" } },
+    "target_rationale": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "reason"],
+        "properties": {
+          "path": { "type": "string" },
+          "role": { "type": "string" },
+          "score": { "type": ["number", "null"] },
+          "matched_terms": { "type": "array", "items": { "type": "string" } },
+          "reason": { "type": "string" }
+        }
+      }
+    },
     "user_flow": { "type": "string" },
     "sequence_diagram": { "type": "string" },
     "plantuml_flow": { "type": "string" },

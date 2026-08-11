@@ -7,17 +7,23 @@ export async function planContext(argv) {
   const task = args.task || args._?.join(" ") || await promptText("Task/feature/bug: ");
   if (!task) throw new Error("--task is required");
   const indexFile = args.index || ".chay/project_map.json";
-  const out = args.out || "memory/context_package.json";
+  const out = args.out || "chay-memory/context_package.json";
   const maxNotes = Number(args["max-notes"] || args["max-files"] || 3);
 
   const index = readJson(indexFile);
   const taskWords = normalize(task).split(" ").filter(Boolean);
+  const taskSignals = taskSignalWords(taskWords);
   const includeDatabase = Boolean(args["include-database"] || hasDatabaseIntent(taskWords));
 
-  const scored = index.files.map((file) => ({
-    ...file,
-    score: scoreFile(file, taskWords, { includeDatabase })
-  }))
+  const scored = index.files.map((file) => {
+    const score = scoreFile(file, taskWords, { includeDatabase, taskSignals });
+    return {
+      ...file,
+      score: score.score,
+      matched_terms: score.matchedTerms,
+      reason: score.reason
+    };
+  })
   .filter((file) => file.score > 0 && !isGeneratedPath(file.path) && (includeDatabase || !isDatabasePath(file)))
   .sort((a, b) => b.score - a.score)
   .slice(0, maxNotes);
@@ -35,12 +41,14 @@ export async function planContext(argv) {
       path: file.path,
       role: file.role,
       lines: file.lines,
-      score: file.score
+      score: file.score,
+      matched_terms: file.matched_terms,
+      reason: file.reason
     })),
     rules: [
       "Read selected files only.",
       "Return result_note JSON only.",
-      "Do not read .chay audit markdown."
+      "Read chay-memory/feature_flow.md and chay-memory/folder_structure.md before editing."
     ]
   };
 
@@ -55,25 +63,45 @@ function normalize(value) {
 function scoreFile(file, words, options = {}) {
   const path = normalize(file.path);
   let score = 0;
+  const matchedTerms = [];
+  const reasons = [];
 
   for (const word of words) {
-    if (word.length < 3) continue;
-    if (path.includes(word)) score += 3;
+    const term = normalizeTaskWord(word);
+    if (term.length < 3) continue;
+    if (path.includes(term)) {
+      score += options.taskSignals?.has(term) ? 5 : 2;
+      matchedTerms.push(term);
+    }
   }
 
-  if (file.role === "api_controller") score += 3;
-  if (file.role === "service") score += 3;
-  if (file.role === "route") score += 2;
-  if (file.role === "model") score += 1;
-  if (file.role === "repository") score += 1;
-  if (isDatabasePath(file) && !options.includeDatabase) score -= 12;
-  if (file.lines > 800) score -= 2;
+  const matchedSignal = matchedTerms.some((term) => options.taskSignals?.has(term));
+  if ((options.taskSignals?.size || 0) > 0 && !matchedSignal) {
+    return {
+      score: 0,
+      matchedTerms,
+      reason: "Skipped: path did not match a specific task keyword."
+    };
+  }
 
-  return score;
+  if (matchedTerms.length > 0) reasons.push(`Matched task terms: ${matchedTerms.join(", ")}`);
+  if (file.role === "api_controller") { score += 3; reasons.push("API/controller role."); }
+  if (file.role === "service") { score += 3; reasons.push("Service/business logic role."); }
+  if (file.role === "route") { score += 2; reasons.push("Route role."); }
+  if (file.role === "model") { score += 1; reasons.push("Model role."); }
+  if (file.role === "repository") { score += 1; reasons.push("Repository/data access role."); }
+  if (isDatabasePath(file) && !options.includeDatabase) { score -= 12; reasons.push("Database path skipped unless database intent is explicit."); }
+  if (file.lines > 800) { score -= 2; reasons.push("Large file penalty; prefer narrower targets."); }
+
+  return {
+    score,
+    matchedTerms,
+    reason: reasons.join(" ") || "Selected by repository role and task score."
+  };
 }
 
 function isGeneratedPath(file) {
-  return String(file).split(/[\\/]/).some((part) => ["obj", "bin", "generated", ".chay", ".chay-index", "memory", "audit"].includes(part));
+  return String(file).split(/[\\/]/).some((part) => ["obj", "bin", "generated", ".chay", ".chay-index", "memory", "chay-memory", "audit"].includes(part));
 }
 
 function isDatabasePath(file) {
@@ -89,3 +117,38 @@ function isDatabasePath(file) {
 function hasDatabaseIntent(words) {
   return words.some((word) => ["migration", "migrations", "sql", "database", "schema", "table", "policy", "policies", "rls", "supabase", "postgres", "postgresql"].includes(word));
 }
+
+function taskSignalWords(words) {
+  return new Set(words
+    .map((word) => normalizeTaskWord(word))
+    .filter((word) => word.length >= 3 && !genericTaskWords.has(word)));
+}
+
+function normalizeTaskWord(word) {
+  const value = String(word || "").toLowerCase();
+  if (value === "applies" || value === "applied" || value === "applying") return "apply";
+  if (value === "applications") return "application";
+  if (value === "jobs") return "job";
+  if (value === "users") return "user";
+  return value;
+}
+
+const genericTaskWords = new Set([
+  "add",
+  "bug",
+  "build",
+  "change",
+  "create",
+  "edit",
+  "feature",
+  "fix",
+  "flow",
+  "implement",
+  "make",
+  "new",
+  "page",
+  "screen",
+  "task",
+  "update",
+  "user"
+]);

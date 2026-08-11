@@ -7,7 +7,7 @@ import { estimateTokens } from "../utils/tokens.js";
 
 export async function snapshotExperience(argv) {
   const args = parseArgs(argv);
-  const out = args.out || "memory/experience_spectrum.json";
+  const out = args.out || "chay-memory/experience_spectrum.json";
   const snapshot = buildExperienceSnapshot(args);
   writeJson(out, snapshot);
   console.log(JSON.stringify({ ok: true, out, spectrum: snapshot.spectrum, usage: snapshot.usage }, null, 2));
@@ -16,9 +16,9 @@ export async function snapshotExperience(argv) {
 function buildExperienceSnapshot(args) {
   const policyFile = args.policy || "runtime_default_policy";
   const policy = loadPolicy(policyFile);
-  const host = optionalJson("memory/host_config.json") || {};
-  const context = optionalJson("memory/context_package.json") || {};
-  const ledger = optionalJson("memory/plan_ledger.json") || null;
+  const host = optionalJson("chay-memory/host_config.json") || {};
+  const context = optionalJson("chay-memory/context_package.json") || {};
+  const ledger = optionalJson("chay-memory/plan_ledger.json") || null;
   const resultNotes = readMemoryNotes("result");
   const workNotes = readMemoryNotes("work");
   const skills = collectSkills(host, workNotes, policy);
@@ -35,10 +35,10 @@ function buildExperienceSnapshot(args) {
         purpose: "episodic task state and outcomes",
         compression_target: "5-20x",
         refs: [
-          "memory/task_note.json",
-          "memory/context_package.json",
-          ...(ledger ? ["memory/plan_ledger.json"] : []),
-          ...resultNotes.map((note) => `memory/${note.file}`)
+          "chay-memory/task_note.json",
+          "chay-memory/context_package.json",
+          ...(ledger ? ["chay-memory/plan_ledger.json"] : []),
+          ...resultNotes.map((note) => `chay-memory/${note.file}`)
         ],
         selected_files: (context.selected_files || []).map((file) => ({
           path: file.path,
@@ -70,7 +70,7 @@ function buildExperienceSnapshot(args) {
     usage: [
       "Run context plan with a small --max-notes value.",
       "Create compact work notes with cr pack \"Task\" --compact.",
-      "Workers read memory refs and allowed_files; they do not read .chay audit markdown, raw logs, or full history.",
+      "Workers read chay-memory refs and allowed_files; they do not read raw logs, full prompts, or full history.",
       "Runtime dispatch writes plan_ledger only after result validation and patch check pass.",
       "Use policy_ref for rules instead of copying long policy text into every work note."
     ],
@@ -79,10 +79,10 @@ function buildExperienceSnapshot(args) {
 }
 
 function readMemoryNotes(kind) {
-  if (!fs.existsSync("memory")) return [];
-  return fs.readdirSync("memory")
+  if (!fs.existsSync("chay-memory")) return [];
+  return fs.readdirSync("chay-memory")
     .filter((file) => file.endsWith(".json") && file.includes(kind))
-    .map((file) => ({ file, data: optionalJson(path.join("memory", file)) }))
+    .map((file) => ({ file, data: optionalJson(path.join("chay-memory", file)) }))
     .filter((note) => note.data);
 }
 

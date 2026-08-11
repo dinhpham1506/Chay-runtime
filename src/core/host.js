@@ -1,7 +1,7 @@
 import { exists, readJson } from "../utils/fs.js";
 import { normalizeAgentName } from "./agents.js";
 
-export function loadHostConfig(file = "memory/host_config.json") {
+export function loadHostConfig(file = "chay-memory/host_config.json") {
   return exists(file) ? readJson(file) : null;
 }
 
@@ -16,11 +16,11 @@ export function workerNames() {
 }
 
 export function workNotePath(worker = defaultWorker()) {
-  return `memory/${normalizeAgentName(worker)}_work_note.json`;
+  return `chay-memory/${normalizeAgentName(worker)}_work_note.json`;
 }
 
 export function resultNotePath(worker = defaultWorker()) {
-  return `memory/${normalizeAgentName(worker)}_result_note.json`;
+  return `chay-memory/${normalizeAgentName(worker)}_result_note.json`;
 }
 
 export function resolveWorker(args = {}, fallback = "codex") {

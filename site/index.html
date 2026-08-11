@@ -320,7 +320,7 @@
       <div class="card reveal">
         <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg></div>
         <h3>Feature graph là source of truth</h3>
-        <p><code>memory/feature_graph.json</code> chứa user flow, sequence diagram, nhánh lỗi, code targets và acceptance checks.</p>
+        <p><code>chay-memory/feature_flow.md</code> và <code>chay-memory/feature_graph.json</code> chứa user flow, sequence diagram, nhánh lỗi, code targets và lý do chọn file.</p>
       </div>
       <div class="card reveal">
         <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></div>
@@ -330,7 +330,7 @@
       <div class="card reveal">
         <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m16.2 7.8-2 6.3-6.4 2 2-6.3z"/></svg></div>
         <h3>Handoff giảm token</h3>
-        <p>IDE session mới đọc <code>memory/ai_handoff.json</code> trước, thay vì đọc lại cả repo và đoán việc đang làm.</p>
+        <p>IDE session mới đọc <code>chay-memory/ai_handoff.json</code>, <code>feature_flow.md</code> và <code>folder_structure.md</code> trước, thay vì đọc lại cả repo và đoán việc đang làm.</p>
       </div>
       <div class="card reveal">
         <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h20M4 3v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3"/><path d="M8 21h8M12 19v2"/><path d="m9 8 2 2 4-4"/></svg></div>
@@ -362,7 +362,7 @@
       <div class="role reveal">
         <span class="tag">// config</span>
         <h3>cr config</h3>
-        <p>Tạo <code>.chay/ide/CHAY_IDE_INSTRUCTIONS.md</code> và <code>memory/ide_config.json</code> cho IDE AI đang dùng.</p>
+        <p>Tạo <code>.chay/ide/CHAY_IDE_INSTRUCTIONS.md</code> và <code>chay-memory/ide_config.json</code> cho IDE AI đang dùng.</p>
       </div>
       <div class="role reveal">
         <span class="tag">// one command</span>
@@ -382,7 +382,7 @@
   <div class="wrap center reveal">
     <span class="eyebrow">Workflow chính</span>
     <h2>Graph → sequence → handoff → IDE AI → verify</h2>
-    <p class="section-sub">Local UI vẫn dùng được để inspect state, nhưng workflow chính là IDE-first. File quan trọng nhất cho session mới là <code style="font-family:var(--mono);color:var(--accent-2)">memory/ai_handoff.json</code>.</p>
+    <p class="section-sub">Local UI vẫn dùng được để inspect state, nhưng workflow chính là IDE-first. File quan trọng nhất cho session mới là <code style="font-family:var(--mono);color:var(--accent-2)">chay-memory/ai_handoff.json</code>, rồi <code style="font-family:var(--mono);color:var(--accent-2)">chay-memory/feature_flow.md</code>.</p>
   </div>
   <div class="wrap reveal">
     <div class="progress-box">
@@ -402,7 +402,7 @@
         </div>
         <div class="step" data-step="3">
           <div class="marker">4</div>
-          <div class="txt"><div class="name">Tạo handoff</div><div class="cmd">memory/ai_handoff.json</div></div>
+          <div class="txt"><div class="name">Tạo handoff</div><div class="cmd">chay-memory/ai_handoff.json</div></div>
         </div>
         <div class="step" data-step="4">
           <div class="marker">5</div>
@@ -425,7 +425,7 @@
       <div class="term">
         <div class="bar">
           <span class="dots"><i style="background:#ff5f56"></i><i style="background:#ffbd2e"></i><i style="background:#27c93f"></i></span>
-          <span class="fname">memory/ai_handoff.json</span>
+          <span class="fname">chay-memory/ai_handoff.json</span>
         </div>
         <div class="body" id="termBody"></div>
       </div>
@@ -463,7 +463,7 @@
 <span class="k">cr</span> go <span class="s">"User applies to job"</span>
 
 <span class="c"># 5 · mở IDE AI và bảo nó đọc handoff</span>
-<span class="c"># Read memory/ai_handoff.json and continue the task.</span>
+<span class="c"># Read chay-memory/ai_handoff.json, feature_flow.md, folder_structure.md and continue the task.</span>
 
 <span class="c"># 6 · sau khi IDE AI sửa code</span>
 <span class="k">cr</span> verify
@@ -484,13 +484,13 @@
         <span class="doc-tag">Khởi tạo &amp; thiết lập</span>
         <code class="doc-cmd">cr start
 cr check</code>
-        <p>Tạo thư mục runtime local, IDE instructions và <code>memory/ide_config.json</code>. Không chia main/worker trong workflow mới.</p>
+        <p>Tạo thư mục runtime local, IDE instructions và <code>chay-memory/ide_config.json</code>. Không chia main/worker trong workflow mới.</p>
       </div>
       <div class="doc-card reveal">
         <span class="doc-tag">Cấu hình IDE AI</span>
         <code class="doc-cmd">cr config codex,claude,anti,github-copilot,cursor,kiro
 cr config check</code>
-        <p>Tạo <code>.chay/ide/CHAY_IDE_INSTRUCTIONS.md</code> và <code>memory/ide_config.json</code>. IDE AI code ở ngoài; Chạy Runtime giữ contract và verify.</p>
+        <p>Tạo <code>.chay/ide/CHAY_IDE_INSTRUCTIONS.md</code> và <code>chay-memory/ide_config.json</code>. IDE AI code ở ngoài; Chạy Runtime giữ contract và verify.</p>
       </div>
       <div class="doc-card reveal">
         <span class="doc-tag">Tạo / resume task</span>
@@ -502,12 +502,12 @@ cr go "User applies to job" --files src/applyService.js</code>
       <div class="doc-card reveal">
         <span class="doc-tag">Handoff cho session mới</span>
         <code class="doc-cmd">cr handoff</code>
-        <p>Ghi <code>memory/ai_handoff.json</code> để IDE AI đọc nhanh trạng thái, files liên quan, graph, sequence, PlantUML, guardrails và OWASP API review prompts.</p>
+        <p>Ghi <code>chay-memory/ai_handoff.json</code>, <code>feature_flow.md</code>, <code>folder_structure.md</code> và PlantUML để IDE AI đọc nhanh trạng thái, files liên quan, graph, guardrails và OWASP API review prompts.</p>
       </div>
       <div class="doc-card reveal">
         <span class="doc-tag">Verify sau khi IDE AI code</span>
         <code class="doc-cmd">cr verify
-cr patch check --diff .chay/tmp/current.diff --work memory/&lt;agent&gt;_work_note.json</code>
+cr patch check --diff .chay/tmp/current.diff --work chay-memory/&lt;agent&gt;_work_note.json</code>
         <p>Kiểm result note, patch scope, docs human-owned, secrets, token budget và các violation hiện tại.</p>
       </div>
       <div class="doc-card reveal">
@@ -606,7 +606,7 @@ cr dispatch codex --agent=codex</code>
     { step: 'config',      msg: 'Configured external IDE AI targets' },
     { step: 'graph',       msg: 'Created feature graph and user flow' },
     { step: 'sequence',    msg: 'Created Mermaid and PlantUML sequence diagrams' },
-    { step: 'handoff',     msg: 'Wrote memory/ai_handoff.json' },
+    { step: 'handoff',     msg: 'Wrote chay-memory/ai_handoff.json' },
     { step: 'ide',         msg: 'IDE AI reads handoff before source files' },
     { step: 'verify',      msg: 'Verified patch scope, docs, secrets, and result note' },
     { step: 'refresh',     msg: 'Refreshed handoff for the next session' },

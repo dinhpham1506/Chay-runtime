@@ -9,21 +9,39 @@ import { createHandoff } from "./handoff.js";
 export async function go(argv = []) {
   const args = parseArgs(argv);
   const task = args.task || args._?.join(" ");
-  const graphFile = args.graph || "memory/feature_graph.json";
-  const folderStructureFile = args["folder-structure-out"] || "memory/folder_structure.md";
-  const handoffFile = args.handoff || "memory/ai_handoff.json";
-  const contextFile = args.context || "memory/context_package.json";
+  const graphFile = args.graph || "chay-memory/feature_graph.json";
+  const folderStructureFile = args["folder-structure-out"] || "chay-memory/folder_structure.md";
+  const featureFlowFile = args["feature-flow-out"] || "chay-memory/feature_flow.md";
+  const plantumlFlowFile = args["plantuml-flow-out"] || "chay-memory/user_flow.puml";
+  const plantumlSequenceFile = args["plantuml-sequence-out"] || "chay-memory/sequence.puml";
+  const handoffFile = args.handoff || "chay-memory/ai_handoff.json";
+  const contextFile = args.context || "chay-memory/context_package.json";
 
   if (!task) {
-    await quiet(() => createHandoff(["--out", handoffFile, ...(args.worker ? ["--worker", args.worker] : [])]));
+    await quiet(() => createHandoff([
+      "--out",
+      handoffFile,
+      "--folder-structure",
+      folderStructureFile,
+      "--feature-flow",
+      featureFlowFile,
+      "--plantuml-flow",
+      plantumlFlowFile,
+      "--plantuml-sequence",
+      plantumlSequenceFile,
+      ...(args.worker ? ["--worker", args.worker] : [])
+    ]));
     return printGoResult({
       mode: "resume",
       task: currentTask(graphFile, contextFile),
       graphFile,
+      featureFlowFile,
+      plantumlFlowFile,
+      plantumlSequenceFile,
       handoffFile,
       contextFile,
       selectedFiles: selectedFiles(contextFile),
-      created: ["memory/ai_handoff.json"],
+      created: ["chay-memory/ai_handoff.json"],
       message: exists(graphFile) ? "Resume existing feature from handoff." : "No task provided; handoff was refreshed from current runtime state."
     });
   }
@@ -74,6 +92,14 @@ export async function go(argv = []) {
     graphFile,
     "--folder-structure-out",
     folderStructureFile,
+    "--feature-flow-out",
+    featureFlowFile,
+    "--plantuml-flow-out",
+    plantumlFlowFile,
+    "--plantuml-sequence-out",
+    plantumlSequenceFile,
+    "--context",
+    contextFile,
     ...(files ? ["--files", files] : []),
     ...(args["require-existing"] ? ["--require-existing"] : [])
   ]));
@@ -92,6 +118,12 @@ export async function go(argv = []) {
     handoffFile,
     "--folder-structure",
     folderStructureFile,
+    "--feature-flow",
+    featureFlowFile,
+    "--plantuml-flow",
+    plantumlFlowFile,
+    "--plantuml-sequence",
+    plantumlSequenceFile,
     ...workerArgs
   ]));
 
@@ -103,12 +135,28 @@ export async function go(argv = []) {
     contextFile,
     selectedFiles: files ? files.split(",").map((file) => file.trim()).filter(Boolean) : plannedFiles,
     folderStructureFile,
-    created: [graphFile, folderStructureFile, contextFile, handoffFile],
+    featureFlowFile,
+    plantumlFlowFile,
+    plantumlSequenceFile,
+    created: [graphFile, featureFlowFile, folderStructureFile, plantumlFlowFile, plantumlSequenceFile, contextFile, handoffFile],
     message: explicitFiles ? "Created feature contract from explicit files." : "Created feature contract from repo scan and context plan."
   });
 }
 
-function printGoResult({ mode, task, graphFile, folderStructureFile = "memory/folder_structure.md", handoffFile, contextFile, selectedFiles, created, message }) {
+function printGoResult({
+  mode,
+  task,
+  graphFile,
+  folderStructureFile = "chay-memory/folder_structure.md",
+  featureFlowFile = "chay-memory/feature_flow.md",
+  plantumlFlowFile = "chay-memory/user_flow.puml",
+  plantumlSequenceFile = "chay-memory/sequence.puml",
+  handoffFile,
+  contextFile,
+  selectedFiles,
+  created,
+  message
+}) {
   console.log(JSON.stringify({
     ok: true,
     command: "go",
@@ -117,18 +165,24 @@ function printGoResult({ mode, task, graphFile, folderStructureFile = "memory/fo
     task,
     created,
     graph: graphFile,
+    feature_flow: featureFlowFile,
     folder_structure: folderStructureFile,
+    plantuml_flow: plantumlFlowFile,
+    plantuml_sequence: plantumlSequenceFile,
     context: contextFile,
     handoff: handoffFile,
     selected_files: selectedFiles,
     read_order: [
       handoffFile,
+      featureFlowFile,
       folderStructureFile,
+      plantumlFlowFile,
+      plantumlSequenceFile,
       graphFile,
-      "memory/task_note.json",
+      "chay-memory/task_note.json",
       contextFile
     ],
-    next_prompt: `Read ${handoffFile} first, then ${folderStructureFile}. Follow the user_flow and sequence_diagram. Edit only selected/allowed files. Update the result_note JSON.`,
+    next_prompt: `Read ${handoffFile} first, then ${featureFlowFile} and ${folderStructureFile}. If selected files do not match the business goal, stop and ask for explicit --files. Edit only selected/allowed files. Update the result_note JSON.`,
     next_commands: ["cr verify", "cr handoff"]
   }, null, 2));
 }

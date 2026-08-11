@@ -4,8 +4,8 @@ chay-runtime is a note-based policy runtime for multi-agent coding CLIs.
 
 ## Core idea
 
-- Agents read compact JSON notes from `memory/*.json`.
-- Humans inspect Markdown notes from `.chay/audit/*.md`.
+- Agents read scoped contracts from `chay-memory/*.md` and compact JSON notes from `chay-memory/*.json`.
+- Humans inspect the same `chay-memory` flow and folder docs instead of scattered audit folders.
 - Boundary tools validate note size, output schema, patch size, and scope.
 - Feature graphs define the user flow source of truth before code changes.
 - Architecture rules require workers to follow existing design patterns and SOLID principles.
@@ -28,7 +28,7 @@ turns coding agents into a bounded workflow:
   output contract.
 - The runtime validates result JSON, patch scope, forbidden patterns, retry
   behavior, progress notes, and optional tests before treating the work as done.
-- Humans get `.chay/audit` notes and a local UI without exposing raw prompts, logs, or
+- Humans get `chay-memory` flow docs and a local UI without exposing raw prompts, logs, or
   long agent chatter.
 
 The useful part is control: you can let multiple coding tools help while keeping
@@ -51,7 +51,7 @@ subagents or ask for a main/worker pair. If you already know the file scope, pas
 context package. Open your IDE AI and tell it:
 
 ```text
-Read memory/ai_handoff.json and continue the task.
+Read chay-memory/ai_handoff.json, then chay-memory/feature_flow.md and chay-memory/folder_structure.md. Continue only inside selected files.
 ```
 
 Friendly aliases exist for the common steps:
@@ -97,7 +97,7 @@ global `cr`. Update it with `npm install -g chay-runtime@latest`, or in a local
 checkout run `npm link` from this repository and then retry `cr start`.
 
 `cr start` prepares the Chạy Runtime folders, writes
-`.chay/ide/CHAY_IDE_INSTRUCTIONS.md`, and writes `memory/ide_config.json` in
+`.chay/ide/CHAY_IDE_INSTRUCTIONS.md`, and writes `chay-memory/ide_config.json` in
 external IDE AI mode. It does not ask you to choose multiple agents, does not
 create a main/worker split, and does not run Supabase or database setup.
 
@@ -114,7 +114,7 @@ cr setup --agents codex,anti --main anti
 cr setup --agents codex,claude,anti --main claude
 ```
 
-After legacy setup, `cr task`, `cr pack`, and `cr run` automatically use `memory/host_config.json`
+After legacy setup, `cr task`, `cr pack`, and `cr run` automatically use `chay-memory/host_config.json`
 for the default worker, controller, worker LLM, and skills unless flags override
 them. Any two supported agents can be selected from `claude`, `codex`, and
 `antigravity`; one is the main/controller and the rest are workers.
@@ -155,7 +155,7 @@ Open `http://127.0.0.1:7770`. The UI shows workflow columns, agents, task state,
 selected files, runtime CLI status, checks, token/eval reports, and chat. The
 maintainable console template lives at `site/console.html`; `src/commands/ui.js` serves the file and
 owns the local API. It reads `/api/state`, streams updates through `/api/stream`
-with a file-watch/poll fallback, and writes chat to `memory/chat/messages.json`.
+with a file-watch/poll fallback, and writes chat to `chay-memory/chat/messages.json`.
 The same UI can create compact tasks and spawn `cr run` in the background with
 worker/engine/isolate/test-command options, write manual progress events, validate
 result notes, check patches, and show the plan ledger / experience compression
@@ -193,7 +193,7 @@ Progress API:
 cr progress update --agent codex --step editing --message "Updating backend structure"
 ```
 
-The UI does not expose raw logs, `.chay/audit/*.md`, `.chay/tmp/current.diff`, stack traces, command output, or full prompts.
+The UI does not expose raw logs, `.chay/tmp/current.diff`, stack traces, command output, or full prompts.
 
 ## Publish to npm
 
@@ -223,7 +223,7 @@ With a known file scope:
 
 ```bash
 cr graph "Fix duplicate job apply bug" --files src/applyService.js
-cr task --from-graph memory/feature_graph.json --compact
+cr task --from-graph chay-memory/feature_graph.json --compact
 cr handoff
 cr run
 ```
@@ -242,11 +242,11 @@ WORKER=codex
 cr scan
 cr plan "Fix duplicate job apply bug"
 cr pack "Fix duplicate job apply bug" --worker "$WORKER" --files src/applyService.js --compact
-cr boundary check-note --file memory/task_note.json
-cr boundary check-note --file "memory/${WORKER}_work_note.json" --kind work
+cr boundary check-note --file chay-memory/task_note.json
+cr boundary check-note --file "chay-memory/${WORKER}_work_note.json" --kind work
 cr run "$WORKER" --max-retries 3
 cr run "$WORKER" --max-retries 3 --isolate
-cr experience snapshot --out memory/experience_spectrum.json
+cr experience snapshot --out chay-memory/experience_spectrum.json
 ```
 
 `cr repo scan` reuses unchanged file metadata from the previous project map
@@ -267,8 +267,8 @@ cr plan "Fix duplicate apply service"
 cr pack "Fix duplicate apply service" --worker codex --files src/applyService.js --compact
 
 # worker/reviewer boundary checks
-cr boundary check-note --file memory/task_note.json --kind task
-cr boundary check-note --file memory/codex_work_note.json --kind work
+cr boundary check-note --file chay-memory/task_note.json --kind task
+cr boundary check-note --file chay-memory/codex_work_note.json --kind work
 cr run codex --max-retries 3
 ```
 
@@ -290,7 +290,7 @@ layers:
 - Rules: `policy_ref` pointing to the packaged `runtime_default_policy`.
 
 Use `cr pack "Task" --compact` to avoid copying long policy/rule text into
-each work note, and `cr experience snapshot` to inspect the memory/skills/rules
+each work note, and `cr experience snapshot` to inspect the chay-memory/skills/rules
 that a worker should use. See [docs/experience-compression.md](docs/experience-compression.md).
 
 ## Test and build
@@ -315,7 +315,7 @@ See [docs/c4-model.md](docs/c4-model.md) for the C4 system model, including the 
 - user-selected controller LLM, worker LLM, and worker skills
 - realtime Chạy Console state without raw logs
 - task/work/result note validation
-- `.chay/audit` Markdown compilation
+- `chay-memory` Markdown note compilation
 - patch boundary rejection for out-of-scope files and forbidden anti-patterns
 - Claude integration creates `chay-main`, `chay-reviewer`, and `chay-<worker>-worker`
 
@@ -363,14 +363,14 @@ Chạy Runtime rejects:
 - patches that add too many lines
 - edits outside allowed files
 - isolated worker edits outside allowed files before they reach the real project
-- agents reading `.chay/audit` Markdown
+- agents reading raw logs or full prompts
 - worker notes that omit architecture/SOLID rules
 - large free-form result logs
 
 The default `cr run` path is a runtime guardrail, not an OS security sandbox:
 it validates the worker result and full diff before accepting the patch. Use
 `cr run <worker> --isolate` to run the worker in a temporary scoped
-workspace. Isolated run copies only runtime notes, policy/schema files,
+workspace. Isolated run copies only runtime notes, packaged policy/schema contracts,
 selected context files, and `allowed_files` into the workspace, validates the
 full sandbox diff, then copies only `allowed_files` back to the real project
 after the patch boundary passes.
@@ -395,8 +395,8 @@ has intentionally accepted a larger context.
 When a worker returns invalid output, `cr boundary validate-output` returns a compact `retry_instruction`. The main/controller agent should send that instruction back to the worker and loop until the worker returns valid `result_note` JSON or reports `blocked`.
 
 `cr run <worker>` automates that worker loop for configured agents. It reads
-`memory/<worker>_work_note.json`, runs the selected worker agent, writes live progress,
-accepts JSON returned on stdout or in `memory/<worker>_result_note.json`, retries invalid
+`chay-memory/<worker>_work_note.json`, runs the selected worker agent, writes live progress,
+accepts JSON returned on stdout or in `chay-memory/<worker>_result_note.json`, retries invalid
 result notes up to `maxDispatchRetries` (default `3`), optionally runs
 `--test-command "<command>"`, and then runs the patch boundary check before marking
 the worker done. It also creates short-lived file locks for `allowed_files`,

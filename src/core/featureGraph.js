@@ -87,14 +87,15 @@ export function featureGraphCodeTargets(graph) {
   return [...new Set([...rootTargets, ...nodeTargets].map((item) => String(item || "").trim()).filter(Boolean))];
 }
 
-export function featureGraphInput(file = "memory/feature_graph.json") {
+export function featureGraphInput(file = "chay-memory/feature_graph.json") {
   return fs.existsSync(file) ? file : "";
 }
 
-export function createFeatureGraph({ goal, files = [], out = "memory/feature_graph.json", featureId = "" }) {
+export function createFeatureGraph({ goal, files = [], out = "chay-memory/feature_graph.json", featureId = "", fileMetadata = [] }) {
   const id = slug(featureId || goal || "feature");
   const codeTargets = [...new Set(files.map((file) => String(file || "").trim()).filter(Boolean))];
-  const folderStructure = folderStructureFromTargets(codeTargets);
+  const targetRationale = targetRationaleFromMetadata(codeTargets, fileMetadata);
+  const folderStructure = folderStructureFromTargetsWithRationale(codeTargets, targetRationale);
   return {
     feature_id: id,
     goal,
@@ -110,6 +111,7 @@ export function createFeatureGraph({ goal, files = [], out = "memory/feature_gra
       "4. Edit only code_targets and preserve existing design patterns for maintainability and scale."
     ],
     folder_structure: folderStructure,
+    target_rationale: targetRationale,
     nodes: [
       { id: "start", label: "User starts feature flow", type: "start" },
       { id: "primary_action", label: goal || "Primary user action", type: "action", code_targets: codeTargets },
@@ -173,6 +175,11 @@ export function createFeatureGraph({ goal, files = [], out = "memory/feature_gra
 }
 
 export function folderStructureFromTargets(files) {
+  return folderStructureFromTargetsWithRationale(files, []);
+}
+
+function folderStructureFromTargetsWithRationale(files, targetRationale = []) {
+  const rationaleByPath = new Map(targetRationale.map((item) => [item.path, item]));
   const groups = new Map();
   for (const file of files) {
     const normalized = String(file || "").replace(/\\/g, "/").replace(/^\.\/+/, "");
@@ -184,6 +191,7 @@ export function folderStructureFromTargets(files) {
   return [...groups.entries()].map(([folder, targets]) => ({
     folder,
     code_targets: targets,
+    target_rationale: targets.map((target) => rationaleByPath.get(target)).filter(Boolean),
     rule: "Follow existing files in this folder before adding new structure."
   }));
 }
@@ -201,7 +209,7 @@ export function folderStructureMarkdown(graph) {
 
   const groups = Array.isArray(graph?.folder_structure) ? graph.folder_structure : [];
   if (groups.length === 0) {
-    lines.push("No code targets selected yet. Run `cr go \"Task\" --files path/to/file.js` or edit `memory/feature_graph.json` with explicit `code_targets`.");
+    lines.push("No code targets selected yet. Run `cr go \"Task\" --files path/to/file.js` or edit `chay-memory/feature_graph.json` with explicit `code_targets`.");
     return `${lines.join("\n")}\n`;
   }
 
@@ -209,12 +217,106 @@ export function folderStructureMarkdown(graph) {
     lines.push(`## ${group.folder || "."}`, "");
     for (const target of group.code_targets || []) {
       lines.push(`- ${target}`);
+      const rationale = findTargetRationale(graph, target);
+      if (rationale?.reason) lines.push(`  - Why: ${rationale.reason}`);
     }
     if (group.rule) lines.push("", `Rule: ${group.rule}`);
     lines.push("");
   }
 
   return `${lines.join("\n")}\n`;
+}
+
+export function featureFlowMarkdown(graph, artifacts = {}) {
+  const lines = [
+    "# Feature Flow",
+    "",
+    `Feature: ${graph?.feature_id || ""}`,
+    `Goal: ${graph?.goal || ""}`,
+    "",
+    "## Read Order",
+    "",
+    `1. ${artifacts.handoff || "chay-memory/ai_handoff.json"}`,
+    `2. ${artifacts.featureFlow || "chay-memory/feature_flow.md"}`,
+    `3. ${artifacts.folderStructure || "chay-memory/folder_structure.md"}`,
+    `4. ${artifacts.graph || "chay-memory/feature_graph.json"}`,
+    `5. ${artifacts.context || "chay-memory/context_package.json"}`,
+    "6. Selected source files only",
+    "",
+    "## Code Targets",
+    ""
+  ];
+
+  const targets = Array.isArray(graph?.code_targets) ? graph.code_targets : [];
+  if (targets.length === 0) {
+    lines.push("No code targets selected. Provide explicit files with `cr go \"Task\" --files path/to/file.ts`.");
+  } else {
+    for (const target of targets) {
+      lines.push(`- ${target}`);
+      const rationale = findTargetRationale(graph, target);
+      if (rationale?.reason) lines.push(`  - Why: ${rationale.reason}`);
+    }
+  }
+
+  lines.push("", "## Folder Structure", "");
+  for (const group of graph?.folder_structure || []) {
+    lines.push(`### ${group.folder || "."}`, "");
+    lines.push(group.rule || "Follow existing local pattern before editing.");
+    lines.push("");
+    for (const target of group.code_targets || []) lines.push(`- ${target}`);
+    lines.push("");
+  }
+
+  lines.push(
+    "## User Flow",
+    "",
+    "```mermaid",
+    graph?.user_flow || graph?.mermaid || "",
+    "```",
+    "",
+    "## Sequence",
+    "",
+    "```mermaid",
+    graph?.sequence_diagram || "",
+    "```",
+    "",
+    "## PlantUML",
+    "",
+    `- ${artifacts.plantumlFlow || "chay-memory/user_flow.puml"}`,
+    `- ${artifacts.plantumlSequence || "chay-memory/sequence.puml"}`,
+    "",
+    "## Acceptance Checks",
+    ""
+  );
+
+  for (const check of graph?.acceptance_checks || []) lines.push(`- ${check}`);
+  lines.push("", "Rule: if selected files do not match the business goal, stop and ask for explicit `--files` instead of editing unrelated code.");
+  return `${lines.join("\n")}\n`;
+}
+
+function targetRationaleFromMetadata(codeTargets, fileMetadata) {
+  const metadataByPath = new Map((fileMetadata || []).map((file) => [file.path, file]));
+  return codeTargets.map((target) => {
+    const metadata = metadataByPath.get(target) || {};
+    return {
+      path: target,
+      role: metadata.role || "",
+      score: Number.isFinite(metadata.score) ? metadata.score : null,
+      matched_terms: Array.isArray(metadata.matched_terms) ? metadata.matched_terms : [],
+      reason: metadata.reason || "Explicitly provided as a code target."
+    };
+  });
+}
+
+function findTargetRationale(graph, target) {
+  const topLevel = Array.isArray(graph?.target_rationale) ? graph.target_rationale : [];
+  const found = topLevel.find((item) => item.path === target);
+  if (found) return found;
+  for (const group of graph?.folder_structure || []) {
+    const groupFound = (group.target_rationale || []).find((item) => item.path === target);
+    if (groupFound) return groupFound;
+  }
+  return null;
 }
 
 export function mermaidSequence(goal) {
@@ -225,7 +327,7 @@ export function mermaidSequence(goal) {
     "  participant Runtime",
     "  participant Code",
     `  Human->>IDE_AI: ${escapeMermaid(goal || "Describe feature")}`,
-    "  IDE_AI->>Runtime: Read memory/ai_handoff.json",
+    "  IDE_AI->>Runtime: Read chay-memory/ai_handoff.json",
     "  IDE_AI->>Runtime: Read feature_graph + work_note",
     "  IDE_AI->>Code: Edit only graph code_targets",
     "  IDE_AI->>Runtime: Write result_note JSON",
@@ -260,7 +362,7 @@ export function plantumlSequence(goal) {
     "participant Runtime",
     "participant Code",
     `Human -> IDE_AI: ${plantText(goal || "Describe feature")}`,
-    "IDE_AI -> Runtime: Read memory/ai_handoff.json",
+    "IDE_AI -> Runtime: Read chay-memory/ai_handoff.json",
     "IDE_AI -> Runtime: Read feature_graph + work_note",
     "IDE_AI -> Code: Edit only graph code_targets",
     "IDE_AI -> Runtime: Write result_note JSON",

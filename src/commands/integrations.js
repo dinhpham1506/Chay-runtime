@@ -86,14 +86,14 @@ function configureClaudeSettings(root, worker) {
   if (!worker) return;
   const file = path.join(root, ".claude", "settings.json");
   if (!fs.existsSync(file)) return;
-  const content = fs.readFileSync(file, "utf8").replaceAll("memory/codex_work_note.json", `memory/${worker}_work_note.json`);
+  const content = fs.readFileSync(file, "utf8").replaceAll("chay-memory/codex_work_note.json", `chay-memory/${worker}_work_note.json`);
   fs.writeFileSync(file, content, "utf8");
 }
 
 function configuredWorkers(args) {
   const explicit = list(args.workers);
   if (explicit.length > 0) return explicit;
-  const hostFile = "memory/host_config.json";
+  const hostFile = "chay-memory/host_config.json";
   if (fs.existsSync(hostFile)) {
     try {
       const host = JSON.parse(fs.readFileSync(hostFile, "utf8"));

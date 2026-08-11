@@ -77,9 +77,9 @@ let watcherTimer = null;
 let pollTimer = null;
 let lastSignature = "";
 function startWatcher() {
-  fs.mkdirSync("memory", { recursive: true });
+  fs.mkdirSync("chay-memory", { recursive: true });
   fs.mkdirSync(".chay/tmp", { recursive: true });
-  const targets = ["memory", ".chay/tmp"].filter((dir) => fs.existsSync(dir));
+  const targets = ["chay-memory", ".chay/tmp"].filter((dir) => fs.existsSync(dir));
   const schedule = () => {
     if (watcherTimer) clearTimeout(watcherTimer);
     watcherTimer = setTimeout(broadcastState, 150);
@@ -159,8 +159,8 @@ async function createUiTask(res, data, worker) {
   const task = data.task || "";
   if (!task.trim()) return sendJson(res, 400, { ok: false, error: "task_required" });
   await scanRepo(["--root", ".", "--out", ".chay/project_map.json"]);
-  await planContext(["--task", task, "--index", ".chay/project_map.json", "--out", "memory/context_package.json", "--max-notes", "2"]);
-  const files = selectedFiles("memory/context_package.json").join(",");
+  await planContext(["--task", task, "--index", ".chay/project_map.json", "--out", "chay-memory/context_package.json", "--max-notes", "2"]);
+  const files = selectedFiles("chay-memory/context_package.json").join(",");
   await makeWorkpack(["--worker", worker, "--goal", task, "--out", workNotePath(worker), "--compact", ...(files ? ["--allowed-files", files] : [])]);
   writeProgress(worker, "assigned", "Task assigned from Chạy Runtime UI", task);
   const dispatch = data.run === false ? { ok: true, skipped: true } : spawnWorker(worker, data);
@@ -194,7 +194,7 @@ function patchUiCheck(res, diffFile, workFile) {
 }
 
 function experienceUiSnapshot(res) {
-  const result = spawnSync(process.execPath, [cliPath, "experience", "snapshot", "--out", "memory/experience_spectrum.json"], { encoding: "utf8" });
+  const result = spawnSync(process.execPath, [cliPath, "experience", "snapshot", "--out", "chay-memory/experience_spectrum.json"], { encoding: "utf8" });
   if (result.status !== 0) return sendJson(res, 500, { ok: false, error: "experience_snapshot_failed", stderr: compact(result.stderr) });
   try {
     return sendJson(res, 200, JSON.parse(result.stdout));
@@ -204,7 +204,7 @@ function experienceUiSnapshot(res) {
 }
 
 function refreshDiff(diffFile, work) {
-  const pathspec = [".", ":(exclude).chay", ":(exclude)memory", ":(exclude)audit"];
+  const pathspec = [".", ":(exclude).chay", ":(exclude)chay-memory", ":(exclude)audit"];
   const result = spawnSync("git", ["diff", "--no-ext-diff", "--", ...pathspec], { encoding: "utf8" });
   if (result.status !== 0) {
     return { ok: false, error: "git_diff_failed", stderr: compact(result.stderr) };
@@ -215,8 +215,8 @@ function refreshDiff(diffFile, work) {
 }
 
 function buildState() {
-  const host = optionalJson("memory/host_config.json") || {};
-  const context = optionalJson("memory/context_package.json") || {};
+  const host = optionalJson("chay-memory/host_config.json") || {};
+  const context = optionalJson("chay-memory/context_package.json") || {};
   const notes = readMemoryNotes();
   const progress = notes.filter((note) => note.kind === "progress" && !Array.isArray(note.data)).map((note) => normalizeProgress(note.data));
   const progressHistory = notes.filter((note) => note.kind === "progress_history" && Array.isArray(note.data)).flatMap((note) => note.data.map(normalizeProgress)).slice(-80);
@@ -239,12 +239,12 @@ function buildState() {
     tasks: taskList(notes, context),
     result_notes: resultNotes(notes),
     selected_files: context.selected_files || [],
-    feature_graph: optionalJson("memory/feature_graph.json"),
-    handoff: optionalJson("memory/ai_handoff.json"),
-    ide_config: optionalJson("memory/ide_config.json"),
+    feature_graph: optionalJson("chay-memory/feature_graph.json"),
+    handoff: optionalJson("chay-memory/ai_handoff.json"),
+    ide_config: optionalJson("chay-memory/ide_config.json"),
     progress_history: progressHistory,
-    plan_ledger: optionalJson("memory/plan_ledger.json"),
-    experience: optionalJson("memory/experience_spectrum.json"),
+    plan_ledger: optionalJson("chay-memory/plan_ledger.json"),
+    experience: optionalJson("chay-memory/experience_spectrum.json"),
     chat: readChat(),
     checks: buildChecks(notes, worker),
     token_report: buildTokenReport(policy, { worker }),
@@ -331,7 +331,7 @@ function saveChat(res, body) {
   const chat = readChat();
   const message = { id: `msg_${Date.now()}`, from: data.from || "human", to: data.to || "main", message: compact(data.message || ""), created_at: new Date().toISOString() };
   chat.push(message);
-  writeJson("memory/chat/messages.json", chat.slice(-200));
+  writeJson("chay-memory/chat/messages.json", chat.slice(-200));
   sendJson(res, 200, { ok: true, message });
   broadcastState();
 }
@@ -346,12 +346,12 @@ function selectedFiles(file) {
 }
 
 function readMemoryNotes() {
-  if (!fs.existsSync("memory")) return [];
-  return fs.readdirSync("memory").filter((file) => file.endsWith(".json")).map((file) => ({ file, data: optionalJson(path.join("memory", file)) })).filter((note) => note.data).map((note) => ({ ...note, kind: kind(note.file) }));
+  if (!fs.existsSync("chay-memory")) return [];
+  return fs.readdirSync("chay-memory").filter((file) => file.endsWith(".json")).map((file) => ({ file, data: optionalJson(path.join("chay-memory", file)) })).filter((note) => note.data).map((note) => ({ ...note, kind: kind(note.file) }));
 }
 function kind(file) { if (file.includes("progress_history")) return "progress_history"; if (file.includes("progress")) return "progress"; if (file.includes("result")) return "result"; if (file.includes("work")) return "work"; return "other"; }
 function stepFor(agent, notes) { const result = notes.find((note) => note.kind === "result" && note.data.worker === agent); if (result) return result.data.status === "blocked" ? "blocked" : "done"; return notes.some((note) => note.kind === "work" && note.data.assigned_to === agent) ? "assigned" : "idle"; }
-function readChat() { return exists("memory/chat/messages.json") ? readJson("memory/chat/messages.json") : []; }
+function readChat() { return exists("chay-memory/chat/messages.json") ? readJson("chay-memory/chat/messages.json") : []; }
 function optionalJson(file) { try { return exists(file) ? readJson(file) : null; } catch { return null; } }
 function sendJson(res, status, data) { res.writeHead(status, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" }); res.end(JSON.stringify(data, null, 2)); }
 function sendHtml(res, body) { res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" }); res.end(body); }

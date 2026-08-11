@@ -16,7 +16,7 @@ export async function makeWorkpack(argv) {
   const policy = loadPolicy(args.policy);
   const host = loadHostConfig();
   const hostWorker = findHostWorker(host, worker);
-  const out = args.out || `memory/${worker}_work_note.json`;
+  const out = args.out || `chay-memory/${worker}_work_note.json`;
   const skills = listArg(args.skills || args["worker-skills"] || hostWorker?.skills || policy.agentSkills || []);
   const compact = Boolean(args.compact);
   const graphFile = args["from-graph"] || args.graph || featureGraphInput();
@@ -37,12 +37,12 @@ export async function makeWorkpack(argv) {
       skills
     },
     goal,
-    context_summary: args.context || "Use memory/task_note.json + memory/context_package.json.",
+    context_summary: args.context || "Use chay-memory/task_note.json + chay-memory/context_package.json.",
     inputs: [
-      "memory/task_note.json",
-      "memory/context_package.json",
+      "chay-memory/task_note.json",
+      "chay-memory/context_package.json",
       ...(graphFile ? [graphFile] : []),
-      ...(compact ? ["memory/plan_ledger.json"] : [])
+      ...(compact ? ["chay-memory/plan_ledger.json"] : [])
     ],
     feature_graph: graphFile ? {
       file: graphFile,
@@ -71,9 +71,9 @@ export async function makeWorkpack(argv) {
     ],
     forbidden: compact ? [
       "Follow policy_ref forbiddenPatterns and forbiddenNotePaths.",
-      "Do not read .chay audit markdown or rewrite unrelated files."
+      "Do not read raw logs/full prompts or rewrite unrelated files."
     ] : [
-      "read .chay audit markdown",
+      "read raw logs or full prompts",
       "rewrite unrelated files",
       "split files only to satisfy a line-count target",
       "introduce god objects or mixed responsibilities",
@@ -84,10 +84,10 @@ export async function makeWorkpack(argv) {
     experience_compression: compact ? {
       framework: "experience_compression_spectrum_v1",
       memory_refs: [
-        "memory/task_note.json",
-        "memory/context_package.json",
-        "memory/plan_ledger.json",
-        `memory/${worker}_result_note.json`
+        "chay-memory/task_note.json",
+        "chay-memory/context_package.json",
+        "chay-memory/plan_ledger.json",
+        `chay-memory/${worker}_result_note.json`
       ],
       skills_ref: "skills",
       rules_ref: "policy_ref",
@@ -110,7 +110,7 @@ function listArg(value) {
 }
 
 function loadHostConfig() {
-  return exists("memory/host_config.json") ? readJson("memory/host_config.json") : null;
+  return exists("chay-memory/host_config.json") ? readJson("chay-memory/host_config.json") : null;
 }
 
 function findHostWorker(host, worker) {

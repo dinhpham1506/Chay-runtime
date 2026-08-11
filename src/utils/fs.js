@@ -48,7 +48,7 @@ export function walk(dir, options = {}) {
     "bin",
     "obj",
     "coverage",
-    "memory",
+    "chay-memory",
     "audit"
   ];
   if (!fs.existsSync(dir)) return out;

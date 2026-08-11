@@ -4,17 +4,26 @@ import { parseArgs } from "../utils/args.js";
 import { exists, readJson, walk, writeJson } from "../utils/fs.js";
 
 const exts = new Set([".js", ".ts", ".tsx", ".jsx", ".java", ".kt", ".py", ".go", ".cs", ".sql", ".yml", ".yaml", ".json"]);
-const generatedParts = new Set(["obj", "bin", "generated", ".chay", ".chay-index", "memory", "audit"]);
+const generatedParts = new Set(["obj", "bin", "generated", ".chay", ".chay-index", "chay-memory", "audit", "backup", "backups", ".cache"]);
+const ignoredFileNames = new Set(["package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bun.lockb"]);
+const defaultMaxFileBytes = 250_000;
 
 export async function scanRepo(argv) {
   const args = parseArgs(argv);
   const root = path.resolve(args.root || ".");
   const out = args.out || ".chay/project_map.json";
   const previous = previousIndex(out);
+  const maxFileBytes = Number(args["max-file-bytes"] || defaultMaxFileBytes);
+  const includeLarge = Boolean(args["include-large"]);
 
   const files = walk(root)
     .filter((file) => exts.has(path.extname(file)))
-    .filter((file) => !isGeneratedPath(path.relative(root, file)))
+    .filter((file) => {
+      const rel = path.relative(root, file);
+      if (isGeneratedPath(rel)) return false;
+      const stat = fs.statSync(file);
+      return !isIgnoredFile(rel, stat, { includeLarge, maxFileBytes });
+    })
     .map((file) => {
       const rel = path.relative(root, file);
       const stat = fs.statSync(file);
@@ -36,7 +45,12 @@ export async function scanRepo(argv) {
   const index = {
     generated_at: new Date().toISOString(),
     root,
-    strategy: "mtime_size_incremental_v1",
+    strategy: "mtime_size_incremental_v2_skip_generated_lock_backups_large",
+    selection_limits: {
+      include_large: includeLarge,
+      max_file_bytes: includeLarge ? null : maxFileBytes,
+      skipped_lockfiles: [...ignoredFileNames]
+    },
     file_count: files.length,
     files
   };
@@ -57,6 +71,13 @@ function previousIndex(file) {
 
 function isGeneratedPath(file) {
   return file.split(path.sep).some((part) => generatedParts.has(part));
+}
+
+function isIgnoredFile(file, stat, options) {
+  const name = path.basename(file);
+  if (ignoredFileNames.has(name)) return true;
+  if (!options.includeLarge && stat.size > options.maxFileBytes) return true;
+  return false;
 }
 
 function inferRole(file, text) {

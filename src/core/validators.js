@@ -81,8 +81,8 @@ export function validateWorkNote(note, policy) {
 
 function validateAgentInputs(inputs) {
   return inputs
-    .filter((input) => typeof input !== "string" || !input.startsWith("memory/") || !input.endsWith(".json"))
-    .map((input) => ({ type: "invalid_agent_input", input, expected: "memory/*.json" }));
+    .filter((input) => typeof input !== "string" || !input.startsWith("chay-memory/") || !input.endsWith(".json"))
+    .map((input) => ({ type: "invalid_agent_input", input, expected: "chay-memory/*.json" }));
 }
 
 function findForbiddenPathViolations(value, policy) {

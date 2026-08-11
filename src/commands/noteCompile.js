@@ -4,7 +4,7 @@ import { readJson, writeText } from "../utils/fs.js";
 export async function compileNote(argv) {
   const args = parseArgs(argv);
   if (!args.json) throw new Error("--json is required");
-  const out = args.out || args.json.replace("memory/", ".chay/audit/").replace(".json", ".md");
+  const out = args.out || args.json.replace(".json", ".md");
   const data = readJson(args.json);
 
   const md = toMarkdown(data, args.json);
@@ -33,6 +33,6 @@ function toMarkdown(data, source) {
     }
     lines.push("");
   }
-  lines.push("> This Markdown file is human-readable audit output. Agents should read JSON notes, not this file.");
+  lines.push("> This Markdown file is human-readable support output. For implementation, prefer ai_handoff, feature_flow, folder_structure, and compact JSON notes.");
   return lines.join("\n");
 }

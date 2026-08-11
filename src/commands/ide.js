@@ -33,8 +33,8 @@ function checkIde(args) {
     configured,
     available_cli_agents: cliAgents,
     instruction_file: ".chay/ide/CHAY_IDE_INSTRUCTIONS.md",
-    handoff_file: "memory/ai_handoff.json",
-    next_action: configured.targets.length > 0 ? "run cr go, then ask the IDE AI to read memory/ai_handoff.json" : "run cr config manual"
+    handoff_file: "chay-memory/ai_handoff.json",
+    next_action: configured.targets.length > 0 ? "run cr go, then ask the IDE AI to read chay-memory/feature_flow.md and chay-memory/ai_handoff.json" : "run cr config manual"
   }, null, 2));
 }
 
@@ -51,7 +51,7 @@ function configIde(args) {
     targets: configured.targets,
     config: configured.config_file,
     instruction_file: configured.instruction_file,
-    next_prompt: "Read memory/ai_handoff.json and .chay/ide/CHAY_IDE_INSTRUCTIONS.md, then continue the task without editing outside allowed files.",
+    next_prompt: "Read chay-memory/ai_handoff.json, chay-memory/feature_flow.md, and .chay/ide/CHAY_IDE_INSTRUCTIONS.md, then continue the task without editing outside allowed files.",
     next_commands: ["cr go \"Describe the feature\"", "cr verify", "cr handoff"]
   }, null, 2));
 }
@@ -62,14 +62,14 @@ export function configureIdeTargets(targets, root = process.cwd()) {
   if (invalid.length > 0) throw new Error(`Unknown IDE target: ${invalid.join(", ")}. Supported: ${knownIdeTargets.join(", ")}`);
 
   const instructionFile = ".chay/ide/CHAY_IDE_INSTRUCTIONS.md";
-  const configFile = "memory/ide_config.json";
+  const configFile = "chay-memory/ide_config.json";
   writeText(`${root}/${instructionFile}`, instructionMarkdown(normalizedTargets));
   writeJson(`${root}/${configFile}`, {
     configured_at: new Date().toISOString(),
     mode: "external_ide_ai",
     targets: normalizedTargets,
     instruction_file: instructionFile,
-    handoff_file: "memory/ai_handoff.json",
+    handoff_file: "chay-memory/ai_handoff.json",
     rule: "IDE AI works outside Chạy Runtime. Chạy Runtime owns contracts, handoff, and verification."
   });
 
@@ -77,12 +77,12 @@ export function configureIdeTargets(targets, root = process.cwd()) {
     targets: normalizedTargets,
     config_file: configFile,
     instruction_file: instructionFile,
-    handoff_file: "memory/ai_handoff.json"
+    handoff_file: "chay-memory/ai_handoff.json"
   };
 }
 
 function readIdeConfig() {
-  const configFile = "memory/ide_config.json";
+  const configFile = "chay-memory/ide_config.json";
   if (!exists(configFile)) return { configured: false, targets: [] };
   try {
     return { configured: true, ...JSON.parse(fs.readFileSync(configFile, "utf8")) };
@@ -111,19 +111,24 @@ function instructionMarkdown(targets) {
     "Mode: external IDE AI. Do not split this work into Chay subagents.",
     "",
     "Read order:",
-    "1. `memory/ai_handoff.json`",
-    "2. `memory/feature_graph.json`",
-    "3. `memory/task_note.json`",
-    "4. `memory/context_package.json`",
-    "5. The selected/allowed files only",
+    "1. `chay-memory/ai_handoff.json`",
+    "2. `chay-memory/feature_flow.md`",
+    "3. `chay-memory/folder_structure.md`",
+    "4. `chay-memory/user_flow.puml`",
+    "5. `chay-memory/sequence.puml`",
+    "6. `chay-memory/feature_graph.json`",
+    "7. `chay-memory/task_note.json`",
+    "8. `chay-memory/context_package.json`",
+    "9. The selected/allowed files only",
     "",
     "Rules:",
-    "- Follow this order before coding: folder_structure -> user_flow -> sequence_diagram / plantuml_sequence -> code.",
-    "- Follow the `user_flow` and `sequence_diagram` in the feature graph.",
+    "- Follow this order before coding: feature_flow -> folder_structure -> PlantUML/user_flow/sequence -> code.",
+    "- Follow the `user_flow`, `sequence_diagram`, and target rationale in the feature graph.",
+    "- If selected files do not match the business goal, stop and ask for explicit `--files` instead of editing unrelated code.",
     "- Preserve the existing folder/layer structure and local design pattern so the feature remains maintainable and scalable.",
     "- Treat human-confirmed docs/specs as source of truth; do not rewrite them unless explicitly approved.",
     "- Edit only allowed files / graph code targets.",
-    "- Do not read or change secrets, `.env`, credentials, `.chay/audit` markdown, raw logs, or full prompts.",
+    "- Do not read or change secrets, `.env`, credentials, raw logs, or full prompts.",
     "- Preserve validation, error handling, security checks, design patterns, accessibility, and tests.",
     "- Do not delete existing behavior unless the graph/spec explicitly requires it.",
     "- After editing, refresh `.chay/tmp/current.diff` and update the result note JSON.",

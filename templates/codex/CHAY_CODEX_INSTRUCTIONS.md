@@ -8,7 +8,7 @@ assigned, validate_result, patch_check, done, or blocked.
 
 Required flow:
 1. Run: cr progress update --agent codex --step reading --message "Reading Chạy Runtime notes"
-2. Read memory/codex_work_note.json, memory/task_note.json, memory/context_package.json.
+2. Read chay-memory/feature_flow.md, chay-memory/folder_structure.md, chay-memory/codex_work_note.json, chay-memory/task_note.json, chay-memory/context_package.json.
 3. Read only the selected files / allowed_files.
 4. Run: cr progress update --agent codex --step planning --message "<one-line plan>"
 5. Apply minimal_patch before editing:
@@ -29,15 +29,15 @@ Rules:
 - Follow minimal_patch_rules or policy_ref minimalPatchRules before writing code.
 - Follow output_contract exactly.
 - Do not modify files outside allowed_files when allowed_files is provided.
-- Do not read .chay/audit/*.md.
+- Do not read raw logs, full prompts, or unrelated generated runtime files.
 - Do not run more commands than budget.
 - Return result_note JSON only.
 
 Before finishing:
 - Run: git diff --no-ext-diff -- . > .chay/tmp/current.diff
 - Run: cr progress update --agent codex --step patch_check --message "Validating patch boundary"
-- Run: cr patch check --diff .chay/tmp/current.diff --work memory/codex_work_note.json
+- Run: cr patch check --diff .chay/tmp/current.diff --work chay-memory/codex_work_note.json
 - Run: cr progress update --agent codex --step done --message "Writing result note"
-- Write result to memory/codex_result_note.json
+- Write result to chay-memory/codex_result_note.json
 - If you cannot proceed, run: cr progress update --agent codex --step blocked --message "<reason>"
   and write a result note with status "blocked".

@@ -9,13 +9,16 @@ import { owaspChecklist } from "../core/owaspApi.js";
 export async function createHandoff(argv = []) {
   const args = parseArgs(argv);
   const worker = args.worker || defaultWorker();
-  const out = args.out || "memory/ai_handoff.json";
+  const out = args.out || "chay-memory/ai_handoff.json";
   const policy = loadPolicy(args.policy);
   const workFile = args.work || workNotePath(worker);
   const resultFile = args.result || resultNotePath(worker);
-  const graphFile = args.graph || "memory/feature_graph.json";
-  const folderStructureFile = args["folder-structure"] || args["folder-structure-out"] || "memory/folder_structure.md";
-  const contextFile = args.context || "memory/context_package.json";
+  const graphFile = args.graph || "chay-memory/feature_graph.json";
+  const folderStructureFile = args["folder-structure"] || args["folder-structure-out"] || "chay-memory/folder_structure.md";
+  const featureFlowFile = args["feature-flow"] || args["feature-flow-out"] || "chay-memory/feature_flow.md";
+  const plantumlFlowFile = args["plantuml-flow"] || args["plantuml-flow-out"] || "chay-memory/user_flow.puml";
+  const plantumlSequenceFile = args["plantuml-sequence"] || args["plantuml-sequence-out"] || "chay-memory/sequence.puml";
+  const contextFile = args.context || "chay-memory/context_package.json";
   const diffFile = args.diff || ".chay/tmp/current.diff";
 
   const work = optionalJson(workFile);
@@ -30,9 +33,12 @@ export async function createHandoff(argv = []) {
     purpose: "Fast resume context for a new IDE AI session. Read this first before scanning source.",
     read_order: [
       out,
+      exists(featureFlowFile) ? featureFlowFile : null,
       exists(folderStructureFile) ? folderStructureFile : null,
+      exists(plantumlFlowFile) ? plantumlFlowFile : null,
+      exists(plantumlSequenceFile) ? plantumlSequenceFile : null,
       graph ? graphFile : null,
-      "memory/task_note.json",
+      "chay-memory/task_note.json",
       context ? contextFile : null,
       work ? workFile : null,
       result ? resultFile : null
@@ -46,7 +52,10 @@ export async function createHandoff(argv = []) {
     },
     source_of_truth: {
       feature_graph: graph ? graphFile : null,
+      feature_flow_md: exists(featureFlowFile) ? featureFlowFile : null,
       folder_structure_md: exists(folderStructureFile) ? folderStructureFile : null,
+      plantuml_flow_file: exists(plantumlFlowFile) ? plantumlFlowFile : null,
+      plantuml_sequence_file: exists(plantumlSequenceFile) ? plantumlSequenceFile : null,
       feature_id: graph?.feature_id || work?.feature_graph?.feature_id || null,
       goal: graph?.goal || work?.goal || context?.task || "",
       implementation_order: graph?.implementation_order || [
@@ -56,6 +65,7 @@ export async function createHandoff(argv = []) {
         "Code only inside allowed files and preserve existing design patterns."
       ],
       folder_structure: graph?.folder_structure || [],
+      target_rationale: graph?.target_rationale || [],
       user_flow: graph?.user_flow || graph?.mermaid || "",
       sequence_diagram: graph?.sequence_diagram || "",
       plantuml_flow: graph?.plantuml_flow || "",
@@ -70,9 +80,10 @@ export async function createHandoff(argv = []) {
     },
     guardrails: [
       "Do not delete existing behavior unless the graph/spec explicitly requires it.",
-      "Follow folder_structure first, then user_flow, then sequence_diagram before coding.",
+      "Follow feature_flow.md and folder_structure.md first, then PlantUML/user_flow/sequence before coding.",
+      "If selected files do not match the business goal, stop and ask for explicit files instead of editing unrelated code.",
       "Do not edit human-owned docs unless human_approved_files/human_approved_paths allows it.",
-      "Do not read or change secrets, credentials, private keys, .env files, .chay/audit markdown, raw logs, or full prompts.",
+      "Do not read or change secrets, credentials, private keys, .env files, raw logs, or full prompts.",
       "Follow existing design patterns and local helpers before adding abstractions or dependencies.",
       "Preserve validation, error handling, security checks, accessibility, and tests.",
       "Return/update result_note JSON only; keep it compact."

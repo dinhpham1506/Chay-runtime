@@ -10,13 +10,13 @@ export function writeProgressNote(agent, step, message = "", task = "") {
     task: compact(task),
     updated_at: new Date().toISOString()
   };
-  writeJson(`memory/${agent}_progress.json`, progress);
+  writeJson(`chay-memory/${agent}_progress.json`, progress);
   appendProgressHistory(agent, progress);
   return progress;
 }
 
 function appendProgressHistory(agent, progress) {
-  const file = `memory/${agent}_progress_history.json`;
+  const file = `chay-memory/${agent}_progress_history.json`;
   const history = safeJson(file, []);
   const next = Array.isArray(history) ? history : [];
   next.push(progress);

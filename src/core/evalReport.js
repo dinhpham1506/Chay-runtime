@@ -81,7 +81,7 @@ function testSignal(resultNote) {
 }
 
 function countRetries() {
-  const chat = optionalJson("memory/chat/messages.json") || [];
+  const chat = optionalJson("chay-memory/chat/messages.json") || [];
   const retryText = JSON.stringify(chat).toLowerCase();
   const matches = retryText.match(/retry|try again|rerun|fix contract|retry_worker_with_contract/g);
   return matches ? matches.length : 0;

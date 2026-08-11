@@ -6,11 +6,11 @@ import { defaultWorker, resultNotePath, workNotePath } from "./host.js";
 
 export function buildTokenReport(policy, options = {}) {
   const worker = options.worker || defaultWorker();
-  const context = optionalJson("memory/context_package.json") || {};
+  const context = optionalJson("chay-memory/context_package.json") || {};
   const selected = Array.isArray(context.selected_files) ? context.selected_files : [];
   const notes = {
-    task_note: fileTokens("memory/task_note.json"),
-    context_package: fileTokens("memory/context_package.json"),
+    task_note: fileTokens("chay-memory/task_note.json"),
+    context_package: fileTokens("chay-memory/context_package.json"),
     work_note: fileTokens(options.workFile || workNotePath(worker)),
     result_note: fileTokens(options.resultFile || resultNotePath(worker))
   };
@@ -68,7 +68,7 @@ function budgetViolations(notes, policy) {
 }
 
 function walkFiles(dir) {
-  const skip = new Set([".git", "node_modules", ".chay", ".chay-index", "memory", "audit", "obj", "bin", "dist", "build", ".next"]);
+  const skip = new Set([".git", "node_modules", ".chay", ".chay-index", "chay-memory", "audit", "obj", "bin", "dist", "build", ".next"]);
   const out = [];
   if (!fs.existsSync(dir)) return out;
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {

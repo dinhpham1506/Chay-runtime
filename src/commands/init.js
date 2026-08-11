@@ -9,12 +9,12 @@ export async function initProject() {
 }
 
 export function createProjectFiles(root = process.cwd()) {
-  writeJson(path.join(root, "memory/task_note.json"), {
+  writeJson(path.join(root, "chay-memory/task_note.json"), {
     task_id: "task_001",
     goal: "Describe the coding task here",
     requirements: [
       "Use compact JSON notes",
-      "Do not read .chay audit markdown",
+      "Read chay-memory Markdown/JSON contracts before source files",
       "Keep patches small",
       "Return result_note JSON only"
     ],
@@ -27,12 +27,11 @@ export function createProjectFiles(root = process.cwd()) {
     created_at: new Date().toISOString()
   });
 
-  writeText(path.join(root, ".chay/audit/.gitkeep"), "");
   writeText(path.join(root, ".chay/tmp/.gitkeep"), "");
 
   return {
     ok: true,
     message: "Chạy Runtime project initialized",
-    created: ["memory/task_note.json", ".chay/audit", ".chay/tmp"]
+    created: ["chay-memory/task_note.json", ".chay/tmp"]
   };
 }

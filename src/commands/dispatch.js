@@ -25,7 +25,7 @@ export async function dispatch(argv) {
 export async function dispatchWorker(argv) {
   const args = parseArgs(argv);
   const worker = resolveWorker(args);
-  const workFile = args.work || `memory/${worker}_work_note.json`;
+  const workFile = args.work || `chay-memory/${worker}_work_note.json`;
   if (!exists(workFile)) throw new Error(`work note not found: ${workFile}`);
 
   const policy = loadPolicy(args.policy);
@@ -44,7 +44,7 @@ export async function dispatchWorker(argv) {
   const agent = resolveAgent(args, worker, work);
   const model = resolveModel(args, work);
   const maxRetries = nonNegativeInt(args["max-retries"] ?? policy.maxDispatchRetries ?? 3);
-  const resultFile = args.out || `memory/${worker}_result_note.json`;
+  const resultFile = args.out || `chay-memory/${worker}_result_note.json`;
   const diffFile = args.diff || ".chay/tmp/current.diff";
   const logFile = args.log || `.chay/tmp/${worker}-dispatch.log`;
   const promptFile = args["prompt-file"] || `.chay/tmp/${worker}-dispatch-prompt.txt`;
@@ -287,7 +287,7 @@ function buildPrompt({ worker, workFile, resultFile, diffFile, retryInstruction,
   return [
     `You are the bounded Chạy Runtime ${worker} worker. Execute the task in ${workFile}.`,
     `The repo root is the current working directory.`,
-    `Read memory/task_note.json, memory/context_package.json, ${workFile}, any feature_graph input listed by the work note, and only files listed in allowed_files when allowed_files is present.`,
+    `Read chay-memory/task_note.json, chay-memory/context_package.json, ${workFile}, any feature_graph input listed by the work note, and only files listed in allowed_files when allowed_files is present.`,
     `If a feature_graph is present, treat it as the source of truth for user flow, branches, handled errors, code_targets, and acceptance checks. Do not rediscover or rewrite the feature contract from source code.`,
     `Before editing, apply minimal_patch: reuse existing code, prefer native/standard features, avoid new dependencies, and make the smallest correct patch without removing validation, security, accessibility, or tests.`,
     `You may emit worker progress with cr progress update --agent ${worker} for reading, planning, editing, testing when you run tests, or blocked. Dispatch writes assigned, validate_result, patch_check, and done.`,
@@ -478,7 +478,7 @@ function graphCodeTargetsFromWork(work) {
 }
 
 function updatePlanLedger({ worker, work, resultFile, patch }) {
-  const file = "memory/plan_ledger.json";
+  const file = "chay-memory/plan_ledger.json";
   const result = exists(resultFile) ? readJson(resultFile) : {};
   const ledger = exists(file) ? readJson(file) : {
     task_id: work.work_id,
@@ -511,7 +511,7 @@ function updatePlanLedger({ worker, work, resultFile, patch }) {
 }
 
 function refreshDiff(diffFile, cwd) {
-  const pathspec = [".", ":(exclude).chay", ":(exclude)memory", ":(exclude)audit"];
+  const pathspec = [".", ":(exclude).chay", ":(exclude)chay-memory", ":(exclude)audit"];
   const result = spawnSync("git", ["diff", "--no-ext-diff", "--", ...pathspec], { cwd, encoding: "utf8" });
   if (result.status === 0) {
     const untracked = spawnSync("git", ["ls-files", "--others", "--exclude-standard", "--", ...pathspec], { cwd, encoding: "utf8" });
@@ -594,7 +594,7 @@ function preDispatchTokenViolations(report) {
 
 function compactTokenInputs({ worker, workFile, policy, blocking }) {
   const changes = [];
-  if (blocking.some((item) => item.file === "memory/context_package.json")) {
+  if (blocking.some((item) => item.file === "chay-memory/context_package.json")) {
     const context = compactContextPackage();
     if (context.changed) changes.push(context);
   }
@@ -608,7 +608,7 @@ function compactTokenInputs({ worker, workFile, policy, blocking }) {
   };
 }
 
-function compactContextPackage(file = "memory/context_package.json") {
+function compactContextPackage(file = "chay-memory/context_package.json") {
   if (!exists(file)) return { changed: false, target: file, reason: "missing" };
   const context = readJson(file);
   if (!Array.isArray(context.selected_files) || context.selected_files.length <= 1) {
@@ -633,7 +633,7 @@ function compactWorkNote({ worker, workFile, policy }) {
     return { changed: false, target: workFile, reason: "already_compact" };
   }
 
-  work.context_summary = "Use compact memory/task_note.json + memory/context_package.json.";
+  work.context_summary = "Use compact chay-memory/task_note.json + chay-memory/context_package.json.";
   work.architecture_rules = ["Follow policy_ref architectureRules."];
   work.minimal_patch_rules = ["Follow policy_ref minimalPatchRules before editing."];
   work.skill_refs = [
@@ -642,16 +642,16 @@ function compactWorkNote({ worker, workFile, policy }) {
   ];
   work.forbidden = [
     "Follow policy_ref forbiddenPatterns and forbiddenNotePaths.",
-    "Do not read .chay audit markdown or rewrite unrelated files."
+    "Do not read raw logs/full prompts or rewrite unrelated files."
   ];
   work.policy_ref = work.policy_ref || "runtime_default_policy";
   work.experience_compression = {
     framework: "experience_compression_spectrum_v1",
     memory_refs: [
-      "memory/task_note.json",
-      "memory/context_package.json",
-      "memory/plan_ledger.json",
-      `memory/${worker}_result_note.json`
+      "chay-memory/task_note.json",
+      "chay-memory/context_package.json",
+      "chay-memory/plan_ledger.json",
+      `chay-memory/${worker}_result_note.json`
     ],
     skills_ref: "skills",
     rules_ref: "policy_ref",
@@ -706,7 +706,7 @@ function prepareIsolatedWorkspace({ worker, workFile, resultFile, diffFile, logF
 }
 
 function contextSelectedFiles() {
-  const file = "memory/context_package.json";
+  const file = "chay-memory/context_package.json";
   if (!exists(file)) return [];
   try {
     const context = readJson(file);
@@ -788,7 +788,7 @@ function joinDiffs(...parts) {
 }
 
 function isRuntimePath(file) {
-  return /^(?:\.chay|memory|audit)(?:\/|$)/.test(String(file || "").replace(/\\/g, "/"));
+  return /^(?:\.chay|chay-memory|audit)(?:\/|$)/.test(String(file || "").replace(/\\/g, "/"));
 }
 
 function displayPath(file) {

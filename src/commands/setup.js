@@ -26,16 +26,16 @@ export async function startProject(argv = []) {
     ok: true,
     mode: "external_ide_ai",
     message: "Chạy Runtime started",
-    initialized: ["memory/task_note.json", ".chay/audit", ".chay/tmp"],
+    initialized: ["chay-memory/task_note.json", ".chay/tmp"],
     ide_config: ide.config_file,
     instruction_file: ide.instruction_file,
     targets: ide.targets,
     available_cli_agents: availableCliAgents,
-    next_prompt: "Read memory/ai_handoff.json and .chay/ide/CHAY_IDE_INSTRUCTIONS.md, then continue the task without editing outside allowed files.",
+    next_prompt: "Read chay-memory/ai_handoff.json, chay-memory/feature_flow.md, and .chay/ide/CHAY_IDE_INSTRUCTIONS.md, then continue the task without editing outside allowed files.",
     next_actions: [
       ide.targets.includes("manual") ? "cr config codex,claude,anti,github-copilot,cursor,kiro" : "cr config check",
       "cr go \"Describe the feature\"",
-      "Open your IDE AI and ask it to read memory/ai_handoff.json",
+      "Open your IDE AI and ask it to read chay-memory/ai_handoff.json and chay-memory/feature_flow.md",
       "cr verify",
       "cr handoff"
     ]
@@ -65,13 +65,13 @@ export async function setupProject(argv, options = {}) {
     enabled_agents: answers.agents,
     skills: answers.skills,
     runtime: {
-      memory: "memory/*.json",
-      audit: ".chay/audit/*.md human-only",
+      memory: "chay-memory/*.json",
+      docs: "chay-memory/*.md human-readable flow/folder contracts",
       retry_invalid_output: true
     }
   };
 
-  writeJson(path.join(root, "memory/host_config.json"), config);
+  writeJson(path.join(root, "chay-memory/host_config.json"), config);
   const login = Boolean(args.login || options.login) && !args["skip-login"];
   const auth = ensureAgentAuth(answers.agents, { login });
 
@@ -79,7 +79,7 @@ export async function setupProject(argv, options = {}) {
     ok: true,
     message: options.friendly ? "Chạy Runtime started" : "Chạy Runtime configured",
     installed,
-    host_config: "memory/host_config.json",
+    host_config: "chay-memory/host_config.json",
     main: config.main,
     workers: config.workers,
     auth,

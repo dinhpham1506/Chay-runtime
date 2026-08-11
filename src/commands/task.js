@@ -23,31 +23,31 @@ export async function createTask(argv) {
     "--index",
     args.index || ".chay/project_map.json",
     "--out",
-    args.context || "memory/context_package.json",
+    args.context || "chay-memory/context_package.json",
     ...(args["max-notes"] ? ["--max-notes", args["max-notes"]] : [])
   ]));
   const graphFiles = graph ? featureGraphCodeTargets(graph).join(",") : "";
-  const allowedFiles = args.files || args.file || args["allowed-files"] || graphFiles || selectedFiles(args.context || "memory/context_package.json").join(",");
+  const allowedFiles = args.files || args.file || args["allowed-files"] || graphFiles || selectedFiles(args.context || "chay-memory/context_package.json").join(",");
   await quiet(() => makeWorkpack([
     "--worker",
     worker,
     "--goal",
     task,
     "--out",
-    args.out || `memory/${worker}_work_note.json`,
+    args.out || `chay-memory/${worker}_work_note.json`,
     ...(args["from-graph"] || args.graph ? ["--from-graph", args["from-graph"] || args.graph] : []),
     ...(allowedFiles ? ["--allowed-files", allowedFiles] : []),
     ...(args.compact ? ["--compact"] : [])
   ]));
-  await quiet(() => checkNote(["--file", args.out || `memory/${worker}_work_note.json`, "--kind", "work"]));
+  await quiet(() => checkNote(["--file", args.out || `chay-memory/${worker}_work_note.json`, "--kind", "work"]));
 
   console.log(JSON.stringify({
     ok: true,
     task,
     worker,
     graph: args["from-graph"] || args.graph || undefined,
-    context: args.context || "memory/context_package.json",
-    work_note: args.out || `memory/${worker}_work_note.json`,
+    context: args.context || "chay-memory/context_package.json",
+    work_note: args.out || `chay-memory/${worker}_work_note.json`,
     next_action: `Run cr run ${worker} or open cr ui serve`
   }, null, 2));
 }

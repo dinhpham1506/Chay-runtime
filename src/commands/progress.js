@@ -10,5 +10,5 @@ export async function updateProgress(argv) {
 
   const progress = writeProgressNote(agent, step, args.message || "", args.task || "");
 
-  console.log(JSON.stringify({ ok: true, file: `memory/${agent}_progress.json`, progress }, null, 2));
+  console.log(JSON.stringify({ ok: true, file: `chay-memory/${agent}_progress.json`, progress }, null, 2));
 }

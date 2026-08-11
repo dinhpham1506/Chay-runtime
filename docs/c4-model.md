@@ -47,8 +47,7 @@ flowchart TB
     Policies["Default policy\ninside npm package"]
   end
 
-  Memory["memory/*.json\nmachine-readable notes"]
-  Audit[".chay/audit/*.md\nhuman-only notes"]
+  Memory["chay-memory/*.md + *.json\nflow docs and compact notes"]
   Index[".chay/project_map.json"]
   Tmp[".chay/tmp/current.diff"]
   UI["Chạy Console\nHTTP + SSE"]
@@ -60,7 +59,6 @@ flowchart TB
   Core --> Schemas
   Core --> Policies
   Commands --> Memory
-  Commands --> Audit
   Commands --> Index
   Commands --> Tmp
   Commands --> UI
@@ -72,7 +70,7 @@ flowchart TB
 - Command modules: implement user-facing workflows such as setup, task creation, repo scan, context planning, workpack creation, realtime UI, dispatch, and patch checks.
 - Core modules: enforce policies, validate note schemas, analyze diffs, and build token/eval reports.
 - Templates and schemas: provide installable agent instructions and output contracts.
-- Runtime files: store compact JSON notes in `memory/`; internal policy, schema, audit, indexes, and diffs stay under `.chay/`.
+- Runtime files: store flow docs and compact JSON notes in `chay-memory/`; internal indexes and diffs stay under `.chay/`.
 - Chạy Console: local UI with `/api/state`, `/api/stream`, `/api/action`, `/api/progress`, and `/api/chat`.
 
 ## C3: Components
@@ -121,7 +119,7 @@ flowchart LR
 
 ### Main Workflows
 
-- Setup: creates Chạy Runtime folders, installs integration files, and writes `memory/host_config.json`.
+- Setup: creates Chạy Runtime folders, installs integration files, and writes `chay-memory/host_config.json`.
 - Task creation: scans the repo, plans a compact context package, generates a work note, and validates it.
 - Worker execution: `cr dispatch <worker>` runs a configured worker engine, writes progress notes, validates result notes with a retry cap, and checks patch scope.
 - Output validation: validates result notes against schema and returns compact retry instructions when invalid.
@@ -187,15 +185,15 @@ flowchart TB
 
 ## Runtime Data Model
 
-- `memory/host_config.json`: enabled agents, main controller, workers, models, skills, and runtime folders.
-- `memory/feature_graph.json`: user-flow source of truth with nodes, edges, handled error branches, code targets, and acceptance checks.
-- `memory/task_note.json`: compact task intent and constraints.
-- `memory/context_package.json`: selected files and repo context for the worker.
-- `memory/plan_ledger.json`: runtime-owned task continuity ledger, written only after dispatch validation and patch checks pass.
-- `memory/experience_spectrum.json`: inspectable memory/skills/rules compression snapshot.
-- `memory/<worker>_work_note.json`: bounded worker contract, allowed files, architecture rules, and output schema.
-- `memory/<worker>_progress.json`: live workflow step and short status message.
-- `memory/<worker>_result_note.json`: compact worker result note.
+- `chay-memory/host_config.json`: enabled agents, main controller, workers, models, skills, and runtime folders.
+- `chay-memory/feature_graph.json`: user-flow source of truth with nodes, edges, handled error branches, code targets, and acceptance checks.
+- `chay-memory/task_note.json`: compact task intent and constraints.
+- `chay-memory/context_package.json`: selected files and repo context for the worker.
+- `chay-memory/plan_ledger.json`: runtime-owned task continuity ledger, written only after dispatch validation and patch checks pass.
+- `chay-memory/experience_spectrum.json`: inspectable chay-memory/skills/rules compression snapshot.
+- `chay-memory/<worker>_work_note.json`: bounded worker contract, allowed files, architecture rules, and output schema.
+- `chay-memory/<worker>_progress.json`: live workflow step and short status message.
+- `chay-memory/<worker>_result_note.json`: compact worker result note.
 - `.chay/project_map.json`: generated repo file map.
 - `.chay/tmp/current.diff`: generated scoped diff used by patch checks.
 
@@ -206,14 +204,14 @@ The native Chạy Console is the realtime surface:
 - `cr ui serve --port 7770` serves `/api/stream` using Server-Sent Events.
 - `site/console.html` contains the Console UI; `src/commands/ui.js` serves the static shell and exposes the local JSON/SSE APIs.
 - The UI opens an `EventSource` connection and re-renders when events arrive.
-- The server watches `memory` and `.chay/tmp` with `fs.watch` and broadcasts fresh state after note/diff changes.
+- The server watches `chay-memory` and `.chay/tmp` with `fs.watch` and broadcasts fresh state after note/diff changes.
 - A 10-second fallback poll keeps the UI updated if a filesystem event is missed.
 
 ## Package Boundary
 
 Chạy Runtime intentionally keeps the boundary local and file-based:
 
-- Agents consume compact JSON notes instead of raw logs or full `.chay/audit` markdown.
-- Humans can inspect Markdown audit files under `.chay/audit`.
-- The realtime UI hides raw logs, diffs, prompts, stack traces, and `.chay/audit` markdown.
+- Agents consume `chay-memory` flow docs and compact JSON notes instead of raw logs or full prompts.
+- Humans can inspect Markdown flow/folder files under `chay-memory/`.
+- The realtime UI hides raw logs, diffs, prompts, and stack traces.
 - Patch checks validate changed files and forbidden patterns against the work note and policy.

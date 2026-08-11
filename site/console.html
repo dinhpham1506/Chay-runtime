@@ -440,14 +440,14 @@
         ["Next", status.next_action || state.eval_report?.next_action || ""],
         ["IDE mode", ide.mode || "not configured"],
         ["Targets", (ide.targets || []).join(", ") || "manual"],
-        ["Worker file", state.default_worker ? `memory/${state.default_worker}_work_note.json` : ""]
+        ["Worker file", state.default_worker ? `chay-memory/${state.default_worker}_work_note.json` : ""]
       ]);
 
       els.artifacts.innerHTML = rows([
-        ["Handoff", "memory/ai_handoff.json"],
-        ["Graph", graph.feature_id ? "memory/feature_graph.json" : "missing"],
+        ["Handoff", "chay-memory/ai_handoff.json"],
+        ["Graph", graph.feature_id ? "chay-memory/feature_graph.json" : "missing"],
         ["Instructions", ide.instruction_file || ".chay/ide/CHAY_IDE_INSTRUCTIONS.md"],
-        ["Result", state.default_worker ? `memory/${state.default_worker}_result_note.json` : ""]
+        ["Result", state.default_worker ? `chay-memory/${state.default_worker}_result_note.json` : ""]
       ]);
 
       els.graphSummary.innerHTML = rows([
@@ -514,7 +514,7 @@
 
     function promptText() {
       return [
-        "Read memory/ai_handoff.json and .chay/ide/CHAY_IDE_INSTRUCTIONS.md.",
+        "Read chay-memory/ai_handoff.json, chay-memory/feature_flow.md, and .chay/ide/CHAY_IDE_INSTRUCTIONS.md.",
         "Follow folder_structure first.",
         "Follow the feature graph user_flow and sequence_diagram.",
         "Edit only selected/allowed files.",
