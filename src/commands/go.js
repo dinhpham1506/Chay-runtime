@@ -5,15 +5,20 @@ import { planContext } from "./contextPlan.js";
 import { createGraph } from "./graph.js";
 import { createTask } from "./task.js";
 import { createHandoff } from "./handoff.js";
+import { featureIdFromGoal } from "../core/featureGraph.js";
 
 export async function go(argv = []) {
   const args = parseArgs(argv);
-  const task = args.task || args._?.join(" ");
+  const positional = splitTaskAndFiles(args._ || []);
+  const task = args.task || positional.task;
   const graphFile = args.graph || "chay-memory/feature_graph.json";
-  const folderStructureFile = args["folder-structure-out"] || "chay-memory/folder_structure.md";
-  const featureFlowFile = args["feature-flow-out"] || "chay-memory/feature_flow.md";
-  const plantumlFlowFile = args["plantuml-flow-out"] || "chay-memory/user_flow.puml";
-  const plantumlSequenceFile = args["plantuml-sequence-out"] || "chay-memory/sequence.puml";
+  const activeFeatureId = featureIdFromGoal(task || currentTask(graphFile, args.context || "chay-memory/context_package.json") || "feature");
+  const folderStructureFile = args["folder-structure-out"] || "chay-structure/folder_structure.md";
+  const featureFlowFile = args["feature-flow-out"] || args["feature-md-out"] || `chay-structure/features/${activeFeatureId}.md`;
+  const apiGraphFile = args["api-graph-out"] || "chay-structure/api_graph.md";
+  const plantumlFlowFile = args["plantuml-flow-out"] || `chay-structure/diagrams/${activeFeatureId}-user-flow.puml`;
+  const plantumlSequenceFile = args["plantuml-sequence-out"] || `chay-structure/diagrams/${activeFeatureId}-sequence.puml`;
+  const plantumlApiGraphFile = args["plantuml-api-graph-out"] || `chay-structure/diagrams/${activeFeatureId}-api-graph.puml`;
   const handoffFile = args.handoff || "chay-memory/ai_handoff.json";
   const contextFile = args.context || "chay-memory/context_package.json";
 
@@ -25,10 +30,14 @@ export async function go(argv = []) {
       folderStructureFile,
       "--feature-flow",
       featureFlowFile,
+      "--api-graph",
+      apiGraphFile,
       "--plantuml-flow",
       plantumlFlowFile,
       "--plantuml-sequence",
       plantumlSequenceFile,
+      "--plantuml-api-graph",
+      plantumlApiGraphFile,
       ...(args.worker ? ["--worker", args.worker] : [])
     ]));
     return printGoResult({
@@ -36,8 +45,10 @@ export async function go(argv = []) {
       task: currentTask(graphFile, contextFile),
       graphFile,
       featureFlowFile,
+      apiGraphFile,
       plantumlFlowFile,
       plantumlSequenceFile,
+      plantumlApiGraphFile,
       handoffFile,
       contextFile,
       selectedFiles: selectedFiles(contextFile),
@@ -46,7 +57,7 @@ export async function go(argv = []) {
     });
   }
 
-  const explicitFiles = args.files || args.file || args["code-targets"] || "";
+  const explicitFiles = args.files || args.file || args["code-targets"] || positional.files.join(",");
   const workerArgs = args.worker ? ["--worker", args.worker] : [];
   const compactArgs = args.compact === false || args["no-compact"] ? [] : ["--compact"];
   const indexFile = args.index || ".chay/project_map.json";
@@ -84,7 +95,7 @@ export async function go(argv = []) {
     process.exitCode = 2;
     return;
   }
-  const files = explicitFiles || plannedFiles.join(",");
+  const files = mergeFileList(explicitFiles, plannedFiles).join(",");
 
   await quiet(() => createGraph([
     task,
@@ -94,12 +105,18 @@ export async function go(argv = []) {
     folderStructureFile,
     "--feature-flow-out",
     featureFlowFile,
+    "--api-graph-out",
+    apiGraphFile,
     "--plantuml-flow-out",
     plantumlFlowFile,
     "--plantuml-sequence-out",
     plantumlSequenceFile,
+    "--plantuml-api-graph-out",
+    plantumlApiGraphFile,
     "--context",
     contextFile,
+    "--index",
+    indexFile,
     ...(files ? ["--files", files] : []),
     ...(args["require-existing"] ? ["--require-existing"] : [])
   ]));
@@ -120,10 +137,14 @@ export async function go(argv = []) {
     folderStructureFile,
     "--feature-flow",
     featureFlowFile,
+    "--api-graph",
+    apiGraphFile,
     "--plantuml-flow",
     plantumlFlowFile,
     "--plantuml-sequence",
     plantumlSequenceFile,
+    "--plantuml-api-graph",
+    plantumlApiGraphFile,
     ...workerArgs
   ]));
 
@@ -136,21 +157,45 @@ export async function go(argv = []) {
     selectedFiles: files ? files.split(",").map((file) => file.trim()).filter(Boolean) : plannedFiles,
     folderStructureFile,
     featureFlowFile,
+    apiGraphFile,
     plantumlFlowFile,
     plantumlSequenceFile,
-    created: [graphFile, featureFlowFile, folderStructureFile, plantumlFlowFile, plantumlSequenceFile, contextFile, handoffFile],
+    plantumlApiGraphFile,
+    created: [graphFile, featureFlowFile, folderStructureFile, apiGraphFile, plantumlFlowFile, plantumlSequenceFile, plantumlApiGraphFile, contextFile, handoffFile],
     message: explicitFiles ? "Created feature contract from explicit files." : "Created feature contract from repo scan and context plan."
   });
+}
+
+function mergeFileList(explicitFiles, plannedFiles) {
+  const explicit = String(explicitFiles || "").split(",").map((file) => file.trim()).filter(Boolean);
+  return [...new Set([...explicit, ...plannedFiles])];
+}
+
+function splitTaskAndFiles(items) {
+  const taskParts = [];
+  const files = [];
+  for (const item of items) {
+    if (looksLikeFilePath(item)) files.push(item);
+    else taskParts.push(item);
+  }
+  return { task: taskParts.join(" ").trim(), files };
+}
+
+function looksLikeFilePath(value) {
+  const item = String(value || "");
+  return /[\\/]/.test(item) || /\.[a-z0-9]{1,8}$/i.test(item);
 }
 
 function printGoResult({
   mode,
   task,
   graphFile,
-  folderStructureFile = "chay-memory/folder_structure.md",
-  featureFlowFile = "chay-memory/feature_flow.md",
-  plantumlFlowFile = "chay-memory/user_flow.puml",
-  plantumlSequenceFile = "chay-memory/sequence.puml",
+  folderStructureFile = "chay-structure/folder_structure.md",
+  featureFlowFile = "chay-structure/features/feature.md",
+  apiGraphFile = "chay-structure/api_graph.md",
+  plantumlFlowFile = "chay-structure/diagrams/feature-user-flow.puml",
+  plantumlSequenceFile = "chay-structure/diagrams/feature-sequence.puml",
+  plantumlApiGraphFile = "chay-structure/diagrams/feature-api-graph.puml",
   handoffFile,
   contextFile,
   selectedFiles,
@@ -165,10 +210,13 @@ function printGoResult({
     task,
     created,
     graph: graphFile,
+    feature_md: featureFlowFile,
     feature_flow: featureFlowFile,
     folder_structure: folderStructureFile,
+    api_graph: apiGraphFile,
     plantuml_flow: plantumlFlowFile,
     plantuml_sequence: plantumlSequenceFile,
+    plantuml_api_graph: plantumlApiGraphFile,
     context: contextFile,
     handoff: handoffFile,
     selected_files: selectedFiles,
@@ -176,13 +224,15 @@ function printGoResult({
       handoffFile,
       featureFlowFile,
       folderStructureFile,
+      apiGraphFile,
       plantumlFlowFile,
       plantumlSequenceFile,
+      plantumlApiGraphFile,
       graphFile,
       "chay-memory/task_note.json",
       contextFile
     ],
-    next_prompt: `Read ${handoffFile} first, then ${featureFlowFile} and ${folderStructureFile}. If selected files do not match the business goal, stop and ask for explicit --files. Edit only selected/allowed files. Update the result_note JSON.`,
+    next_prompt: `Read ${handoffFile} first, then ${featureFlowFile}, ${folderStructureFile}, and ${apiGraphFile}. If selected files do not match the business goal, stop and ask for explicit --files. Edit only selected/allowed files. Update the result_note JSON.`,
     next_commands: ["cr verify", "cr handoff"]
   }, null, 2));
 }

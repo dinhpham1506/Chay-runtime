@@ -8,7 +8,7 @@ assigned, validate_result, patch_check, done, or blocked.
 
 Required flow:
 1. Run: cr progress update --agent codex --step reading --message "Reading Chạy Runtime notes"
-2. Read chay-memory/feature_flow.md, chay-memory/folder_structure.md, chay-memory/codex_work_note.json, chay-memory/task_note.json, chay-memory/context_package.json.
+2. Read chay-structure/features/<feature_id>.md, chay-structure/folder_structure.md, chay-structure/api_graph.md, chay-memory/codex_work_note.json, chay-memory/task_note.json, chay-memory/context_package.json.
 3. Read only the selected files / allowed_files.
 4. Run: cr progress update --agent codex --step planning --message "<one-line plan>"
 5. Apply minimal_patch before editing:

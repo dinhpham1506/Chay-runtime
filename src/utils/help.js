@@ -18,10 +18,10 @@ Usage:
 Artifacts:
   chay-memory/ai_handoff.json      # read this first in the IDE AI
   chay-memory/rules/chay-runtime.md # shared IDE project rules
-  chay-memory/feature_flow.md      # human-readable feature contract and rationale
-  chay-memory/folder_structure.md  # folder/code target contract in Markdown
-  chay-memory/user_flow.puml       # PlantUML user flow
-  chay-memory/sequence.puml        # PlantUML coding sequence
+  chay-structure/features/<feature_id>.md # one Markdown feature contract per feature
+  chay-structure/folder_structure.md      # folder/code target contract in Markdown
+  chay-structure/api_graph.md             # API routes and linked code from repo scan
+  chay-structure/diagrams/*.puml          # PlantUML user flow, sequence, API graph
   chay-memory/feature_graph.json   # user flow, sequence, code targets
   .chay/ide/CHAY_IDE_INSTRUCTIONS.md
 

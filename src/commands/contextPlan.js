@@ -4,7 +4,8 @@ import { promptText } from "../utils/prompt.js";
 
 export async function planContext(argv) {
   const args = parseArgs(argv);
-  const task = args.task || args._?.join(" ") || await promptText("Task/feature/bug: ");
+  const positional = splitTaskAndFiles(args._ || []);
+  const task = args.task || positional.task || await promptText("Task/feature/bug: ");
   if (!task) throw new Error("--task is required");
   const indexFile = args.index || ".chay/project_map.json";
   const out = args.out || "chay-memory/context_package.json";
@@ -27,17 +28,28 @@ export async function planContext(argv) {
   .filter((file) => file.score > 0 && !isGeneratedPath(file.path) && (includeDatabase || !isDatabasePath(file)))
   .sort((a, b) => b.score - a.score)
   .slice(0, maxNotes);
+  const selected = mergeSelected(scored, [
+    ...positional.files.map((file) => ({
+      path: file,
+      role: "source",
+      lines: 0,
+      score: 100,
+      matched_terms: [],
+      reason: "Explicit positional file target."
+    })),
+    ...inferredFeatureTargets(index, taskWords, { includeDatabase })
+  ], maxNotes);
 
   const contextPackage = {
     task,
     generated_at: new Date().toISOString(),
-    strategy: "keyword_role_score_v2_compact_avoid_database_by_default",
+    strategy: "keyword_role_score_v3_compact_avoid_database_scripts_generated_by_default",
     selection_policy: {
       max_files: maxNotes,
       include_database: includeDatabase,
       database_hint: "Database and migration files are skipped unless the task mentions migration/sql/database/schema/policy/rls or --include-database is passed."
     },
-    selected_files: scored.map((file) => ({
+    selected_files: selected.map((file) => ({
       path: file.path,
       role: file.role,
       lines: file.lines,
@@ -48,12 +60,12 @@ export async function planContext(argv) {
     rules: [
       "Read selected files only.",
       "Return result_note JSON only.",
-      "Read chay-memory/feature_flow.md and chay-memory/folder_structure.md before editing."
+      "Read chay-structure/features/<feature_id>.md, chay-structure/folder_structure.md, and chay-structure/api_graph.md before editing."
     ]
   };
 
   writeJson(out, contextPackage);
-  console.log(JSON.stringify({ ok: true, out, selected_count: scored.length }, null, 2));
+  console.log(JSON.stringify({ ok: true, out, selected_count: selected.length }, null, 2));
 }
 
 function normalize(value) {
@@ -91,6 +103,7 @@ function scoreFile(file, words, options = {}) {
   if (file.role === "model") { score += 1; reasons.push("Model role."); }
   if (file.role === "repository") { score += 1; reasons.push("Repository/data access role."); }
   if (isDatabasePath(file) && !options.includeDatabase) { score -= 12; reasons.push("Database path skipped unless database intent is explicit."); }
+  if (isScriptPath(file.path) && !hasScriptIntent(words)) { score -= 8; reasons.push("Script/import utility penalty; task did not ask for scripts."); }
   if (file.lines > 800) { score -= 2; reasons.push("Large file penalty; prefer narrower targets."); }
 
   return {
@@ -101,7 +114,7 @@ function scoreFile(file, words, options = {}) {
 }
 
 function isGeneratedPath(file) {
-  return String(file).split(/[\\/]/).some((part) => ["obj", "bin", "generated", ".chay", ".chay-index", "memory", "chay-memory", "audit"].includes(part));
+  return String(file).split(/[\\/]/).some((part) => ["obj", "bin", "generated", ".chay", ".chay-index", "memory", "chay-memory", "chay-structure", "audit"].includes(part));
 }
 
 function isDatabasePath(file) {
@@ -116,6 +129,92 @@ function isDatabasePath(file) {
 
 function hasDatabaseIntent(words) {
   return words.some((word) => ["migration", "migrations", "sql", "database", "schema", "table", "policy", "policies", "rls", "supabase", "postgres", "postgresql"].includes(word));
+}
+
+function hasScriptIntent(words) {
+  return words.some((word) => ["script", "scripts", "import", "etl", "migration", "seed", "backup", "restore"].includes(word));
+}
+
+function isScriptPath(file) {
+  const normalized = normalize(file);
+  return normalized.includes("/scripts/") || normalized.includes("\\scripts\\") || normalized.includes("scripts/");
+}
+
+function splitTaskAndFiles(items) {
+  const taskParts = [];
+  const files = [];
+  for (const item of items) {
+    if (looksLikeFilePath(item)) files.push(item);
+    else taskParts.push(item);
+  }
+  return { task: taskParts.join(" ").trim(), files };
+}
+
+function looksLikeFilePath(value) {
+  const item = String(value || "");
+  return /[\\/]/.test(item) || /\.[a-z0-9]{1,8}$/i.test(item);
+}
+
+function mergeSelected(scored, inferred, maxNotes) {
+  const byPath = new Map();
+  for (const file of [...inferred, ...scored]) {
+    if (!file.path || byPath.has(file.path)) continue;
+    byPath.set(file.path, file);
+  }
+  const forced = [...inferred].filter((file) => file.path);
+  const rest = [...scored].filter((file) => file.path && !forced.some((forcedFile) => forcedFile.path === file.path));
+  return [...new Map([...forced, ...rest].map((file) => [file.path, file])).values()].slice(0, Math.max(maxNotes, forced.length));
+}
+
+function inferredFeatureTargets(index, taskWords, options = {}) {
+  if (!isApplyJobIntent(taskWords)) return [];
+  const files = Array.isArray(index.files) ? index.files : [];
+  const paths = new Set(files.map((file) => file.path));
+  const targets = [];
+
+  addExisting(targets, files, "client/src/lib/api.ts", "API client likely needs an apply-job method.");
+
+  const existingBackend = files.find((file) => /(?:^|\/)(job-application|job-applications|applications|apply-job|jobs)\.[cm]?[jt]sx?$/i.test(file.path) && !isScriptPath(file.path));
+  if (existingBackend) {
+    addExisting(targets, files, existingBackend.path, "Existing job/application backend or service matched apply-job intent.");
+  } else if (hasFolder(paths, "netlify/functions")) {
+    targets.push({
+      path: "netlify/functions/job-applications.ts",
+      role: "api_controller",
+      lines: 0,
+      score: 95,
+      matched_terms: ["job", "apply", "application"],
+      reason: "Proposed new Netlify function because repo uses flat netlify/functions and no apply-job function exists."
+    });
+  }
+
+  if (options.includeDatabase) {
+    const migration = files.find((file) => isDatabasePath(file) && /job|application|user/i.test(file.path));
+    if (migration) addExisting(targets, files, migration.path, "Database file included because database intent was explicit.");
+  }
+
+  return targets;
+}
+
+function addExisting(targets, files, pathValue, reason) {
+  const file = files.find((item) => item.path === pathValue);
+  if (!file) return;
+  targets.push({
+    ...file,
+    score: 100,
+    matched_terms: ["job", "apply"],
+    reason
+  });
+}
+
+function hasFolder(paths, folder) {
+  const prefix = `${folder.replace(/\\/g, "/")}/`;
+  return [...paths].some((item) => String(item).replace(/\\/g, "/").startsWith(prefix));
+}
+
+function isApplyJobIntent(words) {
+  const normalized = new Set(words.map((word) => normalizeTaskWord(word)));
+  return normalized.has("job") && (normalized.has("apply") || normalized.has("application"));
 }
 
 function taskSignalWords(words) {

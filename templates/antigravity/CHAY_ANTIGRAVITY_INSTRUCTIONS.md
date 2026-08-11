@@ -6,8 +6,9 @@ Read only:
 - chay-memory/antigravity_work_note.json
 - chay-memory/task_note.json
 - chay-memory/context_package.json
-- chay-memory/feature_flow.md
-- chay-memory/folder_structure.md
+- chay-structure/features/<feature_id>.md
+- chay-structure/folder_structure.md
+- chay-structure/api_graph.md
 
 Do not read raw logs, full prompts, or unrelated generated runtime files.
 

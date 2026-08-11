@@ -1,6 +1,6 @@
 ---
 name: chay-runtime
-description: Use when working in a repository that contains Chay Runtime project rules or handoff files, including chay-memory/rules/chay-runtime.md, chay-memory/ai_handoff.json, chay-memory/feature_flow.md, chay-memory/folder_structure.md, or .chay/ide/CHAY_IDE_INSTRUCTIONS.md. Follow existing feature contracts, update current flow/folder/graph artifacts for old features, create or refresh contracts for new features, and avoid editing files outside Chay Runtime selected scope.
+description: Use when working in a repository that contains Chay Runtime project rules or handoff files, including chay-memory/rules/chay-runtime.md, chay-memory/ai_handoff.json, chay-structure/features/<feature_id>.md, chay-structure/folder_structure.md, chay-structure/api_graph.md, or .chay/ide/CHAY_IDE_INSTRUCTIONS.md. Follow existing feature contracts, update current flow/folder/graph artifacts for old features, create or refresh contracts for new features, and avoid editing files outside Chay Runtime selected scope.
 ---
 
 # Chay Runtime
@@ -12,11 +12,15 @@ When a project contains `chay-memory/` or `.chay/`, use the local project rules 
 1. `.chay/ide/CHAY_IDE_INSTRUCTIONS.md`
 2. `chay-memory/rules/chay-runtime.md`
 3. `chay-memory/ai_handoff.json`
-4. `chay-memory/feature_flow.md`
-5. `chay-memory/folder_structure.md`
-6. `chay-memory/feature_graph.json`
-7. `chay-memory/context_package.json`
-8. Selected source files only
+4. `chay-structure/features/<feature_id>.md`
+5. `chay-structure/folder_structure.md`
+6. `chay-structure/api_graph.md`
+7. `chay-structure/diagrams/<feature_id>-user-flow.puml`
+8. `chay-structure/diagrams/<feature_id>-sequence.puml`
+9. `chay-structure/diagrams/<feature_id>-api-graph.puml`
+10. `chay-memory/feature_graph.json`
+11. `chay-memory/context_package.json`
+12. Selected source files only
 
 ## Operating Rules
 

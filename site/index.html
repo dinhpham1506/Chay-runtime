@@ -320,7 +320,7 @@
       <div class="card reveal">
         <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg></div>
         <h3>Feature graph là source of truth</h3>
-        <p><code>chay-memory/feature_flow.md</code> và <code>chay-memory/feature_graph.json</code> chứa user flow, sequence diagram, nhánh lỗi, code targets và lý do chọn file.</p>
+        <p><code>chay-structure/features/&lt;feature_id&gt;.md</code> và <code>chay-memory/feature_graph.json</code> chứa user flow, sequence diagram, nhánh lỗi, code targets và lý do chọn file.</p>
       </div>
       <div class="card reveal">
         <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></div>
@@ -330,7 +330,7 @@
       <div class="card reveal">
         <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m16.2 7.8-2 6.3-6.4 2 2-6.3z"/></svg></div>
         <h3>Handoff giảm token</h3>
-        <p>IDE session mới đọc <code>chay-memory/rules/chay-runtime.md</code>, <code>ai_handoff.json</code>, <code>feature_flow.md</code> và <code>folder_structure.md</code> trước, thay vì đọc lại cả repo và đoán việc đang làm.</p>
+        <p>IDE session mới đọc <code>chay-memory/rules/chay-runtime.md</code>, <code>ai_handoff.json</code>, <code>chay-structure/features/&lt;feature_id&gt;.md</code>, <code>folder_structure.md</code> và <code>api_graph.md</code> trước, thay vì đọc lại cả repo và đoán việc đang làm.</p>
       </div>
       <div class="card reveal">
         <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h20M4 3v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3"/><path d="M8 21h8M12 19v2"/><path d="m9 8 2 2 4-4"/></svg></div>
@@ -463,7 +463,7 @@
 <span class="k">cr</span> go <span class="s">"User applies to job"</span>
 
 <span class="c"># 5 · mở IDE AI, rule pack sẽ bảo nó đọc đúng handoff</span>
-<span class="c"># Read chay-memory/rules/chay-runtime.md, ai_handoff.json, feature_flow.md, folder_structure.md and continue.</span>
+<span class="c"># Read chay-memory/rules/chay-runtime.md, ai_handoff.json, chay-structure/features/&lt;feature_id&gt;.md, folder_structure.md, api_graph.md and continue.</span>
 
 <span class="c"># 6 · sau khi IDE AI sửa code</span>
 <span class="k">cr</span> verify
@@ -502,7 +502,7 @@ cr go "User applies to job" --files src/applyService.js</code>
       <div class="doc-card reveal">
         <span class="doc-tag">Handoff cho session mới</span>
         <code class="doc-cmd">cr handoff</code>
-        <p>Ghi <code>chay-memory/ai_handoff.json</code>, <code>feature_flow.md</code>, <code>folder_structure.md</code> và PlantUML để IDE AI đọc nhanh trạng thái, files liên quan, graph, guardrails và OWASP API review prompts.</p>
+        <p>Ghi <code>chay-memory/ai_handoff.json</code>, <code>chay-structure/features/&lt;feature_id&gt;.md</code>, <code>folder_structure.md</code>, <code>api_graph.md</code> và PlantUML để IDE AI đọc nhanh trạng thái, files liên quan, graph, guardrails và OWASP API review prompts.</p>
       </div>
       <div class="doc-card reveal">
         <span class="doc-tag">Verify sau khi IDE AI code</span>

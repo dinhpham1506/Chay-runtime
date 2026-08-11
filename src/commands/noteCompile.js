@@ -33,6 +33,6 @@ function toMarkdown(data, source) {
     }
     lines.push("");
   }
-  lines.push("> This Markdown file is human-readable support output. For implementation, prefer ai_handoff, feature_flow, folder_structure, and compact JSON notes.");
+  lines.push("> This Markdown file is human-readable support output. For implementation, prefer ai_handoff, chay-structure feature docs, folder_structure, api_graph, and compact JSON notes.");
   return lines.join("\n");
 }

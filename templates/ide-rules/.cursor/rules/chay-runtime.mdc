@@ -1,5 +1,5 @@
 ---
-description: Use Chay Runtime handoff and feature-flow files before coding.
+description: Use Chay Runtime handoff and feature contract files before coding.
 alwaysApply: true
 ---
 
@@ -7,4 +7,4 @@ alwaysApply: true
 
 When this project contains `chay-memory/` or `.chay/`, read `chay-memory/rules/chay-runtime.md` before coding.
 
-Never choose files only from generic words like `user`; follow `feature_flow.md`, `folder_structure.md`, and graph `code_targets`.
+Never choose files only from generic words like `user`; follow `chay-structure/features/<feature_id>.md`, `chay-structure/folder_structure.md`, `chay-structure/api_graph.md`, and graph `code_targets`.

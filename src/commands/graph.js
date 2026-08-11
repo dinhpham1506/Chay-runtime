@@ -1,16 +1,20 @@
 import { parseArgs } from "../utils/args.js";
 import { exists, readJson, writeJson, writeText } from "../utils/fs.js";
 import { loadPolicy } from "../core/policy.js";
-import { createFeatureGraph, featureFlowMarkdown, folderStructureMarkdown, validateFeatureGraph } from "../core/featureGraph.js";
+import { apiGraphMarkdown, createFeatureGraph, featureFlowMarkdown, featureIdFromGoal, folderStructureMarkdown, validateFeatureGraph } from "../core/featureGraph.js";
 
 export async function createGraph(argv) {
   const args = parseArgs(argv);
-  const goal = args.goal || args._?.join(" ");
+  const positional = splitTaskAndFiles(args._ || []);
+  const goal = args.goal || positional.task;
+  const featureId = featureIdFromGoal(args.id || args["feature-id"] || goal || "feature");
   const out = args.out || "chay-memory/feature_graph.json";
-  const folderStructureOut = args["folder-structure-out"] || "chay-memory/folder_structure.md";
-  const featureFlowOut = args["feature-flow-out"] || "chay-memory/feature_flow.md";
-  const plantumlFlowOut = args["plantuml-flow-out"] || "chay-memory/user_flow.puml";
-  const plantumlSequenceOut = args["plantuml-sequence-out"] || "chay-memory/sequence.puml";
+  const folderStructureOut = args["folder-structure-out"] || "chay-structure/folder_structure.md";
+  const featureFlowOut = args["feature-flow-out"] || args["feature-md-out"] || `chay-structure/features/${featureId}.md`;
+  const apiGraphOut = args["api-graph-out"] || "chay-structure/api_graph.md";
+  const plantumlFlowOut = args["plantuml-flow-out"] || `chay-structure/diagrams/${featureId}-user-flow.puml`;
+  const plantumlSequenceOut = args["plantuml-sequence-out"] || `chay-structure/diagrams/${featureId}-sequence.puml`;
+  const plantumlApiGraphOut = args["plantuml-api-graph-out"] || `chay-structure/diagrams/${featureId}-api-graph.puml`;
   const policy = loadPolicy(args.policy);
 
   if (args.check) {
@@ -19,13 +23,14 @@ export async function createGraph(argv) {
   }
 
   if (!goal) throw new Error("--goal is required");
-  const files = listArg(args.files || args.file || args["code-targets"]);
+  const files = listArg(args.files || args.file || args["code-targets"] || positional.files.join(","));
   const graph = createFeatureGraph({
     goal,
     files,
     out,
-    featureId: args.id || args["feature-id"],
-    fileMetadata: selectedFileMetadata(args.context || args["selection-context"], files)
+    featureId,
+    fileMetadata: selectedFileMetadata(args.context || args["selection-context"], files),
+    projectIndex: optionalJson(args.index || args["project-map"] || ".chay/project_map.json")
   });
   const result = validateFeatureGraph(graph, policy, { requireExistingFiles: Boolean(args["require-existing"]) });
   writeJson(out, graph);
@@ -34,20 +39,27 @@ export async function createGraph(argv) {
     graph: out,
     folderStructure: folderStructureOut,
     featureFlow: featureFlowOut,
+    apiGraph: apiGraphOut,
     plantumlFlow: plantumlFlowOut,
-    plantumlSequence: plantumlSequenceOut
+    plantumlSequence: plantumlSequenceOut,
+    plantumlApiGraph: plantumlApiGraphOut
   }));
+  writeText(apiGraphOut, apiGraphMarkdown(graph, { plantumlApiGraph: plantumlApiGraphOut }));
   writeText(plantumlFlowOut, `${graph.plantuml_flow}\n`);
   writeText(plantumlSequenceOut, `${graph.plantuml_sequence}\n`);
+  writeText(plantumlApiGraphOut, `${graph.plantuml_api_graph}\n`);
 
   console.log(JSON.stringify({
     ok: result.ok,
     out,
     graph: out,
     folder_structure: folderStructureOut,
+    feature_md: featureFlowOut,
     feature_flow: featureFlowOut,
+    api_graph: apiGraphOut,
     plantuml_flow: plantumlFlowOut,
     plantuml_sequence: plantumlSequenceOut,
+    plantuml_api_graph: plantumlApiGraphOut,
     feature_id: graph.feature_id,
     code_targets: graph.code_targets,
     validation: result,
@@ -78,6 +90,21 @@ function listArg(value) {
   return String(value || "").split(",").map((item) => item.trim()).filter(Boolean);
 }
 
+function splitTaskAndFiles(items) {
+  const taskParts = [];
+  const files = [];
+  for (const item of items) {
+    if (looksLikeFilePath(item)) files.push(item);
+    else taskParts.push(item);
+  }
+  return { task: taskParts.join(" ").trim(), files };
+}
+
+function looksLikeFilePath(value) {
+  const item = String(value || "");
+  return /[\\/]/.test(item) || /\.[a-z0-9]{1,8}$/i.test(item);
+}
+
 function selectedFileMetadata(contextFile, files) {
   if (!contextFile || !exists(contextFile)) return files.map((file) => ({ path: file }));
   try {
@@ -87,5 +114,13 @@ function selectedFileMetadata(contextFile, files) {
     return files.map((file) => byPath.get(file) || { path: file });
   } catch {
     return files.map((file) => ({ path: file }));
+  }
+}
+
+function optionalJson(file) {
+  try {
+    return file && exists(file) ? readJson(file) : null;
+  } catch {
+    return null;
   }
 }

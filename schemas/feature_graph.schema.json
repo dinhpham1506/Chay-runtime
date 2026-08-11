@@ -18,6 +18,19 @@
         }
       }
     },
+    "project_structure": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "folder": { "type": "string" },
+          "file_count": { "type": "number" },
+          "roles": { "type": "array", "items": { "type": "string" } },
+          "examples": { "type": "array", "items": { "type": "string" } },
+          "selected_files": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
     "nodes": {
       "type": "array",
       "items": {
@@ -61,8 +74,23 @@
     },
     "user_flow": { "type": "string" },
     "sequence_diagram": { "type": "string" },
+    "api_graph": { "type": "string" },
+    "api_links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "api": { "type": "string" },
+          "route": { "type": "string" },
+          "related_code": { "type": "array", "items": { "type": "string" } },
+          "imports": { "type": "array", "items": { "type": "string" } },
+          "reason": { "type": "string" }
+        }
+      }
+    },
     "plantuml_flow": { "type": "string" },
     "plantuml_sequence": { "type": "string" },
+    "plantuml_api_graph": { "type": "string" },
     "acceptance_checks": { "type": "array", "items": { "type": "string" } },
     "mermaid": { "type": "string" }
   }

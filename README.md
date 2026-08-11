@@ -51,7 +51,7 @@ subagents or ask for a main/worker pair. If you already know the file scope, pas
 context package. Open your IDE AI and tell it:
 
 ```text
-Read chay-memory/ai_handoff.json, then chay-memory/feature_flow.md and chay-memory/folder_structure.md. Continue only inside selected files.
+Read chay-memory/ai_handoff.json, then chay-structure/features/<feature_id>.md, chay-structure/folder_structure.md, and chay-structure/api_graph.md. Continue only inside selected files.
 ```
 
 Friendly aliases exist for the common steps:

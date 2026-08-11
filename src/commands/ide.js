@@ -35,7 +35,7 @@ function checkIde(args) {
     available_cli_agents: cliAgents,
     instruction_file: ".chay/ide/CHAY_IDE_INSTRUCTIONS.md",
     handoff_file: "chay-memory/ai_handoff.json",
-    next_action: configured.targets.length > 0 ? "run cr go, then ask the IDE AI to read chay-memory/feature_flow.md and chay-memory/ai_handoff.json" : "run cr config manual"
+    next_action: configured.targets.length > 0 ? "run cr go, then ask the IDE AI to read chay-memory/ai_handoff.json and chay-structure/features/<feature_id>.md" : "run cr config manual"
   }, null, 2));
 }
 
@@ -53,7 +53,7 @@ function configIde(args) {
     config: configured.config_file,
     instruction_file: configured.instruction_file,
     rule_pack: configured.rule_pack,
-    next_prompt: "Read chay-memory/ai_handoff.json, chay-memory/feature_flow.md, and .chay/ide/CHAY_IDE_INSTRUCTIONS.md, then continue the task without editing outside allowed files.",
+    next_prompt: "Read chay-memory/ai_handoff.json, chay-structure/features/<feature_id>.md, chay-structure/folder_structure.md, chay-structure/api_graph.md, and .chay/ide/CHAY_IDE_INSTRUCTIONS.md, then continue the task without editing outside allowed files.",
     next_commands: ["cr go \"Describe the feature\"", "cr verify", "cr handoff"]
   }, null, 2));
 }
@@ -118,18 +118,20 @@ function instructionMarkdown(targets) {
     "Read order:",
     "0. `chay-memory/rules/chay-runtime.md`",
     "1. `chay-memory/ai_handoff.json`",
-    "2. `chay-memory/feature_flow.md`",
-    "3. `chay-memory/folder_structure.md`",
-    "4. `chay-memory/user_flow.puml`",
-    "5. `chay-memory/sequence.puml`",
-    "6. `chay-memory/feature_graph.json`",
-    "7. `chay-memory/task_note.json`",
-    "8. `chay-memory/context_package.json`",
-    "9. The selected/allowed files only",
+    "2. `chay-structure/features/<feature_id>.md`",
+    "3. `chay-structure/folder_structure.md`",
+    "4. `chay-structure/api_graph.md`",
+    "5. `chay-structure/diagrams/<feature_id>-user-flow.puml`",
+    "6. `chay-structure/diagrams/<feature_id>-sequence.puml`",
+    "7. `chay-structure/diagrams/<feature_id>-api-graph.puml`",
+    "8. `chay-memory/feature_graph.json`",
+    "9. `chay-memory/task_note.json`",
+    "10. `chay-memory/context_package.json`",
+    "11. The selected/allowed files only",
     "",
     "Rules:",
     "- Use `chay-memory/rules/chay-runtime.md` as the IDE project rule pack.",
-    "- Follow this order before coding: feature_flow -> folder_structure -> PlantUML/user_flow/sequence -> code.",
+    "- Follow this order before coding: feature MD -> folder_structure -> api_graph -> PlantUML diagrams -> code.",
     "- Follow the `user_flow`, `sequence_diagram`, and target rationale in the feature graph.",
     "- If selected files do not match the business goal, stop and ask for explicit `--files` instead of editing unrelated code.",
     "- Preserve the existing folder/layer structure and local design pattern so the feature remains maintainable and scalable.",

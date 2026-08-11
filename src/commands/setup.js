@@ -32,11 +32,11 @@ export async function startProject(argv = []) {
     rule_pack: ide.rule_pack,
     targets: ide.targets,
     available_cli_agents: availableCliAgents,
-    next_prompt: "Read chay-memory/ai_handoff.json, chay-memory/feature_flow.md, and .chay/ide/CHAY_IDE_INSTRUCTIONS.md, then continue the task without editing outside allowed files.",
+    next_prompt: "Read chay-memory/ai_handoff.json, chay-structure/features/<feature_id>.md, chay-structure/folder_structure.md, chay-structure/api_graph.md, and .chay/ide/CHAY_IDE_INSTRUCTIONS.md, then continue the task without editing outside allowed files.",
     next_actions: [
       ide.targets.includes("manual") ? "cr config codex,claude,anti,github-copilot,cursor,kiro" : "cr config check",
       "cr go \"Describe the feature\"",
-      "Open your IDE AI and ask it to read chay-memory/ai_handoff.json and chay-memory/feature_flow.md",
+      "Open your IDE AI and ask it to read chay-memory/ai_handoff.json and chay-structure/features/<feature_id>.md",
       "cr verify",
       "cr handoff"
     ]
@@ -67,7 +67,7 @@ export async function setupProject(argv, options = {}) {
     skills: answers.skills,
     runtime: {
       memory: "chay-memory/*.json",
-      docs: "chay-memory/*.md human-readable flow/folder contracts",
+      docs: "chay-structure/*.md and chay-structure/features/*.md human-readable contracts",
       retry_invalid_output: true
     }
   };
