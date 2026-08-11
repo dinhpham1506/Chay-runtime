@@ -13,7 +13,7 @@ import { defaultWorker } from "../core/host.js";
 export async function go(argv = []) {
   const args = parseArgs(argv);
   const positional = splitTaskAndFiles(args._ || []);
-  const task = args.task || positional.task;
+  const task = args.goal || args.task || positional.task;
   const graphFile = args.graph || "chay-memory/feature_graph.json";
   const currentGraph = optionalJson(graphFile);
   const matchedFeatureId = resolveFeatureId(task, args, currentGraph);
@@ -78,9 +78,11 @@ export async function go(argv = []) {
     });
   }
 
-  const explicitFiles = args.files || args.file || args["code-targets"] || positional.files.join(",");
+  const explicitFileOverride = args.files || args.file || args["code-targets"];
+  const positionalFiles = positional.files.join(",");
   const indexFile = args.index || ".chay/project_map.json";
   const maxFiles = args["max-files"] || args["max-notes"] || "3";
+  const includeDatabase = Boolean(args["include-database"] || hasDatabaseIntent(contractGoal || task));
 
   await quiet(() => scanRepo(["--root", args.root || ".", "--out", indexFile]));
   await quiet(() => planContext([
@@ -96,7 +98,16 @@ export async function go(argv = []) {
   ]));
   const plannedFiles = selectedFiles(contextFile);
   const existingCodeTargets = matchedFeatureId ? currentGraph?.code_targets || [] : [];
-  if (!explicitFiles && plannedFiles.length === 0 && existingCodeTargets.length === 0) {
+  const finalFiles = selectFinalFiles({
+    explicitFileOverride,
+    positionalFiles,
+    plannedFiles,
+    existingFiles: existingCodeTargets,
+    task: contractGoal || task,
+    includeDatabase,
+    maxFiles
+  });
+  if (!explicitFileOverride && plannedFiles.length === 0 && finalFiles.length === 0) {
     console.log(JSON.stringify({
       ok: false,
       command: "go",
@@ -115,7 +126,7 @@ export async function go(argv = []) {
     process.exitCode = 2;
     return;
   }
-  const files = mergeFileList(explicitFiles, plannedFiles, existingCodeTargets).join(",");
+  const files = finalFiles.join(",");
   syncContextSelectedFiles(contextFile, files, contractGoal || task);
 
   await quiet(() => createGraph([
@@ -190,7 +201,7 @@ export async function go(argv = []) {
     created: [graphFile, featureFlowFile, folderStructureFile, apiGraphFile, plantumlFlowFile, plantumlSequenceFile, plantumlApiGraphFile, contextFile, handoffFile],
     message: matchedFeatureId
       ? "Updated existing feature contract from repo scan and context plan."
-      : explicitFiles
+      : explicitFileOverride
         ? "Created feature contract from explicit files."
         : "Created feature contract from repo scan and context plan."
   });
@@ -200,9 +211,57 @@ function workNoteFile(worker) {
   return `chay-memory/${worker || defaultWorker()}_work_note.json`;
 }
 
-function mergeFileList(explicitFiles, plannedFiles, existingFiles = []) {
-  const explicit = String(explicitFiles || "").split(",").map((file) => file.trim()).filter(Boolean);
-  return [...new Set([...explicit, ...plannedFiles, ...existingFiles])];
+function selectFinalFiles({ explicitFileOverride, positionalFiles, plannedFiles, existingFiles = [], task = "", includeDatabase = false, maxFiles = 3 }) {
+  const explicit = listFiles(explicitFileOverride);
+  if (explicit.length > 0) return unique(explicit);
+
+  const positional = listFiles(positionalFiles);
+  const planned = listFiles(plannedFiles);
+  const plannedSet = new Set(planned);
+  const reusableExisting = listFiles(existingFiles)
+    .filter((file) => shouldReuseExistingTarget(file, { plannedSet, task, includeDatabase }));
+  const selected = unique([...positional, ...planned, ...reusableExisting]);
+  const limit = Math.max(Number(maxFiles) || 3, positional.length);
+  return selected.slice(0, limit);
+}
+
+function listFiles(value) {
+  if (Array.isArray(value)) return value.map((file) => String(file || "").trim()).filter(Boolean);
+  return String(value || "").split(",").map((file) => file.trim()).filter(Boolean);
+}
+
+function unique(values) {
+  return [...new Set(values.map((value) => String(value || "").trim()).filter(Boolean))];
+}
+
+function shouldReuseExistingTarget(file, { plannedSet, task, includeDatabase }) {
+  if (plannedSet.has(file)) return true;
+  if (isDatabaseTarget(file)) return includeDatabase || hasDatabaseIntent(task);
+  return targetMatchesIntent(file, task);
+}
+
+function targetMatchesIntent(file, task) {
+  const target = normalizeText(file);
+  const terms = signalTerms(task);
+  if (terms.size === 0) return false;
+  for (const term of terms) {
+    if (target.includes(term)) return true;
+  }
+  return false;
+}
+
+function hasDatabaseIntent(value) {
+  const terms = normalizeText(value).split(" ").filter(Boolean);
+  return terms.some((term) => ["migration", "migrations", "sql", "database", "schema", "table", "policy", "policies", "rls", "supabase", "postgres", "postgresql"].includes(term));
+}
+
+function isDatabaseTarget(file) {
+  const value = normalizeText(file);
+  return value.endsWith(".sql") || value.includes("/migrations/") || value.startsWith("migrations/") || value.includes("/supabase/") || value.includes("supabase-schema");
+}
+
+function normalizeText(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9_/. -]/g, " ");
 }
 
 function contractGoalForUpdate(task, currentGraph, matchedFeatureId, featureId = "") {
@@ -212,7 +271,7 @@ function contractGoalForUpdate(task, currentGraph, matchedFeatureId, featureId =
   if (featureIdFromGoal(requested) === (featureId || matchedFeatureId)) return requested;
   if (currentGoal.toLowerCase().includes(requested.toLowerCase())) return currentGoal;
   if (requested.toLowerCase().includes(currentGoal.toLowerCase())) return requested;
-  return `${currentGoal} / ${requested}`;
+  return `${currentGoal}; ${requested}`;
 }
 
 function syncContextSelectedFiles(contextFile, filesCsv, task) {

@@ -67,8 +67,17 @@ export function validateFeatureGraph(graph, policy = {}, options = {}) {
 
   const codeTargets = featureGraphCodeTargets(graph);
   if (codeTargets.length === 0) violations.push({ type: "code_targets_required" });
+  const databaseIntent = hasDatabaseIntent(graph.goal);
   for (const file of codeTargets) {
     if (path.isAbsolute(file) || file.includes("..")) violations.push({ type: "invalid_code_target_path", file });
+    if (isDatabaseTarget(file) && !databaseIntent) {
+      violations.push({
+        type: "database_target_without_database_intent",
+        file,
+        goal: graph.goal,
+        message: "Database or migration targets require database/schema/migration/sql intent in the feature goal."
+      });
+    }
     if (options.requireExistingFiles && !fs.existsSync(path.join(options.root || process.cwd(), file))) {
       violations.push({ type: "code_target_missing", file });
     }
@@ -149,6 +158,20 @@ export function createFeatureGraph({ goal, files = [], out = "chay-memory/featur
 
 export function featureIdFromGoal(value) {
   return slug(value || "feature");
+}
+
+function hasDatabaseIntent(value) {
+  const terms = String(value || "").toLowerCase().split(/[^a-z0-9_]+/).filter(Boolean);
+  return terms.some((term) => ["migration", "migrations", "sql", "database", "schema", "table", "policy", "policies", "rls", "supabase", "postgres", "postgresql"].includes(term));
+}
+
+function isDatabaseTarget(file) {
+  const value = String(file || "").toLowerCase().replace(/\\/g, "/");
+  return value.endsWith(".sql") ||
+    value.includes("/migrations/") ||
+    value.startsWith("migrations/") ||
+    value.includes("/supabase/") ||
+    value.includes("supabase-schema");
 }
 
 export function folderStructureFromTargets(files) {
