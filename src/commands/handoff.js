@@ -46,6 +46,13 @@ export async function createHandoff(argv = []) {
       feature_graph: graph ? graphFile : null,
       feature_id: graph?.feature_id || work?.feature_graph?.feature_id || null,
       goal: graph?.goal || work?.goal || context?.task || "",
+      implementation_order: graph?.implementation_order || [
+        "Read folder_structure.",
+        "Read user_flow.",
+        "Read sequence_diagram / plantuml_sequence.",
+        "Code only inside allowed files and preserve existing design patterns."
+      ],
+      folder_structure: graph?.folder_structure || [],
       user_flow: graph?.user_flow || graph?.mermaid || "",
       sequence_diagram: graph?.sequence_diagram || "",
       plantuml_flow: graph?.plantuml_flow || "",
@@ -60,6 +67,7 @@ export async function createHandoff(argv = []) {
     },
     guardrails: [
       "Do not delete existing behavior unless the graph/spec explicitly requires it.",
+      "Follow folder_structure first, then user_flow, then sequence_diagram before coding.",
       "Do not edit human-owned docs unless human_approved_files/human_approved_paths allows it.",
       "Do not read or change secrets, credentials, private keys, .env files, audit markdown, raw logs, or full prompts.",
       "Follow existing design patterns and local helpers before adding abstractions or dependencies.",

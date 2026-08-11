@@ -140,6 +140,10 @@ async function runAction(res, body) {
   const data = JSON.parse(body || "{}");
   const worker = normalizeAgentName(data.worker || defaultWorker());
   if (data.action === "create_task") return createUiTask(res, data, worker);
+  if (data.action === "go") return runCliAction(res, ["go", ...(data.task ? [data.task] : []), ...(data.files ? ["--files", data.files] : [])]);
+  if (data.action === "handoff") return runCliAction(res, ["handoff"]);
+  if (data.action === "verify") return sendJson(res, 200, buildEvalReport(loadPolicy(), { worker }));
+  if (data.action === "config_ide") return runCliAction(res, ["config", data.targets || "manual"]);
   if (data.action === "run_worker") { const dispatch = spawnWorker(worker, data); return sendJson(res, dispatch.ok ? 200 : 409, dispatch); }
   if (data.action === "validate_output") return validateUiOutput(res, data.file || resultNotePath(worker));
   if (data.action === "patch_check") return patchUiCheck(res, data.diff || ".chay/tmp/current.diff", data.work || workNotePath(worker));
@@ -237,6 +241,7 @@ function buildState() {
     selected_files: context.selected_files || [],
     feature_graph: optionalJson("memory/feature_graph.json"),
     handoff: optionalJson("memory/ai_handoff.json"),
+    ide_config: optionalJson("memory/ide_config.json"),
     progress_history: progressHistory,
     plan_ledger: optionalJson("memory/plan_ledger.json"),
     experience: optionalJson("memory/experience_spectrum.json"),
@@ -245,6 +250,21 @@ function buildState() {
     token_report: buildTokenReport(policy, { worker }),
     eval_report: buildEvalReport(policy, { worker })
   };
+}
+
+function runCliAction(res, args) {
+  const result = spawnSync(process.execPath, [cliPath, ...args], { encoding: "utf8" });
+  const text = result.stdout.trim() || result.stderr.trim();
+  let payload = null;
+  try {
+    payload = text ? JSON.parse(text) : {};
+  } catch {
+    payload = { ok: result.status === 0, stdout: compact(result.stdout), stderr: compact(result.stderr) };
+  }
+  if (result.status !== 0) {
+    return sendJson(res, 500, { ok: false, command: ["cr", ...args].join(" "), ...payload });
+  }
+  sendJson(res, 200, payload);
 }
 
 let runtimeCache = { at: 0, data: [] };

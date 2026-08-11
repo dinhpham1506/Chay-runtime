@@ -62,6 +62,7 @@ runIn(graphProject, "boundary", "check-graph", "--file", "memory/feature_graph.j
 const featureGraph = JSON.parse(fs.readFileSync(path.join(graphProject, "memory", "feature_graph.json"), "utf8"));
 assert.ok(featureGraph.plantuml_flow.includes("@startuml"));
 assert.ok(featureGraph.plantuml_sequence.includes("@startuml"));
+assert.deepEqual(featureGraph.folder_structure[0].code_targets, ["src/applyService.js"]);
 runIn(graphProject, "task", "--from-graph", "memory/feature_graph.json", "--compact");
 const graphWork = JSON.parse(fs.readFileSync(path.join(graphProject, "memory", "antigravity_work_note.json"), "utf8"));
 assert.equal(graphWork.feature_graph.source_of_truth, true);
@@ -75,6 +76,7 @@ const handoffFile = JSON.parse(fs.readFileSync(path.join(graphProject, "memory",
 assert.ok(handoffFile.guardrails.some((item) => item.includes("Do not delete existing behavior")));
 assert.equal(handoffFile.owasp_api_review.length, 10);
 assert.ok(handoffFile.source_of_truth.plantuml_sequence.includes("@startuml"));
+assert.ok(handoffFile.source_of_truth.implementation_order[0].includes("folder_structure"));
 const goProject = fs.mkdtempSync(path.join(os.tmpdir(), "chay-runtime-go-"));
 fs.mkdirSync(path.join(goProject, "src"), { recursive: true });
 fs.writeFileSync(path.join(goProject, "src", "applyService.js"), "export const apply = true;\n");
@@ -318,15 +320,14 @@ function verifyUiTemplate() {
   const html = fs.readFileSync(path.join(repoRoot, "site", "console.html"), "utf8");
   const server = fs.readFileSync(path.join(repoRoot, "src", "commands", "ui.js"), "utf8");
   const progress = fs.readFileSync(path.join(repoRoot, "src", "utils", "progress.js"), "utf8");
-  for (const text of ["workerName", "agentName", "testCommand", "progressStep", "streamStatus", "actionResult", "durationText", "live-age", "Worker result", "runtime-status"]) {
-    assert.ok(html.includes(text), `missing console control: ${text}`);
+  for (const text of ["Chạy Inspector", "targets", "taskText", "filesText", "idePrompt", "Feature Graph", "Folder Structure", "Selected Files", "Token Saving", "plantuml_sequence"]) {
+    assert.ok(html.includes(text), `missing inspector control: ${text}`);
   }
   assert.ok(progress.includes("validate_result"), "missing progress contract: validate_result");
   assert.ok(fs.readFileSync(path.join(repoRoot, "src", "core", "agents.js"), "utf8").includes("anti: \"antigravity\""));
-  for (const text of ["/api/stream", "testCommand", "worker_options", "stateSignature", "agent_runtime", "runtime_status"]) {
+  for (const text of ["/api/stream", "config_ide", "action === \"go\"", "action === \"handoff\"", "action === \"verify\"", "feature_graph", "handoff", "ide_config"]) {
     assert.ok(server.includes(text), `missing UI server contract: ${text}`);
   }
   assert.ok(server.includes("available_agents"));
-  assert.ok(server.includes("available_workers"));
   assert.ok(server.includes("result_notes"));
 }

@@ -17,6 +17,7 @@ export function validateFeatureGraph(graph, policy = {}, options = {}) {
   if (!stringField(graph.goal)) violations.push({ type: "missing_goal" });
   if (!Array.isArray(graph.nodes) || graph.nodes.length === 0) violations.push({ type: "nodes_required" });
   if (!Array.isArray(graph.edges) || graph.edges.length === 0) violations.push({ type: "edges_required" });
+  if (!Array.isArray(graph.folder_structure)) violations.push({ type: "folder_structure_required" });
   if (!stringField(graph.user_flow)) violations.push({ type: "user_flow_required" });
   if (!stringField(graph.sequence_diagram)) violations.push({ type: "sequence_diagram_required" });
   if (!stringField(graph.plantuml_flow)) violations.push({ type: "plantuml_flow_required" });
@@ -93,6 +94,7 @@ export function featureGraphInput(file = "memory/feature_graph.json") {
 export function createFeatureGraph({ goal, files = [], out = "memory/feature_graph.json", featureId = "" }) {
   const id = slug(featureId || goal || "feature");
   const codeTargets = [...new Set(files.map((file) => String(file || "").trim()).filter(Boolean))];
+  const folderStructure = folderStructureFromTargets(codeTargets);
   return {
     feature_id: id,
     goal,
@@ -101,6 +103,13 @@ export function createFeatureGraph({ goal, files = [], out = "memory/feature_gra
       source_of_truth: true,
       rule: "Workers must implement the feature graph, not rediscover the feature from source code."
     },
+    implementation_order: [
+      "1. Read folder_structure and keep the repository's current architecture boundaries.",
+      "2. Read user_flow to understand product behavior and error branches.",
+      "3. Read sequence_diagram / plantuml_sequence before coding interactions.",
+      "4. Edit only code_targets and preserve existing design patterns for maintainability and scale."
+    ],
+    folder_structure: folderStructure,
     nodes: [
       { id: "start", label: "User starts feature flow", type: "start" },
       { id: "primary_action", label: goal || "Primary user action", type: "action", code_targets: codeTargets },
@@ -161,6 +170,22 @@ export function createFeatureGraph({ goal, files = [], out = "memory/feature_gra
       ]
     })
   };
+}
+
+export function folderStructureFromTargets(files) {
+  const groups = new Map();
+  for (const file of files) {
+    const normalized = String(file || "").replace(/\\/g, "/").replace(/^\.\/+/, "");
+    if (!normalized) continue;
+    const folder = normalized.includes("/") ? normalized.split("/").slice(0, -1).join("/") : ".";
+    if (!groups.has(folder)) groups.set(folder, []);
+    groups.get(folder).push(normalized);
+  }
+  return [...groups.entries()].map(([folder, targets]) => ({
+    folder,
+    code_targets: targets,
+    rule: "Follow existing files in this folder before adding new structure."
+  }));
 }
 
 export function mermaidSequence(goal) {

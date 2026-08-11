@@ -1,10 +1,23 @@
 {
   "type": "object",
-  "required": ["feature_id", "goal", "nodes", "edges", "code_targets", "user_flow", "sequence_diagram", "plantuml_flow", "plantuml_sequence"],
+  "required": ["feature_id", "goal", "folder_structure", "nodes", "edges", "code_targets", "user_flow", "sequence_diagram", "plantuml_flow", "plantuml_sequence"],
   "properties": {
     "feature_id": { "type": "string" },
     "goal": { "type": "string" },
     "contract": { "type": "object" },
+    "implementation_order": { "type": "array", "items": { "type": "string" } },
+    "folder_structure": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["folder", "code_targets"],
+        "properties": {
+          "folder": { "type": "string" },
+          "code_targets": { "type": "array", "items": { "type": "string" } },
+          "rule": { "type": "string" }
+        }
+      }
+    },
     "nodes": {
       "type": "array",
       "items": {

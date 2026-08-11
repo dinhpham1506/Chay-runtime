@@ -1,545 +1,395 @@
 <!doctype html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Chạy Console</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chạy Inspector</title>
   <style>
     :root {
-      --bg: #eef2f6;
-      --surface: #ffffff;
-      --surface-soft: #f8fafc;
-      --ink: #172033;
-      --muted: #64748b;
-      --line: #d8e1ea;
-      --primary: #102033;
-      --accent: #0f766e;
-      --accent-soft: #e6f4f1;
-      --warn: #b45309;
-      --danger: #b42318;
-      --code-bg: #101828;
-      --code-ink: #d8e7ff;
-      --shadow: 0 10px 28px rgba(16, 32, 51, 0.08);
+      --bg: #0b0d10;
+      --panel: #12161a;
+      --panel-2: #171c21;
+      --line: #2a333b;
+      --text: #eef3f1;
+      --muted: #9aa8a2;
+      --accent: #55d69f;
+      --warn: #f0c46a;
+      --bad: #ff6b6b;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
     * { box-sizing: border-box; }
-    html { color-scheme: light; }
     body {
       margin: 0;
-      min-height: 100dvh;
-      font: 14px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: var(--sans);
       background: var(--bg);
-      color: var(--ink);
+      color: var(--text);
+      line-height: 1.45;
     }
-
-    button, textarea, input, select { font: inherit; }
+    button, input, textarea {
+      font: inherit;
+    }
     button {
-      min-height: 44px;
-      border: 0;
-      border-radius: 8px;
-      padding: 10px 14px;
-      background: var(--primary);
-      color: #fff;
-      cursor: pointer;
-      transition: background 180ms ease, box-shadow 180ms ease, transform 180ms ease;
-    }
-    button:hover { background: #1d3148; }
-    button:active { transform: translateY(1px); }
-    button:disabled {
-      cursor: wait;
-      opacity: 0.68;
-      transform: none;
-    }
-    button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-visible {
-      outline: 3px solid rgba(15, 118, 110, 0.26);
-      outline-offset: 2px;
-    }
-    button.secondary {
-      background: #e2e8f0;
-      color: var(--ink);
-    }
-    button.secondary:hover { background: #d6dee9; }
-
-    textarea, input, select {
-      width: 100%;
-      min-height: 44px;
+      min-height: 40px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      padding: 10px 12px;
-      color: var(--ink);
-      background: #fff;
-    }
-    textarea {
-      min-height: 92px;
-      resize: vertical;
-    }
-    input[type="checkbox"] {
-      width: 18px;
-      min-height: 18px;
-      accent-color: var(--accent);
-    }
-    label {
-      display: block;
-      margin-bottom: 8px;
-      color: var(--ink);
+      background: var(--panel-2);
+      color: var(--text);
+      padding: 9px 12px;
+      cursor: pointer;
       font-weight: 650;
     }
-
-    .app-header {
-      min-height: 64px;
-      padding: 12px 20px;
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #06100d;
+    }
+    button:disabled {
+      opacity: .55;
+      cursor: wait;
+    }
+    input, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #0f1317;
+      color: var(--text);
+      padding: 10px 11px;
+      outline: none;
+    }
+    textarea { min-height: 82px; resize: vertical; }
+    label {
+      display: block;
+      margin: 0 0 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    code, pre {
+      font-family: var(--mono);
+    }
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      border-bottom: 1px solid var(--line);
+      background: rgba(11, 13, 16, .92);
+      backdrop-filter: blur(10px);
+    }
+    .topbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
-      background: var(--primary);
-      color: #fff;
-      box-shadow: var(--shadow);
+      padding: 14px 18px;
     }
     .brand {
       display: flex;
-      flex-wrap: wrap;
+      gap: 10px;
       align-items: center;
-      gap: 10px 14px;
-      min-width: 0;
+      font-family: var(--mono);
+      font-size: 15px;
+      font-weight: 800;
     }
-    .brand-mark {
+    .dot {
       width: 10px;
       height: 10px;
-      border-radius: 999px;
-      background: #19c37d;
-      box-shadow: 0 0 0 5px rgba(25, 195, 125, 0.14);
-      flex: 0 0 auto;
-    }
-    .brand-title { font-size: 16px; font-weight: 750; }
-    .header-meta {
-      color: #c7d7ea;
-      font-size: 12px;
-      overflow-wrap: anywhere;
-    }
-    .live-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      min-height: 28px;
-      border: 1px solid rgba(255,255,255,0.18);
-      border-radius: 999px;
-      padding: 3px 10px;
-      color: #dce8f6;
-      font-size: 12px;
-      white-space: nowrap;
-    }
-    .live-pill::before {
-      content: "";
-      width: 8px;
-      height: 8px;
       border-radius: 50%;
-      background: #f59e0b;
+      background: var(--accent);
+      box-shadow: 0 0 18px rgba(85, 214, 159, .6);
     }
-    .live-pill.connected::before { background: #19c37d; }
-    .live-pill.disconnected::before { background: #ef4444; }
-
-    .layout {
+    .meta {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+    main {
       display: grid;
-      grid-template-columns: minmax(260px, 300px) minmax(0, 1fr) minmax(300px, 380px);
-      min-height: calc(100dvh - 64px);
-    }
-    .sidebar, .inspector {
-      background: var(--surface);
-      overflow: auto;
-    }
-    .sidebar { border-right: 1px solid var(--line); }
-    .inspector { border-left: 1px solid var(--line); }
-    .workspace {
-      min-width: 0;
-      overflow: auto;
-      padding: 18px;
+      grid-template-columns: 360px minmax(0, 1fr);
+      gap: 14px;
+      padding: 14px;
     }
     .panel {
-      padding: 16px;
-      border-bottom: 1px solid var(--line);
-    }
-    .panel h2, .section-title {
-      margin: 0 0 12px;
-      font-size: 14px;
-      line-height: 1.2;
-    }
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 10px;
-    }
-    .actions button { margin: 0; }
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-      margin-top: 12px;
-    }
-    .field-full { grid-column: 1 / -1; }
-    .check-row {
-      min-height: 44px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: var(--ink);
-      font-weight: 650;
-    }
-    .field-help {
-      display: block;
-      margin-top: 5px;
-      color: var(--muted);
-      font-size: 12px;
-    }
-    .muted { color: var(--muted); }
-
-    .flow {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(150px, 1fr));
-      gap: 12px;
-    }
-    .lane {
-      min-height: 210px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: var(--surface-soft);
-      overflow: hidden;
+      background: var(--panel);
+      padding: 14px;
+      min-width: 0;
     }
-    .lane h3 {
-      margin: 0;
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--line);
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 750;
+    .stack {
+      display: grid;
+      gap: 12px;
     }
-    .lane h3 span { display: block; color: var(--ink); font-size: 13px; }
-    .lane h3 code { color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; }
-    .agent-card {
-      margin: 10px;
-      padding: 10px;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      background: #fff;
-      box-shadow: 0 4px 12px rgba(16, 32, 51, 0.06);
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
     }
-    .agent-card b, .item b { display: block; }
-    .agent-card .meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px 10px;
-      margin-top: 8px;
-      color: var(--muted);
-      font-size: 12px;
+    .actions .wide {
+      grid-column: 1 / -1;
     }
-    .agent-card p, .item p {
-      margin: 7px 0 0;
-      color: #334155;
-      overflow-wrap: anywhere;
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
     }
-    .section-block { margin-top: 18px; }
-    .section-head {
+    .section-title {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      margin-bottom: 6px;
+      margin: 0 0 10px;
+      font-size: 14px;
+      font-weight: 800;
+      font-family: var(--mono);
     }
-    .section-head .section-title { margin: 0; }
-    .section-head small { color: var(--muted); }
-    .item {
-      padding: 10px 0;
-      border-top: 1px solid #edf2f7;
-      overflow-wrap: anywhere;
-    }
-    .status {
+    .pill {
       display: inline-flex;
       align-items: center;
       min-height: 24px;
+      border: 1px solid var(--line);
       border-radius: 999px;
       padding: 2px 8px;
-      color: var(--accent);
-      background: var(--accent-soft);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+    .pill.ok { color: var(--accent); border-color: rgba(85, 214, 159, .35); }
+    .pill.bad { color: var(--bad); border-color: rgba(255, 107, 107, .35); }
+    .kv {
+      display: grid;
+      gap: 8px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 132px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .row b {
+      color: var(--text);
+      font-weight: 700;
+    }
+    .list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .tag {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 4px 7px;
+      color: var(--muted);
+      background: #0f1317;
+      font-family: var(--mono);
       font-size: 12px;
-      font-weight: 650;
-    }
-    .status.warn {
-      color: var(--warn);
-      background: #fff7ed;
-    }
-    .status.danger {
-      color: var(--danger);
-      background: #fff1f2;
     }
     .log {
-      min-height: 96px;
-      margin-top: 12px;
-      white-space: pre-wrap;
-      border-radius: 8px;
-      padding: 12px;
-      background: var(--code-bg);
-      color: var(--code-ink);
-      font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      max-height: 320px;
       overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #0f1317;
+      padding: 11px;
+      color: var(--muted);
+      font-size: 12px;
     }
-    .files { font-size: 12px; }
-
-    @media (max-width: 1180px) {
-      .layout { grid-template-columns: minmax(260px, 300px) minmax(0, 1fr); }
-      .inspector {
-        grid-column: 1 / -1;
-        border-left: 0;
-        border-top: 1px solid var(--line);
-      }
-      .flow { grid-template-columns: repeat(3, minmax(140px, 1fr)); }
+    .prompt {
+      color: var(--accent);
+      font-size: 12px;
     }
-
-    @media (max-width: 760px) {
-      .app-header { align-items: flex-start; flex-direction: column; }
-      .layout { grid-template-columns: 1fr; }
-      .sidebar, .inspector {
-        border-right: 0;
-        border-left: 0;
-      }
-      .workspace { padding: 14px; }
-      .flow { grid-template-columns: 1fr; }
+    .warn { color: var(--warn); }
+    .bad { color: var(--bad); }
+    .muted { color: var(--muted); }
+    .empty {
+      color: var(--muted);
+      font-size: 13px;
+      padding: 10px 0;
     }
-
-    @media (prefers-reduced-motion: reduce) {
-      * {
-        scroll-behavior: auto !important;
-        transition-duration: 0.01ms !important;
-        animation-duration: 0.01ms !important;
-      }
+    @media (max-width: 980px) {
+      main { grid-template-columns: 1fr; }
+      .grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <header class="app-header">
-    <div class="brand">
-      <span class="brand-mark" aria-hidden="true"></span>
-      <span class="brand-title">Chạy Console</span>
-      <span id="stamp" class="header-meta"></span>
-      <span id="runner" class="header-meta" aria-live="polite"></span>
+  <header>
+    <div class="topbar">
+      <div class="brand"><span class="dot"></span> Chạy Inspector</div>
+      <div class="meta"><span id="streamStatus">connecting</span> · <span id="stamp">--:--:--</span></div>
     </div>
-    <span id="streamStatus" class="live-pill disconnected" aria-live="polite">Connecting / Đang kết nối</span>
   </header>
 
-  <div class="layout">
-    <aside class="sidebar" aria-label="Task controls / Điều khiển task">
+  <main>
+    <aside class="stack">
       <section class="panel">
-        <h2>Task run / Chạy task</h2>
-        <label for="taskText">Task / Việc cần làm</label>
-        <textarea id="taskText" placeholder="Fix duplicate apply service / Sửa lỗi apply bị trùng"></textarea>
-        <div class="form-grid">
+        <h2 class="section-title">Control</h2>
+        <div class="stack">
           <div>
-            <label for="workerName">Worker / Agent làm việc</label>
-            <select id="workerName"></select>
+            <label for="targets">IDE targets</label>
+            <input id="targets" value="codex,claude,anti,github-copilot,cursor,kiro">
           </div>
           <div>
-            <label for="agentName">Engine / Bộ chạy</label>
-            <select id="agentName"></select>
+            <label for="taskText">Feature / task</label>
+            <textarea id="taskText" placeholder="User applies to job"></textarea>
           </div>
           <div>
-            <label for="maxRetries">Retries / Số lần thử</label>
-            <input id="maxRetries" type="number" min="0" max="10" value="3">
+            <label for="filesText">Files override</label>
+            <input id="filesText" placeholder="src/applyService.js">
           </div>
-          <label class="check-row" for="isolate">
-            <input id="isolate" type="checkbox">
-            Isolate / Cô lập
-          </label>
-          <div class="field-full">
-            <label for="testCommand">Test command / Lệnh test</label>
-            <input id="testCommand" placeholder="npm test">
-            <span class="field-help">Optional / Tuỳ chọn. <code>cr run</code> chỉ ghi bước testing khi có lệnh này.</span>
+          <div class="actions">
+            <button class="primary" data-action="go">Create Contract</button>
+            <button data-action="handoff">Refresh Handoff</button>
+            <button data-action="config">Configure IDE</button>
+            <button data-action="verify">Verify</button>
+            <button data-action="token">Token Report</button>
+            <button data-action="patch">Patch Check</button>
           </div>
         </div>
-        <div class="actions">
-          <button type="button" class="secondary" data-action="create-note">Create task / Tạo task</button>
-          <button type="button" data-action="create-task">Create + Run / Tạo + chạy</button>
-          <button type="button" class="secondary" data-action="run-worker">Run / Chạy</button>
-        </div>
       </section>
 
       <section class="panel">
-        <h2>Manual progress / Ghi tiến độ</h2>
-        <label for="progressStep">Step / Bước</label>
-        <select id="progressStep"></select>
-        <label for="progressMessage">Message / Tin nhắn</label>
-        <input id="progressMessage" placeholder="Editing backend structure / Đang sửa cấu trúc backend">
-        <div class="actions">
-          <button type="button" class="secondary" data-action="update-progress">Write progress / Ghi tiến độ</button>
-        </div>
+        <h2 class="section-title">IDE Prompt <button data-action="copy-prompt">Copy</button></h2>
+        <pre id="idePrompt" class="log prompt"></pre>
       </section>
 
       <section class="panel">
-        <h2>Efficiency / Hiệu suất</h2>
-        <div id="quality"></div>
-        <div class="actions">
-          <button type="button" class="secondary" data-action="eval-report">Refresh quality / Cập nhật chất lượng</button>
-        </div>
-      </section>
-
-      <section class="panel">
-        <h2>Token budget / Ngân sách token</h2>
-        <div id="tokens"></div>
-        <div class="actions">
-          <button type="button" class="secondary" data-action="token-report">Refresh tokens / Cập nhật token</button>
-        </div>
-      </section>
-
-      <section class="panel">
-        <h2>Checks / Kiểm tra</h2>
-        <div class="actions">
-          <button type="button" data-action="validate-output">Validate result / Kiểm tra kết quả</button>
-          <button type="button" class="secondary" data-action="patch-check">Patch check / Kiểm tra patch</button>
-          <button type="button" class="secondary" data-action="experience-snapshot">Experience / Kinh nghiệm</button>
-        </div>
-        <div id="checks" class="log" aria-live="polite"></div>
-        <div id="actionResult" class="log" aria-live="polite"></div>
+        <h2 class="section-title">Last Action</h2>
+        <pre id="actionResult" class="log"></pre>
       </section>
     </aside>
 
-    <main class="workspace" aria-label="Realtime workflow / Luồng realtime">
-      <div id="flow" class="flow"></div>
+    <section class="stack">
+      <div class="grid">
+        <section class="panel">
+          <h2 class="section-title">Current Task <span id="taskStatus" class="pill">unknown</span></h2>
+          <div id="overview" class="kv"></div>
+        </section>
 
-      <section class="section-block">
-        <h2 class="section-title">Tasks / Task</h2>
-        <div id="tasks"></div>
-      </section>
+        <section class="panel">
+          <h2 class="section-title">Artifacts</h2>
+          <div id="artifacts" class="kv"></div>
+        </section>
+      </div>
 
-      <section class="section-block">
-        <h2 class="section-title">Worker result / Kết quả worker</h2>
-        <div id="results"></div>
-      </section>
+      <div class="grid">
+        <section class="panel">
+          <h2 class="section-title">Feature Graph</h2>
+          <div id="graphSummary" class="kv"></div>
+        </section>
 
-      <section class="section-block">
-        <h2 class="section-title">Timeline / Dòng thời gian</h2>
-        <div id="timeline"></div>
-      </section>
-
-      <section class="section-block">
-        <h2 class="section-title">Plan ledger / Sổ kế hoạch</h2>
-        <div id="ledger"></div>
-      </section>
-    </main>
-
-    <aside class="inspector" aria-label="Project context / Context dự án">
-      <section class="panel">
-        <h2>Feature graph / Luồng tính năng</h2>
-        <div id="featureGraph"></div>
-      </section>
+        <section class="panel">
+          <h2 class="section-title">Folder Structure</h2>
+          <div id="folders" class="kv"></div>
+        </section>
+      </div>
 
       <section class="panel">
-        <h2>Selected files / File đã chọn</h2>
-        <div id="files" class="files"></div>
+        <h2 class="section-title">Selected Files</h2>
+        <div id="files" class="list"></div>
       </section>
 
-      <section class="panel">
-        <h2>Experience / Kinh nghiệm</h2>
-        <div id="experience"></div>
-      </section>
+      <div class="grid">
+        <section class="panel">
+          <h2 class="section-title">Verify</h2>
+          <div id="verify" class="kv"></div>
+        </section>
+
+        <section class="panel">
+          <h2 class="section-title">Token Saving</h2>
+          <div id="tokens" class="kv"></div>
+        </section>
+      </div>
 
       <section class="panel">
-        <h2>Runtime / Bộ chạy</h2>
-        <div id="runtime"></div>
-        <div class="actions">
-          <button type="button" class="secondary" data-action="runtime-status">Check runtime / Kiểm tra runtime</button>
+        <h2 class="section-title">Diagrams</h2>
+        <div class="grid">
+          <pre id="userFlow" class="log"></pre>
+          <pre id="sequence" class="log"></pre>
+          <pre id="plantFlow" class="log"></pre>
+          <pre id="plantSequence" class="log"></pre>
         </div>
       </section>
-
-      <section class="panel">
-        <h2>Chat / Trao đổi</h2>
-        <div id="chat"></div>
-        <label for="message">Message / Tin nhắn</label>
-        <textarea id="message" placeholder="Send a note / Gửi ghi chú"></textarea>
-        <div class="actions">
-          <button type="button" data-action="send-chat">Send / Gửi</button>
-        </div>
-      </section>
-    </aside>
-  </div>
+    </section>
+  </main>
 
   <script>
-    const agentAliases = { anti: "antigravity" };
-    const steps = ["assigned", "reading", "planning", "editing", "validate_result", "testing", "patch_check", "done", "blocked"];
-    const stepLabels = {
-      assigned: "Assigned / Đã giao",
-      reading: "Reading / Đọc ghi chú",
-      planning: "Planning / Lập kế hoạch",
-      editing: "Editing / Đang sửa",
-      validate_result: "Validate result / Kiểm tra kết quả",
-      testing: "Testing / Chạy test",
-      patch_check: "Patch check / Kiểm tra patch",
-      done: "Done / Hoàn tất",
-      blocked: "Blocked / Bị chặn"
-    };
     const $ = (id) => document.getElementById(id);
     const els = {
       stamp: $("stamp"),
-      runner: $("runner"),
       streamStatus: $("streamStatus"),
-      flow: $("flow"),
+      targets: $("targets"),
       taskText: $("taskText"),
-      workerName: $("workerName"),
-      agentName: $("agentName"),
-      maxRetries: $("maxRetries"),
-      isolate: $("isolate"),
-      testCommand: $("testCommand"),
-      progressStep: $("progressStep"),
-      progressMessage: $("progressMessage"),
-      quality: $("quality"),
-      tokens: $("tokens"),
-      checks: $("checks"),
+      filesText: $("filesText"),
+      idePrompt: $("idePrompt"),
       actionResult: $("actionResult"),
-      tasks: $("tasks"),
-      results: $("results"),
-      timeline: $("timeline"),
-      ledger: $("ledger"),
-      featureGraph: $("featureGraph"),
+      taskStatus: $("taskStatus"),
+      overview: $("overview"),
+      artifacts: $("artifacts"),
+      graphSummary: $("graphSummary"),
+      folders: $("folders"),
       files: $("files"),
-      experience: $("experience"),
-      runtime: $("runtime"),
-      chat: $("chat"),
-      message: $("message")
+      verify: $("verify"),
+      tokens: $("tokens"),
+      userFlow: $("userFlow"),
+      sequence: $("sequence"),
+      plantFlow: $("plantFlow"),
+      plantSequence: $("plantSequence")
     };
     let currentState = null;
-    let clockTimer = null;
 
-    document.addEventListener("click", (event) => {
+    document.addEventListener("click", async (event) => {
       const button = event.target.closest("button[data-action]");
       if (!button) return;
-      runButtonAction(button, actions[button.dataset.action]);
+      await runAction(button, button.dataset.action);
     });
 
-    const actions = {
-      "create-note": createNote,
-      "create-task": createTask,
-      "run-worker": runWorker,
-      "update-progress": updateProgress,
-      "validate-output": validateOutput,
-      "patch-check": patchCheck,
-      "token-report": tokenReport,
-      "eval-report": evalReport,
-      "experience-snapshot": experienceSnapshot,
-      "runtime-status": runtimeStatus,
-      "send-chat": sendChat
-    };
-
-    async function runButtonAction(button, action) {
-      if (!action) return;
+    async function runAction(button, action) {
       const old = button.textContent;
       button.disabled = true;
-      button.textContent = "Working... / Đang chạy...";
+      button.textContent = "Working";
       try {
-        await action();
+        if (action === "copy-prompt") {
+          await navigator.clipboard.writeText(els.idePrompt.textContent);
+          showResult({ ok: true, copied: "ide_prompt" });
+          return;
+        }
+        const body = actionPayload(action);
+        const result = await api("/api/action", body);
+        showResult(result);
+        await load();
       } catch (error) {
         showResult({ ok: false, error: error.message || String(error) });
       } finally {
         button.disabled = false;
         button.textContent = old;
       }
+    }
+
+    function actionPayload(action) {
+      if (action === "go") {
+        return {
+          action: "go",
+          task: els.taskText.value.trim(),
+          files: els.filesText.value.trim()
+        };
+      }
+      if (action === "config") return { action: "config_ide", targets: els.targets.value.trim() || "manual" };
+      if (action === "handoff") return { action: "handoff" };
+      if (action === "verify") return { action: "verify" };
+      if (action === "token") return { action: "token_report" };
+      if (action === "patch") return { action: "patch_check" };
+      return { action };
     }
 
     async function api(path, body) {
@@ -553,321 +403,136 @@
       return data;
     }
 
-    function render(state) {
-      currentState = state;
-      els.stamp.textContent = new Date(state.generated_at).toLocaleTimeString();
-      renderRunnerClock();
-      syncControls(state);
-      els.flow.innerHTML = steps.map((step) => `<div class="lane"><h3><span>${stepLabels[step] || step}</span><code>${step}</code></h3><div id="c-${step}"></div></div>`).join("");
-
-      for (const agent of state.agents) {
-        const step = steps.includes(agent.step) ? agent.step : "assigned";
-        $(`c-${step}`).insertAdjacentHTML("beforeend", [
-          "<div class=\"agent-card\">",
-          `<b>${esc(agent.agent)}</b>`,
-          `<small>${esc(agent.role)} / ${esc(agent.llm)}</small>`,
-          `<p>${esc(agent.message || agent.step)}</p>`,
-          `<div class="meta"><span>${esc(stepLabels[step] || step)}</span><span class="live-age" data-at="${esc(agent.updated_at || "")}">${esc(ageText(agent.updated_at))}</span></div>`,
-          "</div>"
-        ].join(""));
-      }
-
-      els.tasks.innerHTML = state.tasks.map((task) => [
-        "<div class=\"item\">",
-        `<b>${esc(task.agent || "")}</b> <span class="status">${esc(task.status || "")}</span>`,
-        `<p>${esc(task.goal || "")}</p>`,
-        `<small>${esc((task.files || []).join(", "))}</small>`,
-        "</div>"
-      ].join("")).join("") || "<p class=\"muted\">No tasks / Chưa có task</p>";
-
-      els.files.innerHTML = state.selected_files.map((file) => [
-        "<div class=\"item\">",
-        `${esc(file.path)}<br><small>${esc(file.role || "")}</small>`,
-        "</div>"
-      ].join("")).join("") || "<p class=\"muted\">No context / Chưa có context</p>";
-
-      els.timeline.innerHTML = renderTimeline(state.progress_history || []);
-      els.results.innerHTML = renderResults(state.result_notes || []);
-      els.ledger.innerHTML = renderLedger(state.plan_ledger);
-      els.featureGraph.innerHTML = renderFeatureGraph(state.feature_graph);
-      els.experience.innerHTML = renderExperience(state.experience);
-      els.runtime.innerHTML = renderRuntime(state.agent_runtime || []);
-      els.chat.innerHTML = state.chat.map((message) => [
-        "<div class=\"item\">",
-        `<b>${esc(message.from)} -> ${esc(message.to)}</b>`,
-        `<p>${esc(message.message)}</p>`,
-        "</div>"
-      ].join("")).join("") || "<p class=\"muted\">No messages / Chưa có tin nhắn</p>";
-
-      renderQuality(state.eval_report);
-      renderTokens(state.token_report);
-      els.checks.textContent = JSON.stringify(state.checks, null, 2);
-    }
-
-    function syncControls(state) {
-      const firstWorker = (state.agents || []).find((agent) => agent.role === "worker");
-      const worker = firstWorker?.agent || state.default_worker || "codex";
-      syncOptions(els.workerName, state.available_workers || state.available_agents || ["codex"], worker);
-      syncOptions(els.agentName, state.available_agents || ["codex", "claude", "antigravity"], firstWorker?.agent || worker);
-      if (!els.workerName.dataset.touched) els.workerName.value = worker;
-      if (!els.agentName.dataset.touched) els.agentName.value = firstWorker?.agent || worker;
-      if (!els.progressStep.options.length) {
-        for (const step of state.progress_steps || steps) {
-          const option = document.createElement("option");
-          option.value = step;
-          option.textContent = `${stepLabels[step] || step} (${step})`;
-          els.progressStep.appendChild(option);
-        }
-        els.progressStep.value = "editing";
-      }
-    }
-
-    function syncOptions(select, values, preferred) {
-      const normalized = [...new Set(values.map(normalizeAgentName).filter(Boolean))];
-      const current = select.value || preferred;
-      const next = normalized.includes(normalizeAgentName(current)) ? normalizeAgentName(current) : normalizeAgentName(preferred || normalized[0] || "codex");
-      const signature = normalized.join(",");
-      if (select.dataset.options === signature) {
-        select.value = next;
-        return;
-      }
-      select.innerHTML = normalized.map((value) => `<option value="${esc(value)}">${esc(agentLabel(value))}</option>`).join("");
-      select.dataset.options = signature;
-      select.value = next;
-    }
-
-    function normalizeAgentName(agent) {
-      const value = String(agent || "").trim().toLowerCase();
-      return agentAliases[value] || value;
-    }
-
-    function agentLabel(agent) {
-      return agent === "antigravity" ? "Antigravity" : agent.charAt(0).toUpperCase() + agent.slice(1);
-    }
-
-    function renderRunnerClock() {
-      const runner = currentState?.runner;
-      if (!runner) {
-        els.runner.textContent = "";
-        return;
-      }
-      els.runner.textContent = `${runner.worker} running / đang chạy (${runner.engine}) ${durationText(Date.now() - Date.parse(runner.started_at))} pid ${runner.pid}`;
-    }
-
     async function load() {
-      try {
-        render(await fetch("/api/state").then((response) => response.json()));
-      } catch {
-        // The next SSE update or interval tick can recover the view.
-      }
+      const state = await fetch("/api/state").then((response) => response.json());
+      render(state);
     }
 
     function connect() {
       const stream = new EventSource("/api/stream");
-      stream.onopen = () => setStreamStatus(true);
+      stream.onopen = () => setStream(true);
+      stream.onerror = () => setStream(false);
       stream.onmessage = (event) => {
         try { render(JSON.parse(event.data)); } catch {}
       };
-      stream.onerror = () => setStreamStatus(false);
     }
 
-    function setStreamStatus(connected) {
-      els.streamStatus.classList.toggle("connected", connected);
-      els.streamStatus.classList.toggle("disconnected", !connected);
-      els.streamStatus.textContent = connected ? "Realtime connected / Đã kết nối realtime" : "Realtime reconnecting / Đang kết nối lại";
+    function render(state) {
+      currentState = state;
+      els.stamp.textContent = new Date(state.generated_at).toLocaleTimeString();
+      const handoff = state.handoff || {};
+      const graph = state.feature_graph || {};
+      const ide = state.ide_config || {};
+      const status = handoff.status || {};
+      const files = unique([
+        ...(handoff.relevant_files?.allowed_files || []),
+        ...(handoff.relevant_files?.graph_code_targets || []),
+        ...(handoff.relevant_files?.context_selected_files || []),
+        ...(state.selected_files || []).map((file) => file.path)
+      ]);
+
+      const done = status.task_status === "completed";
+      els.taskStatus.textContent = status.task_status || "not_started";
+      els.taskStatus.className = `pill ${done ? "ok" : "bad"}`;
+
+      els.overview.innerHTML = rows([
+        ["Goal", graph.goal || handoff.source_of_truth?.goal || firstTask(state)],
+        ["Next", status.next_action || state.eval_report?.next_action || ""],
+        ["IDE mode", ide.mode || "not configured"],
+        ["Targets", (ide.targets || []).join(", ") || "manual"],
+        ["Worker file", state.default_worker ? `memory/${state.default_worker}_work_note.json` : ""]
+      ]);
+
+      els.artifacts.innerHTML = rows([
+        ["Handoff", "memory/ai_handoff.json"],
+        ["Graph", graph.feature_id ? "memory/feature_graph.json" : "missing"],
+        ["Instructions", ide.instruction_file || ".chay/ide/CHAY_IDE_INSTRUCTIONS.md"],
+        ["Result", state.default_worker ? `memory/${state.default_worker}_result_note.json` : ""]
+      ]);
+
+      els.graphSummary.innerHTML = rows([
+        ["Feature", graph.feature_id || ""],
+        ["Nodes", String((graph.nodes || []).length)],
+        ["Edges", String((graph.edges || []).length)],
+        ["Code targets", (graph.code_targets || []).join(", ")]
+      ]);
+
+      els.folders.innerHTML = renderFolders(graph.folder_structure || handoff.source_of_truth?.folder_structure || []);
+      els.files.innerHTML = files.length ? files.map((file) => `<span class="tag">${esc(file)}</span>`).join("") : `<div class="empty">No selected files</div>`;
+      els.verify.innerHTML = renderVerify(state.eval_report);
+      els.tokens.innerHTML = renderTokens(state.token_report);
+      els.userFlow.textContent = graph.user_flow || graph.mermaid || "No Mermaid user flow";
+      els.sequence.textContent = graph.sequence_diagram || "No Mermaid sequence";
+      els.plantFlow.textContent = graph.plantuml_flow || "No PlantUML flow";
+      els.plantSequence.textContent = graph.plantuml_sequence || "No PlantUML sequence";
+      els.idePrompt.textContent = promptText();
     }
 
-    function renderQuality(report) {
-      els.quality.innerHTML = [
-        `<div class="item"><b>${report.score}/100</b> ${esc(report.grade)}</div>`,
-        `<div class="item"><small>next action / hành động tiếp: ${esc(report.next_action)}</small></div>`,
-        ...report.cases.map((item) => `<div class="item">${item.ok ? "OK" : "FAIL"} ${esc(item.id)}<br><small>${esc(item.value)}</small></div>`)
-      ].join("");
+    function renderVerify(report) {
+      if (!report) return `<div class="empty">No report</div>`;
+      const violations = report.violations || [];
+      return rows([
+        ["Score", `${report.score}/100 ${report.grade}`],
+        ["Status", report.ok ? "ok" : "needs work"],
+        ["Next", report.next_action],
+        ["Violations", violations.length ? violations.map((item) => item.type).join(", ") : "none"]
+      ]);
     }
 
     function renderTokens(report) {
-      els.tokens.innerHTML = [
-        `<div class="item"><b>${report.estimates.chay_context_tokens}</b> Chạy Runtime tokens</div>`,
-        `<div class="item"><b>${report.estimates.full_repo_tokens}</b> full repo estimate / ước tính toàn repo</div>`,
-        `<div class="item"><b>${report.estimates.savings_percent}%</b> savings / tiết kiệm</div>`,
-        `<div class="item">work note / ghi chú việc ${report.notes.work_note.tokens}/${report.budgets.maxNoteTokens}<br>result note / ghi chú kết quả ${report.notes.result_note.tokens}/${report.budgets.maxResultTokens}<br><small>${esc((report.violations || []).map((item) => item.type).join(", ") || "within budget / trong ngân sách")}</small></div>`
-      ].join("");
+      if (!report?.estimates) return `<div class="empty">No token report</div>`;
+      return rows([
+        ["Chạy context", String(report.estimates.chay_context_tokens)],
+        ["Full repo", String(report.estimates.full_repo_tokens)],
+        ["Saved", String(report.estimates.saved_tokens)],
+        ["Savings", `${report.estimates.savings_percent}%`]
+      ]);
     }
 
-    function renderTimeline(history) {
-      const rows = history.slice(-20);
-      return rows.slice().reverse().map((item, reversedIndex) => {
-        const index = rows.length - 1 - reversedIndex;
-        const next = rows[index + 1];
-        const ms = next?.updated_at ? Date.parse(next.updated_at) - Date.parse(item.updated_at) : Date.now() - Date.parse(item.updated_at);
-        const duration = Number.isFinite(ms) && ms >= 0 ? durationText(ms) : "";
-        return [
-        "<div class=\"item\">",
-        `<b>${esc(item.agent)} - ${esc(item.step)}</b>`,
-        `<p>${esc(item.message || "")}</p>`,
-        `<small>${esc(new Date(item.updated_at).toLocaleTimeString())} · ${esc(next ? `took / mất ${duration}` : `running / đang chạy ${duration}`)}</small>`,
+    function renderFolders(items) {
+      if (!items.length) return `<div class="empty">No folder structure yet</div>`;
+      return items.map((item) => [
+        "<div class=\"row\">",
+        `<b>${esc(item.folder || ".")}</b>`,
+        `<span>${esc((item.code_targets || []).join(", "))}</span>`,
         "</div>"
-      ].join("");
-      }).join("") || "<p class=\"muted\">No progress yet / Chưa có tiến độ</p>";
+      ].join("")).join("");
     }
 
-    function renderResults(results) {
-      return results.slice().reverse().map((result) => [
-        "<div class=\"item\">",
-        `<b>${esc(result.worker)} - ${esc(result.status)}</b>`,
-        `<p>${esc(result.summary || "No summary / Chưa có tóm tắt")}</p>`,
-        listBlock("changed / đã sửa", result.changed_files),
-        listBlock("findings / phát hiện", result.findings),
-        listBlock("risks / rủi ro", result.risks),
-        result.next_recommendation ? `<small>next / tiếp theo: ${esc(result.next_recommendation)}</small>` : "",
-        `<small>${esc(result.file || "")}</small>`,
+    function rows(items) {
+      return items.map(([key, value]) => [
+        "<div class=\"row\">",
+        `<b>${esc(key)}</b>`,
+        `<span>${esc(value || "")}</span>`,
         "</div>"
-      ].join("")).join("") || "<p class=\"muted\">No result_note yet / Chưa có result_note</p>";
+      ].join("")).join("");
     }
 
-    function listBlock(label, items) {
-      if (!Array.isArray(items) || items.length === 0) return "";
-      return `<small>${label}: ${esc(items.join(", "))}</small><br>`;
+    function firstTask(state) {
+      return (state.tasks || [])[0]?.goal || "";
     }
 
-    function renderLedger(ledger) {
-      if (!ledger) return "<p class=\"muted\">No ledger yet / Chưa có sổ kế hoạch</p>";
-      return (ledger.steps_done || []).map((step) => [
-        "<div class=\"item\">",
-        `<b>#${step.step_index} ${esc(step.worker)}</b>`,
-        `<p>${esc(step.result_summary)}</p>`,
-        `<small>${esc((step.changed_files || []).join(", "))}</small>`,
-        "</div>"
-      ].join("")).join("") || "<p class=\"muted\">No completed steps / Chưa có bước hoàn tất</p>";
-    }
-
-    function renderFeatureGraph(graph) {
-      if (!graph) return "<p class=\"muted\">No feature graph / Chưa có graph</p>";
-      const nodes = graph.nodes || [];
-      const edges = graph.edges || [];
+    function promptText() {
       return [
-        `<div class="item"><b>${esc(graph.feature_id || "feature")}</b><p>${esc(graph.goal || "")}</p></div>`,
-        `<div class="item">nodes / node ${esc(nodes.length)}<br>edges / cạnh ${esc(edges.length)}<br>code targets / file code ${esc((graph.code_targets || []).join(", "))}</div>`,
-        nodes.slice(0, 8).map((node) => `<div class="item"><b>${esc(node.id)}</b> <span class="status">${esc(node.type)}</span><br><small>${esc(node.label)}</small></div>`).join(""),
-        graph.user_flow || graph.mermaid ? `<div class="log">${esc(graph.user_flow || graph.mermaid)}</div>` : "",
-        graph.sequence_diagram ? `<div class="log">${esc(graph.sequence_diagram)}</div>` : "",
-        graph.plantuml_flow ? `<div class="log">${esc(graph.plantuml_flow)}</div>` : "",
-        graph.plantuml_sequence ? `<div class="log">${esc(graph.plantuml_sequence)}</div>` : ""
-      ].join("");
-    }
-
-    function renderExperience(experience) {
-      if (!experience) return "<p class=\"muted\">No snapshot yet / Chưa có snapshot</p>";
-      return [
-        `<div class="item"><b>${esc(experience.framework)}</b></div>`,
-        `<div class="item">memory refs / tham chiếu nhớ ${esc((experience.spectrum?.memory?.refs || []).length)}<br>skills / kỹ năng ${esc((experience.spectrum?.skills?.items || []).length)}<br>rules / luật ${esc(experience.spectrum?.rules?.policy_ref || "")}</div>`
-      ].join("");
-    }
-
-    function renderRuntime(items) {
-      if (!items.length) return "<p class=\"muted\">No runtime status / Chưa có trạng thái runtime</p>";
-      return items.map((item) => {
-        const statusClass = item.cli?.found ? "status" : "status danger";
-        const auth = item.auth || {};
-        return [
-          "<div class=\"item\">",
-          `<b>${esc(agentLabel(item.agent))}</b> <span class="${statusClass}">${esc(item.cli?.found ? "CLI found / Có CLI" : "CLI missing / Thiếu CLI")}</span>`,
-          `<p>${esc(item.cli?.summary || "")}</p>`,
-          `<small>auth / đăng nhập: ${esc(auth.status || "not_checked")} · ${esc(auth.summary || auth.hint || "")}</small>`,
-          auth.hint ? `<br><small>hint / gợi ý: ${esc(auth.hint)}</small>` : "",
-          "</div>"
-        ].join("");
-      }).join("");
-    }
-
-    function runOptions() {
-      return {
-        worker: normalizeAgentName(els.workerName.value.trim() || "codex"),
-        agent: normalizeAgentName(els.agentName.value.trim() || els.workerName.value.trim() || "codex"),
-        maxRetries: Number(els.maxRetries.value || 3),
-        isolate: els.isolate.checked,
-        testCommand: els.testCommand.value.trim()
-      };
+        "Read memory/ai_handoff.json and .chay/ide/CHAY_IDE_INSTRUCTIONS.md.",
+        "Follow folder_structure first.",
+        "Follow the feature graph user_flow and sequence_diagram.",
+        "Edit only selected/allowed files.",
+        "Update the result_note JSON, then stop for cr verify."
+      ].join("\n");
     }
 
     function showResult(data) {
       els.actionResult.textContent = JSON.stringify(data, null, 2);
     }
 
-    async function createNote() {
-      const task = els.taskText.value.trim();
-      if (!task) return;
-      showResult({ ok: true, status: "creating_task_note", cli: "cr task" });
-      showResult(await api("/api/action", { action: "create_task", task, run: false, ...runOptions() }));
-      load();
+    function setStream(ok) {
+      els.streamStatus.textContent = ok ? "realtime" : "reconnecting";
+      els.streamStatus.className = ok ? "prompt" : "warn";
     }
 
-    async function createTask() {
-      const task = els.taskText.value.trim();
-      if (!task) return;
-      showResult({ ok: true, status: "creating_task_and_running", cli: "cr task && cr run" });
-      showResult(await api("/api/action", { action: "create_task", task, run: true, ...runOptions() }));
-      els.taskText.value = "";
-      load();
-    }
-
-    async function runWorker() {
-      showResult({ ok: true, status: "running_worker", cli: "cr run" });
-      showResult(await api("/api/action", { action: "run_worker", ...runOptions() }));
-      load();
-    }
-
-    async function updateProgress() {
-      showResult(await api("/api/progress", {
-        agent: normalizeAgentName(els.workerName.value.trim() || "codex"),
-        step: els.progressStep.value,
-        message: els.progressMessage.value.trim() || els.progressStep.value
-      }));
-      els.progressMessage.value = "";
-      load();
-    }
-
-    async function validateOutput() {
-      showResult(await api("/api/action", { action: "validate_output", worker: runOptions().worker }));
-      load();
-    }
-
-    async function patchCheck() {
-      showResult({ ok: true, status: "checking_patch_boundary" });
-      showResult(await api("/api/action", { action: "patch_check", worker: runOptions().worker }));
-      load();
-    }
-
-    async function tokenReport() {
-      showResult(await api("/api/action", { action: "token_report", worker: runOptions().worker }));
-      load();
-    }
-
-    async function evalReport() {
-      showResult(await api("/api/action", { action: "eval_report", worker: runOptions().worker }));
-      load();
-    }
-
-    async function experienceSnapshot() {
-      showResult(await api("/api/action", { action: "experience_snapshot", worker: runOptions().worker }));
-      load();
-    }
-
-    async function runtimeStatus() {
-      showResult(await api("/api/action", { action: "runtime_status", worker: runOptions().worker }));
-      load();
-    }
-
-    async function sendChat() {
-      const text = els.message.value.trim();
-      if (!text) return;
-      showResult(await api("/api/chat", { from: "human", to: "main", message: text }));
-      els.message.value = "";
-      load();
-    }
-
-    for (const control of [els.workerName, els.agentName]) {
-      control.addEventListener("change", () => { control.dataset.touched = "1"; });
+    function unique(items) {
+      return [...new Set(items.map((item) => String(item || "").trim()).filter(Boolean))];
     }
 
     function esc(value) {
@@ -880,33 +545,9 @@
       }[char]));
     }
 
-    function durationText(ms) {
-      const total = Math.max(0, Math.floor(Number(ms || 0) / 1000));
-      const minutes = Math.floor(total / 60);
-      const seconds = total % 60;
-      return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-    }
-
-    function ageText(value) {
-      if (!value) return "no timestamp / chưa có thời gian";
-      const ms = Date.now() - Date.parse(value);
-      return Number.isFinite(ms) ? `updated / cập nhật ${durationText(ms)} ago / trước` : "no timestamp / chưa có thời gian";
-    }
-
-    function tickClocks() {
-      renderRunnerClock();
-      document.querySelectorAll(".live-age").forEach((node) => {
-        node.textContent = ageText(node.dataset.at);
-      });
-      if (currentState) {
-        els.timeline.innerHTML = renderTimeline(currentState.progress_history || []);
-      }
-    }
-
-    load();
+    load().catch((error) => showResult({ ok: false, error: error.message }));
     connect();
     setInterval(load, 10000);
-    clockTimer = setInterval(tickClocks, 1000);
   </script>
 </body>
 </html>
