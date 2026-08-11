@@ -685,11 +685,11 @@
       Chạy Runtime
     </a>
     <div class="nav-links">
-      <a href="#workflow">Workflow</a>
-      <a href="#guardrails">Guardrails</a>
-      <a href="#quickstart">Quickstart</a>
+      <a href="#workflow" data-i18n="navWorkflow">Workflow</a>
+      <a href="#guardrails" data-i18n="navGuardrails">Guardrails</a>
+      <a href="#quickstart" data-i18n="navQuickstart">Quickstart</a>
       <a class="nav-cta" href="https://github.com/dinhpham1506/Chay-runtime" target="_blank" rel="noopener">
-        GitHub
+        <span data-i18n="navGithub">GitHub</span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>
       </a>
     </div>
@@ -702,7 +702,7 @@
       <div class="hero-copy reveal">
         <span class="eyebrow"><i></i> <span data-i18n="eyebrow">Contract layer for external IDE AI</span></span>
         <h1 data-i18n="headline">Build AI coding flows grounded in your repo.</h1>
-        <p data-i18n="subhead">Chạy Runtime turns a vague task into a compact feature contract, folder map, API graph, work note and handoff. Codex, Claude, Cursor or Kiro can code outside. The repo keeps the guardrails.</p>
+        <p data-i18n="subhead">Chạy Runtime turns a vague task into a compact feature contract, folder map, API flowchart, work note and handoff. Codex, Claude, Cursor or Kiro can code outside. The repo keeps the guardrails.</p>
         <div class="language-switch" aria-label="Language">
           <button class="active" type="button" data-lang="en" aria-pressed="true">EN</button>
           <button type="button" data-lang="vi" aria-pressed="false">VI</button>
@@ -727,43 +727,43 @@
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
               cr go "Admin changes user role"
             </div>
-            <span class="status-pill">scope synced</span>
+            <span class="status-pill" data-i18n="scopeSynced">scope synced</span>
           </div>
           <div class="console-body">
             <aside class="sidebar">
-              <div class="side-label">runtime</div>
-              <div class="side-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h5"/></svg> Feature graph</div>
-              <div class="side-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h6l3-8 3 16 3-8h3"/></svg> API map</div>
-              <div class="side-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg> Handoff</div>
-              <div class="side-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg> Verify</div>
+              <div class="side-label" data-i18n="runtimeLabel">runtime</div>
+              <div class="side-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h5"/></svg> <span data-i18n="sideFeatureGraph">Feature flowchart</span></div>
+              <div class="side-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h6l3-8 3 16 3-8h3"/></svg> <span data-i18n="sideApiMap">API flowchart</span></div>
+              <div class="side-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg> <span data-i18n="sideHandoff">Handoff</span></div>
+              <div class="side-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg> <span data-i18n="sideVerify">Verify</span></div>
               <div class="side-spacer"></div>
-              <div class="side-label">targets</div>
+              <div class="side-label" data-i18n="targetsLabel">targets</div>
               <div class="side-item">Codex</div>
               <div class="side-item">Claude</div>
               <div class="side-item">Cursor</div>
               <div class="mini-input">
-                <strong>AI handoff prompt</strong>
-                <span>Read rules, feature MD, folder structure and API graph before editing.</span>
+                <strong data-i18n="handoffPromptTitle">AI handoff prompt</strong>
+                <span data-i18n="handoffPromptText">Read rules, feature MD, folder structure and API flowchart before editing.</span>
               </div>
             </aside>
             <section class="main-panel">
               <div class="panel-head">
-                <h2>Admin changes user role</h2>
+                <h2 data-i18n="consoleTitle">Admin changes user role</h2>
                 <span class="status-pill">update_feature</span>
               </div>
               <div class="metrics">
-                <div class="metric"><span>feature id</span><strong>Role</strong><p>One contract folder for one business feature.</p></div>
-                <div class="metric"><span>diagrams</span><strong>3 views</strong><p>User flow, sequence and API graph per feature.</p></div>
-                <div class="metric"><span>scope</span><strong>Files</strong><p>Only files linked to that feature contract.</p></div>
+                <div class="metric"><span data-i18n="metricFeatureLabel">feature id</span><strong data-i18n="metricFeatureValue">Role</strong><p data-i18n="metricFeatureText">One contract folder for one business feature.</p></div>
+                <div class="metric"><span data-i18n="metricDiagramLabel">diagrams</span><strong data-i18n="metricDiagramValue">3 views</strong><p data-i18n="metricDiagramText">Program flow, sequence and API flowchart per feature.</p></div>
+                <div class="metric"><span data-i18n="metricScopeLabel">scope</span><strong data-i18n="metricScopeValue">Files</strong><p data-i18n="metricScopeText">Only files linked to that feature contract.</p></div>
               </div>
               <div class="workspace">
                 <div class="graph">
-                  <div class="graph-title">per-feature diagrams <span>admin_changes_user_role</span></div>
+                  <div class="graph-title"><span data-i18n="diagramTitle">per-feature flowcharts</span> <span>admin_changes_user_role</span></div>
                   <div class="nodes">
-                    <div class="node">User flow</div>
-                    <div class="node">Sequence</div>
-                    <div class="node">API graph</div>
-                    <div class="node">Folder map</div>
+                    <div class="node" data-i18n="nodeUserFlow">User flow</div>
+                    <div class="node" data-i18n="nodeSequence">Sequence</div>
+                    <div class="node" data-i18n="nodeApiGraph">API flowchart</div>
+                    <div class="node" data-i18n="nodeFolderMap">Folder map</div>
                   </div>
                   <div class="target-list">
                     <code>chay-structure/features/admin_changes_user_role.md</code>
@@ -777,12 +777,12 @@
                   </div>
                 </div>
                 <div class="handoff">
-                  <div class="handoff-title">read order <span>for IDE AI</span></div>
+                  <div class="handoff-title"><span data-i18n="readOrderTitle">read order</span> <span data-i18n="readOrderSub">for IDE AI</span></div>
                   <div class="handoff-list">
-                    <div class="handoff-row"><i>1</i><div><strong>ai_handoff.json</strong><span>Current source of truth</span></div></div>
-                    <div class="handoff-row"><i>2</i><div><strong>feature markdown</strong><span>User flow and acceptance</span></div></div>
-                    <div class="handoff-row"><i>3</i><div><strong>folder structure</strong><span>Local architecture map</span></div></div>
-                    <div class="handoff-row"><i>4</i><div><strong>api graph</strong><span>Routes and linked code</span></div></div>
+                    <div class="handoff-row"><i>1</i><div><strong>ai_handoff.json</strong><span data-i18n="readOrder1">Current source of truth</span></div></div>
+                    <div class="handoff-row"><i>2</i><div><strong data-i18n="readOrderFeature">feature markdown</strong><span data-i18n="readOrder2">User flow and acceptance</span></div></div>
+                    <div class="handoff-row"><i>3</i><div><strong data-i18n="readOrderFolder">folder structure</strong><span data-i18n="readOrder3">Local architecture map</span></div></div>
+                    <div class="handoff-row"><i>4</i><div><strong data-i18n="readOrderApi">API flowchart</strong><span data-i18n="readOrder4">Routes and linked code</span></div></div>
                   </div>
                 </div>
               </div>
@@ -790,7 +790,7 @@
                 <span>cr start</span>
                 <span>cr config</span>
                 <span>cr go</span>
-                <span>IDE AI edits</span>
+                <span data-i18n="flowIdeEdits">IDE AI edits</span>
                 <span>cr verify</span>
               </div>
             </section>
@@ -803,15 +803,15 @@
   <section id="workflow">
     <div class="wrap">
       <div class="section-head center reveal">
-        <span class="section-kicker">workflow</span>
-        <h2 class="section-title">One flow for new work and maintenance.</h2>
-        <p>Chạy keeps old feature contracts updated instead of creating competing docs. When scope changes, graph, context, work note and handoff move together.</p>
+        <span class="section-kicker" data-i18n="workflowKicker">workflow</span>
+        <h2 class="section-title" data-i18n="workflowTitle">One flow for new work and maintenance.</h2>
+        <p data-i18n="workflowText">Chạy keeps old feature contracts updated instead of creating competing docs. When scope changes, graph, context, work note and handoff move together.</p>
       </div>
       <div class="steps-grid">
-        <article class="step-card reveal"><span class="num">01</span><h3>Start the runtime</h3><p>Create local rules and a clean memory folder that IDE AI can read.</p><code>cr start</code></article>
-        <article class="step-card reveal"><span class="num">02</span><h3>Configure the IDE</h3><p>Install rule files for Codex, Claude, Cursor, Kiro or manual IDE mode.</p><code>cr config codex,cursor</code></article>
-        <article class="step-card reveal"><span class="num">03</span><h3>Generate the contract</h3><p>Scan repo, select targets, create feature MD, folder structure and API graph.</p><code>cr go "Task"</code></article>
-        <article class="step-card reveal"><span class="num">04</span><h3>Verify the patch</h3><p>Check result note, diff boundary, secrets, docs ownership and OWASP prompts.</p><code>cr verify</code></article>
+        <article class="step-card reveal"><span class="num">01</span><h3 data-i18n="step1Title">Start the runtime</h3><p data-i18n="step1Text">Create local rules and a clean memory folder that IDE AI can read.</p><code>cr start</code></article>
+        <article class="step-card reveal"><span class="num">02</span><h3 data-i18n="step2Title">Configure the IDE</h3><p data-i18n="step2Text">Install rule files for Codex, Claude, Cursor, Kiro or manual IDE mode.</p><code>cr config codex,cursor</code></article>
+        <article class="step-card reveal"><span class="num">03</span><h3 data-i18n="step3Title">Generate the contract</h3><p data-i18n="step3Text">Scan repo, select targets, create feature MD, folder structure and API flowchart.</p><code>cr go "Task"</code></article>
+        <article class="step-card reveal"><span class="num">04</span><h3 data-i18n="step4Title">Verify the patch</h3><p data-i18n="step4Text">Check result note, diff boundary, secrets, docs ownership and OWASP prompts.</p><code>cr verify</code></article>
       </div>
     </div>
   </section>
@@ -819,22 +819,22 @@
   <section id="guardrails">
     <div class="wrap split">
       <div class="section-head reveal">
-        <span class="section-kicker">guardrails</span>
-        <h2 class="section-title">The AI edits code. The contract keeps it honest.</h2>
-        <p>The runtime is intentionally small: one folder for machine state, one folder for human-readable structure, and a strict selected-file boundary.</p>
+        <span class="section-kicker" data-i18n="guardrailsKicker">guardrails</span>
+        <h2 class="section-title" data-i18n="guardrailsTitle">The AI edits code. The contract keeps it honest.</h2>
+        <p data-i18n="guardrailsText">The runtime is intentionally small: one folder for machine state, one folder for human-readable structure, and a strict selected-file boundary.</p>
       </div>
       <div class="rules">
         <div class="rule reveal">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
-          <div><strong>No stale scope</strong><span>When a goal narrows, old migration or API targets are dropped unless the new intent still needs them.</span></div>
+          <div><strong data-i18n="rule1Title">No stale scope</strong><span data-i18n="rule1Text">When a goal narrows, old migration or API targets are dropped unless the new intent still needs them.</span></div>
         </div>
         <div class="rule reveal">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h10"/></svg>
-          <div><strong>No generic keyword matching</strong><span>Words like user or admin are not enough to map a task into an existing feature.</span></div>
+          <div><strong data-i18n="rule2Title">No generic keyword matching</strong><span data-i18n="rule2Text">Words like user or admin are not enough to map a task into an existing feature.</span></div>
         </div>
         <div class="rule reveal">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
-          <div><strong>Readable artifacts</strong><span>Feature flow lives in Markdown. Diagrams live in PlantUML. JSON stays in chay-memory.</span></div>
+          <div><strong data-i18n="rule3Title">Readable artifacts</strong><span data-i18n="rule3Text">Feature flow lives in Markdown. Diagrams live in PlantUML. JSON stays in chay-memory.</span></div>
         </div>
       </div>
     </div>
@@ -862,12 +862,12 @@
 <span class="k">cr</span> handoff</pre>
       </div>
       <div class="section-head reveal">
-        <span class="section-kicker">quickstart</span>
-        <h2 class="section-title">Built for production repos, not demo scaffolds.</h2>
-        <p>Use explicit files when the first feature is sensitive. After that, Chạy can maintain the existing contract and keep follow-up work on the same feature id.</p>
+        <span class="section-kicker" data-i18n="quickstartKicker">quickstart</span>
+        <h2 class="section-title" data-i18n="quickstartTitle">Built for production repos, not demo scaffolds.</h2>
+        <p data-i18n="quickstartText">Use explicit files when the first feature is sensitive. After that, Chạy can maintain the existing contract and keep follow-up work on the same feature id.</p>
         <div class="hero-actions" style="justify-content:flex-start">
-          <a class="btn btn-primary" href="https://github.com/dinhpham1506/Chay-runtime" target="_blank" rel="noopener">Open GitHub</a>
-          <a class="btn" href="https://www.npmjs.com/package/chay-runtime" target="_blank" rel="noopener">Open npm</a>
+          <a class="btn btn-primary" href="https://github.com/dinhpham1506/Chay-runtime" target="_blank" rel="noopener"><span data-i18n="openGithub">Open GitHub</span></a>
+          <a class="btn" href="https://www.npmjs.com/package/chay-runtime" target="_blank" rel="noopener"><span data-i18n="openNpm">Open npm</span></a>
         </div>
       </div>
     </div>
@@ -876,11 +876,11 @@
   <section>
     <div class="wrap">
       <div class="final-band reveal">
-        <h2>Give every IDE AI session the same map before it touches code.</h2>
-        <p>Feature graph, selected files, folder structure, API links, sequence diagram and handoff stay synchronized in the repo.</p>
+        <h2 data-i18n="finalTitle">Give every IDE AI session the same map before it touches code.</h2>
+        <p data-i18n="finalText">Program flowchart, selected files, folder structure, API flowchart, sequence diagram and handoff stay synchronized in the repo.</p>
         <div class="hero-actions">
-          <a class="btn btn-primary" href="#top">Back to top</a>
-          <a class="btn" href="https://github.com/dinhpham1506/Chay-runtime" target="_blank" rel="noopener">View source</a>
+          <a class="btn btn-primary" href="#top"><span data-i18n="backTop">Back to top</span></a>
+          <a class="btn" href="https://github.com/dinhpham1506/Chay-runtime" target="_blank" rel="noopener"><span data-i18n="viewSource">View source</span></a>
         </div>
       </div>
     </div>
@@ -889,7 +889,7 @@
 
 <footer>
   <div class="wrap footer-inner">
-    <span>Chạy Runtime - local contract layer for external IDE AI.</span>
+    <span data-i18n="footerText">Chạy Runtime - local contract layer for external IDE AI.</span>
     <div class="footer-links">
       <a href="https://github.com/dinhpham1506/Chay-runtime" target="_blank" rel="noopener">GitHub</a>
       <a href="https://www.npmjs.com/package/chay-runtime" target="_blank" rel="noopener">npm</a>
@@ -900,20 +900,156 @@
 <script>
   const translations = {
     en: {
+      navWorkflow: "Workflow",
+      navGuardrails: "Guardrails",
+      navQuickstart: "Quickstart",
+      navGithub: "GitHub",
       eyebrow: "Contract layer for external IDE AI",
       headline: "Build AI coding flows grounded in your repo.",
-      subhead: "Chạy Runtime turns a vague task into a compact feature contract, folder map, API graph, work note and handoff. Codex, Claude, Cursor or Kiro can code outside. The repo keeps the guardrails.",
+      subhead: "Chay Runtime turns a vague task into a compact feature contract, folder map, API flowchart, work note and handoff. Codex, Claude, Cursor or Kiro can code outside. The repo keeps the guardrails.",
       startCta: "Start with CLI",
       workflowCta: "View workflow",
-      npmCta: "View npm"
+      npmCta: "View npm",
+      scopeSynced: "scope synced",
+      runtimeLabel: "runtime",
+      sideFeatureGraph: "Feature flowchart",
+      sideApiMap: "API flowchart",
+      sideHandoff: "Handoff",
+      sideVerify: "Verify",
+      targetsLabel: "targets",
+      handoffPromptTitle: "AI handoff prompt",
+      handoffPromptText: "Read rules, feature MD, folder structure and API flowchart before editing.",
+      consoleTitle: "Admin changes user role",
+      metricFeatureLabel: "feature id",
+      metricFeatureValue: "Role",
+      metricFeatureText: "One contract folder for one business feature.",
+      metricDiagramLabel: "flowcharts",
+      metricDiagramValue: "4 views",
+      metricDiagramText: "Program flow, API flowchart, sequence and folder map per feature.",
+      metricScopeLabel: "scope",
+      metricScopeValue: "Files",
+      metricScopeText: "Only files linked to that feature contract.",
+      diagramTitle: "per-feature flowcharts",
+      nodeUserFlow: "Program flow",
+      nodeSequence: "Sequence",
+      nodeApiGraph: "API flowchart",
+      nodeFolderMap: "Folder map",
+      readOrderTitle: "read order",
+      readOrderSub: "for IDE AI",
+      readOrder1: "Current source of truth",
+      readOrderFeature: "feature markdown",
+      readOrder2: "Program flow and acceptance",
+      readOrderFolder: "folder structure",
+      readOrder3: "Local architecture map",
+      readOrderApi: "API flowchart",
+      readOrder4: "Routes and linked code",
+      flowIdeEdits: "IDE AI edits",
+      workflowKicker: "workflow",
+      workflowTitle: "One flow for new work and maintenance.",
+      workflowText: "Chay keeps old feature contracts updated instead of creating competing docs. When scope changes, graph, context, work note and handoff move together.",
+      step1Title: "Start the runtime",
+      step1Text: "Create local rules and a clean memory folder that IDE AI can read.",
+      step2Title: "Configure the IDE",
+      step2Text: "Install rule files for Codex, Claude, Cursor, Kiro or manual IDE mode.",
+      step3Title: "Generate the contract",
+      step3Text: "Scan repo, select targets, create feature MD, folder structure and API flowchart.",
+      step4Title: "Verify the patch",
+      step4Text: "Check result note, diff boundary, secrets, docs ownership and OWASP prompts.",
+      guardrailsKicker: "guardrails",
+      guardrailsTitle: "The AI edits code. The contract keeps it honest.",
+      guardrailsText: "The runtime is intentionally small: one folder for machine state, one folder for human-readable structure, and a strict selected-file boundary.",
+      rule1Title: "No stale scope",
+      rule1Text: "When a goal narrows, old migration or API targets are dropped unless the new intent still needs them.",
+      rule2Title: "No generic keyword matching",
+      rule2Text: "Words like user or admin are not enough to map a task into an existing feature.",
+      rule3Title: "Readable artifacts",
+      rule3Text: "Feature flow lives in Markdown. Diagrams live in PlantUML. JSON stays in chay-memory.",
+      quickstartKicker: "quickstart",
+      quickstartTitle: "Built for production repos, not demo scaffolds.",
+      quickstartText: "Use explicit files when the first feature is sensitive. After that, Chay can maintain the existing contract and keep follow-up work on the same feature id.",
+      openGithub: "Open GitHub",
+      openNpm: "Open npm",
+      finalTitle: "Give every IDE AI session the same map before it touches code.",
+      finalText: "Program flowchart, selected files, folder structure, API flowchart, sequence diagram and handoff stay synchronized in the repo.",
+      backTop: "Back to top",
+      viewSource: "View source",
+      footerText: "Chay Runtime - local contract layer for external IDE AI."
     },
     vi: {
+      navWorkflow: "Quy trình",
+      navGuardrails: "Guardrail",
+      navQuickstart: "Bắt đầu",
+      navGithub: "GitHub",
       eyebrow: "Lớp contract cho IDE AI bên ngoài",
       headline: "Cho AI code theo đúng repo của bạn.",
-      subhead: "Chạy Runtime biến task mơ hồ thành feature contract gọn, folder map, API graph, work note và handoff. Codex, Claude, Cursor hoặc Kiro code bên ngoài; repo giữ guardrail bên trong.",
+      subhead: "Chạy Runtime biến task mơ hồ thành feature contract gọn, folder map, API flowchart, work note và handoff. Codex, Claude, Cursor hoặc Kiro code bên ngoài; repo giữ guardrail bên trong.",
       startCta: "Bắt đầu bằng CLI",
-      workflowCta: "Xem workflow",
-      npmCta: "Xem npm"
+      workflowCta: "Xem quy trình",
+      npmCta: "Xem npm",
+      scopeSynced: "scope đã đồng bộ",
+      runtimeLabel: "runtime",
+      sideFeatureGraph: "Feature flowchart",
+      sideApiMap: "API flowchart",
+      sideHandoff: "Handoff",
+      sideVerify: "Verify",
+      targetsLabel: "mục tiêu",
+      handoffPromptTitle: "Prompt handoff cho AI",
+      handoffPromptText: "Đọc rules, feature MD, folder structure và API flowchart trước khi sửa code.",
+      consoleTitle: "Admin đổi role người dùng",
+      metricFeatureLabel: "feature id",
+      metricFeatureValue: "Role",
+      metricFeatureText: "Một folder contract cho một tính năng nghiệp vụ.",
+      metricDiagramLabel: "flowchart",
+      metricDiagramValue: "4 góc nhìn",
+      metricDiagramText: "Program flow, API flowchart, sequence và folder map theo từng feature.",
+      metricScopeLabel: "scope",
+      metricScopeValue: "Files",
+      metricScopeText: "Chỉ các file gắn với contract của feature đó.",
+      diagramTitle: "flowchart theo từng feature",
+      nodeUserFlow: "Program flow",
+      nodeSequence: "Sequence",
+      nodeApiGraph: "API flowchart",
+      nodeFolderMap: "Folder map",
+      readOrderTitle: "thứ tự đọc",
+      readOrderSub: "cho IDE AI",
+      readOrder1: "Nguồn sự thật hiện tại",
+      readOrderFeature: "feature markdown",
+      readOrder2: "Program flow và acceptance",
+      readOrderFolder: "folder structure",
+      readOrder3: "Bản đồ kiến trúc local",
+      readOrderApi: "API flowchart",
+      readOrder4: "Route và code liên quan",
+      flowIdeEdits: "IDE AI sửa code",
+      workflowKicker: "quy trình",
+      workflowTitle: "Một flow cho feature mới và maintain feature cũ.",
+      workflowText: "Chạy cập nhật contract cũ thay vì tạo docs cạnh tranh. Khi scope đổi, graph, context, work note và handoff đi cùng nhau.",
+      step1Title: "Khởi động runtime",
+      step1Text: "Tạo local rules và folder memory sạch để IDE AI đọc được.",
+      step2Title: "Cấu hình IDE",
+      step2Text: "Cài rule files cho Codex, Claude, Cursor, Kiro hoặc manual IDE mode.",
+      step3Title: "Tạo contract",
+      step3Text: "Scan repo, chọn targets, tạo feature MD, folder structure và API flowchart.",
+      step4Title: "Verify patch",
+      step4Text: "Check result note, diff boundary, secrets, docs ownership và OWASP prompts.",
+      guardrailsKicker: "guardrail",
+      guardrailsTitle: "AI sửa code. Contract giữ nó đúng hướng.",
+      guardrailsText: "Runtime cố ý nhỏ: một folder cho machine state, một folder cho cấu trúc dễ đọc, và boundary chặt theo selected files.",
+      rule1Title: "Không dính scope cũ",
+      rule1Text: "Khi goal thu hẹp, migration hoặc API target cũ bị bỏ nếu intent mới không còn cần nó.",
+      rule2Title: "Không match bằng keyword chung",
+      rule2Text: "Các từ như user hoặc admin không đủ để map task vào feature cũ.",
+      rule3Title: "Artifact dễ đọc",
+      rule3Text: "Feature flow nằm trong Markdown. Diagram nằm trong PlantUML. JSON nằm trong chay-memory.",
+      quickstartKicker: "bắt đầu",
+      quickstartTitle: "Dành cho repo production, không phải demo scaffold.",
+      quickstartText: "Với feature nhạy cảm, truyền files rõ ngay lần đầu. Sau đó Chạy maintain cùng contract và giữ follow-up trên cùng feature id.",
+      openGithub: "Mở GitHub",
+      openNpm: "Mở npm",
+      finalTitle: "Cho mọi session IDE AI cùng một bản đồ trước khi nó chạm code.",
+      finalText: "Program flowchart, selected files, folder structure, API flowchart, sequence diagram và handoff luôn đồng bộ trong repo.",
+      backTop: "Lên đầu trang",
+      viewSource: "Xem source",
+      footerText: "Chạy Runtime - lớp contract local cho IDE AI bên ngoài."
     }
   };
 
