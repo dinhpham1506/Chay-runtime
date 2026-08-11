@@ -226,7 +226,7 @@ function selectFinalFiles({ explicitFileOverride, positionalFiles, plannedFiles,
 }
 
 function listFiles(value) {
-  if (Array.isArray(value)) return value.map((file) => String(file || "").trim()).filter(Boolean);
+  if (Array.isArray(value)) return value.flatMap((item) => listFiles(item));
   return String(value || "").split(",").map((file) => file.trim()).filter(Boolean);
 }
 
@@ -386,10 +386,23 @@ function findMatchingFeatureDoc(task, dir) {
     const file = path.join(dir, entry.name);
     const text = fs.readFileSync(file, "utf8");
     const id = entry.name.replace(/\.md$/, "");
-    const score = featureMatchScore(task, `${id}\n${text}`);
+    const score = featureMatchScore(task, featureDocSearchText(id, text));
     if (score > best.score) best = { id, score };
   }
   return best.score >= 2 ? best.id : "";
+}
+
+function featureDocSearchText(id, text) {
+  const lines = String(text || "").split(/\r?\n/);
+  const relevant = lines.filter((line) =>
+    /^Feature:\s*/i.test(line) ||
+    /^Goal:\s*/i.test(line) ||
+    /^#\s+Feature Flow/i.test(line) ||
+    /^##\s+User Flow/i.test(line) ||
+    /^##\s+Acceptance/i.test(line) ||
+    /^-\s+(Submitting|Duplicate|Only|Admin|User|Client|Success|Known)/i.test(line)
+  );
+  return [id, ...relevant].join("\n");
 }
 
 function matchesFeature(task, featureText) {
@@ -398,14 +411,14 @@ function matchesFeature(task, featureText) {
 
 function graphSearchText(graph) {
   if (!graph || typeof graph !== "object") return "";
-  return JSON.stringify({
-    feature_id: graph.feature_id,
-    goal: graph.goal,
-    nodes: graph.nodes,
-    acceptance_checks: graph.acceptance_checks,
-    code_targets: graph.code_targets,
-    target_rationale: graph.target_rationale
-  });
+  const nodeLabels = Array.isArray(graph.nodes) ? graph.nodes.map((node) => node?.label).filter(Boolean).join("\n") : "";
+  const checks = Array.isArray(graph.acceptance_checks) ? graph.acceptance_checks.join("\n") : "";
+  return [
+    graph.feature_id,
+    graph.goal,
+    nodeLabels,
+    checks
+  ].filter(Boolean).join("\n");
 }
 
 function featureMatchScore(task, featureText) {

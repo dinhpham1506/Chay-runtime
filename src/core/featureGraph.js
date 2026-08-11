@@ -426,7 +426,7 @@ function apiGraphFromIndex(projectIndex, codeTargets = [], goal = "") {
   const files = Array.isArray(projectIndex?.files) ? projectIndex.files : [];
   const byPath = new Map(files.map((file) => [String(file.path || "").replace(/\\/g, "/"), file]));
   const selected = new Set(codeTargets.map((file) => String(file).replace(/\\/g, "/")));
-  const goalTerms = new Set(String(goal || "").toLowerCase().split(/[^a-z0-9_]+/).filter((word) => word.length >= 3 && !["user", "the", "and", "for", "fix", "add", "new"].includes(word)));
+  const goalTerms = new Set(String(goal || "").toLowerCase().split(/[^a-z0-9_]+/).filter((word) => word.length >= 3 && !["admin", "user", "users", "the", "and", "for", "fix", "add", "new", "change", "changes", "only", "can"].includes(word)));
   const apiFiles = files
     .filter((file) => file.role === "api_controller" || (Array.isArray(file.api_routes) && file.api_routes.length > 0))
     .map((file) => ({ ...file, path: String(file.path || "").replace(/\\/g, "/") }));
@@ -460,8 +460,8 @@ function apiGraphFromIndex(projectIndex, codeTargets = [], goal = "") {
     });
   }
 
-  const visibleLinks = links.filter((link) => link.related_code.length > 0 || matchesGoal(link.api, goalTerms)).slice(0, 20);
-  const finalLinks = visibleLinks.length > 0 ? visibleLinks : links.slice(0, 20);
+  const visibleLinks = links.filter((link) => link.related_code.length > 0).slice(0, 20);
+  const finalLinks = visibleLinks.length > 0 ? visibleLinks : links.filter((link) => matchesGoal(link.api, goalTerms)).slice(0, 20);
 
   return {
     links: finalLinks,
@@ -539,7 +539,7 @@ function pathTermMatch(target, apiPath, goalTerms) {
   if (goalTerms.size === 0) return false;
   const targetText = String(target || "").toLowerCase();
   const apiText = String(apiPath || "").toLowerCase();
-  return [...goalTerms].some((term) => targetText.includes(term) && apiText.includes(term));
+  return [...goalTerms].filter((term) => targetText.includes(term) && apiText.includes(term)).length >= 2;
 }
 
 function matchesGoal(file, goalTerms) {

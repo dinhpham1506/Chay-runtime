@@ -139,11 +139,17 @@ assert.equal(goResult.api_graph, "chay-structure/api_graph.md");
 assert.equal(JSON.parse(fs.readFileSync(path.join(goProject, "chay-memory", "antigravity_work_note.json"), "utf8")).allowed_files[0], "src/applyService.js");
 const applyJobProject = fs.mkdtempSync(path.join(os.tmpdir(), "chay-runtime-apply-job-"));
 fs.mkdirSync(path.join(applyJobProject, "netlify", "functions"), { recursive: true });
+fs.mkdirSync(path.join(applyJobProject, "client", "src", "components"), { recursive: true });
 fs.mkdirSync(path.join(applyJobProject, "client", "src", "lib"), { recursive: true });
+fs.mkdirSync(path.join(applyJobProject, "server", "src", "api"), { recursive: true });
 fs.mkdirSync(path.join(applyJobProject, "server", "src", "scripts"), { recursive: true });
 fs.mkdirSync(path.join(applyJobProject, "migrations"), { recursive: true });
+fs.writeFileSync(path.join(applyJobProject, "client", "src", "components", "AdminDashboard.tsx"), "export function AdminDashboard() { return null; }\n");
 fs.writeFileSync(path.join(applyJobProject, "client", "src", "lib", "api.ts"), "export async function api() { return true; }\n");
+fs.writeFileSync(path.join(applyJobProject, "server", "src", "api", "admin.ts"), "export function changeUserRole() { return true; }\n");
 fs.writeFileSync(path.join(applyJobProject, "server", "src", "scripts", "import-jobfree-pnl.ts"), "export const pnl = true;\n");
+fs.writeFileSync(path.join(applyJobProject, "netlify", "functions", "admin-announcements.ts"), "export const announcements = true;\n");
+fs.writeFileSync(path.join(applyJobProject, "netlify", "functions", "admin-usage.ts"), "export const usage = true;\n");
 fs.writeFileSync(path.join(applyJobProject, "netlify", "functions", "admin-users.ts"), "export const adminUsers = true;\n");
 fs.writeFileSync(path.join(applyJobProject, "netlify", "functions", "admin-users-invite.ts"), "export const inviteUser = true;\n");
 fs.writeFileSync(path.join(applyJobProject, "netlify", "functions", "admin-users-role.ts"), "export const userRole = true;\n");
@@ -239,6 +245,47 @@ const applyJobResumeGraph = JSON.parse(fs.readFileSync(path.join(applyJobProject
 assert.equal(applyJobResumeWork.goal, applyJobResumeGraph.goal);
 assert.deepEqual(new Set(applyJobResumeWork.allowed_files), new Set(applyJobResumeGraph.code_targets));
 assert.equal(applyJobResumeHandoff.source_of_truth.goal, applyJobResumeGraph.goal);
+const adminRole = runIn(applyJobProject, "go", "Admin changes user role");
+assert.equal(adminRole.mode, "new_feature");
+assert.equal(adminRole.feature_id, "admin_changes_user_role");
+assert.equal(adminRole.matched_existing_feature, null);
+assert.deepEqual(new Set(adminRole.selected_files), new Set([
+  "client/src/components/AdminDashboard.tsx",
+  "netlify/functions/admin-users-role.ts",
+  "server/src/api/admin.ts"
+]));
+assert.ok(!adminRole.selected_files.includes("netlify/functions/job-applications.ts"));
+const adminRoleGraph = JSON.parse(fs.readFileSync(path.join(applyJobProject, "chay-memory", "feature_graph.json"), "utf8"));
+assert.ok(!adminRoleGraph.api_links.some((link) => link.api.includes("admin-announcements")));
+assert.ok(!adminRoleGraph.api_links.some((link) => link.api.includes("admin-usage")));
+const adminRoleRepeatFiles = runIn(
+  applyJobProject,
+  "go",
+  "Admin changes user role",
+  "--feature",
+  "admin_changes_user_role",
+  "--files",
+  "client/src/components/AdminDashboard.tsx",
+  "--files",
+  "netlify/functions/admin-users-role.ts",
+  "--files",
+  "server/src/api/admin.ts"
+);
+assert.deepEqual(new Set(adminRoleRepeatFiles.selected_files), new Set([
+  "client/src/components/AdminDashboard.tsx",
+  "netlify/functions/admin-users-role.ts",
+  "server/src/api/admin.ts"
+]));
+const adminRoleMaintenance = runIn(applyJobProject, "go", "Only super admin can change user role");
+assert.equal(adminRoleMaintenance.mode, "update_feature");
+assert.equal(adminRoleMaintenance.feature_id, "admin_changes_user_role");
+assert.deepEqual(new Set(adminRoleMaintenance.selected_files), new Set([
+  "client/src/components/AdminDashboard.tsx",
+  "netlify/functions/admin-users-role.ts",
+  "server/src/api/admin.ts"
+]));
+assert.ok(!adminRoleMaintenance.selected_files.includes("netlify/functions/admin-users-invite.ts"));
+assert.ok(!adminRoleMaintenance.selected_files.includes("netlify/functions/admin-users.ts"));
 const duplicateAgents = runIn(aliasProject, "setup", "--agents", "codex,codex", "--main", "anti", { expectCode: 1 });
 assert.equal(duplicateAgents.ok, false);
 assert.ok(duplicateAgents.error.includes("2 distinct agents"));

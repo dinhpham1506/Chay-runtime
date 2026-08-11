@@ -167,16 +167,17 @@ function mergeSelected(scored, inferred, maxNotes) {
 }
 
 function inferredFeatureTargets(index, taskWords, options = {}) {
+  if (isAdminChangeRoleIntent(taskWords)) return inferredAdminRoleTargets(index);
   if (!isApplyJobIntent(taskWords)) return [];
   const files = Array.isArray(index.files) ? index.files : [];
   const paths = new Set(files.map((file) => file.path));
   const targets = [];
 
-  addExisting(targets, files, "client/src/lib/api.ts", "API client likely needs an apply-job method.");
+  addExisting(targets, files, "client/src/lib/api.ts", "API client likely needs an apply-job method.", ["job", "apply"]);
 
   const existingBackend = files.find((file) => /(?:^|\/)(job-application|job-applications|applications|apply-job|jobs)\.[cm]?[jt]sx?$/i.test(file.path) && !isScriptPath(file.path));
   if (existingBackend) {
-    addExisting(targets, files, existingBackend.path, "Existing job/application backend or service matched apply-job intent.");
+    addExisting(targets, files, existingBackend.path, "Existing job/application backend or service matched apply-job intent.", ["job", "apply", "application"]);
   } else if (hasFolder(paths, "netlify/functions")) {
     targets.push({
       path: "netlify/functions/job-applications.ts",
@@ -191,7 +192,7 @@ function inferredFeatureTargets(index, taskWords, options = {}) {
   if (options.includeDatabase) {
     const migration = applyJobDatabaseTarget(files, paths);
     if (migration.existing) {
-      addExisting(targets, files, migration.path, "Database file included because it matches job/application schema intent.");
+      addExisting(targets, files, migration.path, "Database file included because it matches job/application schema intent.", ["job", "application", "schema"]);
     } else if (migration.path) {
       targets.push({
         path: migration.path,
@@ -204,6 +205,15 @@ function inferredFeatureTargets(index, taskWords, options = {}) {
     }
   }
 
+  return targets;
+}
+
+function inferredAdminRoleTargets(index) {
+  const files = Array.isArray(index.files) ? index.files : [];
+  const targets = [];
+  addExisting(targets, files, "client/src/components/AdminDashboard.tsx", "Admin role changes are initiated from the admin dashboard UI.", ["admin", "role"]);
+  addExisting(targets, files, "netlify/functions/admin-users-role.ts", "Netlify role-change function is the narrow serverless endpoint for user role updates.", ["admin", "user", "role"]);
+  addExisting(targets, files, "server/src/api/admin.ts", "Express admin API may enforce or mirror role-change authorization.", ["admin", "role"]);
   return targets;
 }
 
@@ -227,13 +237,13 @@ function applyJobDatabaseTarget(files, paths) {
   return { existing: false, path: "" };
 }
 
-function addExisting(targets, files, pathValue, reason) {
+function addExisting(targets, files, pathValue, reason, matchedTerms = []) {
   const file = files.find((item) => item.path === pathValue);
   if (!file) return;
   targets.push({
     ...file,
     score: 100,
-    matched_terms: ["job", "apply"],
+    matched_terms: matchedTerms,
     reason
   });
 }
@@ -248,6 +258,11 @@ function isApplyJobIntent(words) {
   return normalized.has("job") && (normalized.has("apply") || normalized.has("application"));
 }
 
+function isAdminChangeRoleIntent(words) {
+  const normalized = new Set(words.map((word) => normalizeTaskWord(word)));
+  return normalized.has("admin") && normalized.has("role") && (normalized.has("change") || normalized.has("update") || normalized.has("super"));
+}
+
 function taskSignalWords(words) {
   return new Set(words
     .map((word) => normalizeTaskWord(word))
@@ -260,6 +275,8 @@ function normalizeTaskWord(word) {
   if (value === "applications") return "application";
   if (value === "jobs") return "job";
   if (value === "users") return "user";
+  if (value === "changes" || value === "changed" || value === "changing") return "change";
+  if (value === "roles") return "role";
   return value;
 }
 
@@ -267,6 +284,7 @@ const genericTaskWords = new Set([
   "add",
   "bug",
   "build",
+  "can",
   "change",
   "create",
   "edit",
@@ -276,6 +294,7 @@ const genericTaskWords = new Set([
   "implement",
   "make",
   "new",
+  "only",
   "page",
   "screen",
   "task",

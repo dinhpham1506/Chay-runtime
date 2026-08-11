@@ -10,7 +10,7 @@ export function parseArgs(argv) {
     const raw = item.slice(2);
     if (raw.includes("=")) {
       const [key, ...parts] = raw.split("=");
-      args[key] = parts.join("=");
+      setArg(args, key, parts.join("="));
       continue;
     }
 
@@ -27,11 +27,26 @@ export function parseArgs(argv) {
       continue;
     }
 
-    args[key] = next;
+    setArg(args, key, next);
     i++;
   }
   return args;
 }
+
+function setArg(args, key, value) {
+  if (!repeatableArgs.has(key) || args[key] === undefined) {
+    args[key] = value;
+    return;
+  }
+  args[key] = Array.isArray(args[key]) ? [...args[key], value] : [args[key], value];
+}
+
+const repeatableArgs = new Set([
+  "allowed-files",
+  "code-targets",
+  "file",
+  "files"
+]);
 
 const booleanArgs = new Set([
   "auth",
