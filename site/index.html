@@ -3,922 +3,885 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Chạy Runtime — Contract, guardrail và handoff cho IDE AI</title>
-<meta name="description" content="Local contract, guardrail và resume handoff cho IDE AI coding. Tạo feature graph, user flow, sequence diagram, rồi verify patch theo scope, docs, secrets và OWASP." />
+<title>Chạy Runtime - IDE AI Contract Layer</title>
+<meta name="description" content="Chạy Runtime tạo feature graph, handoff và guardrail để IDE AI code đúng scope trong repo production." />
 <meta property="og:title" content="Chạy Runtime" />
-<meta property="og:description" content="Contract, guardrail và handoff layer cho Codex, Claude, Antigravity, Cursor và IDE AI." />
+<meta property="og:description" content="Contract, handoff và verify layer cho Codex, Claude, Cursor, Kiro và IDE AI." />
 <meta property="og:type" content="website" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23171717' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/></svg>" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23080808' stroke-width='2'%3E%3Cpath d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E" />
 <style>
-  /* ---- Tokens ---- */
   :root {
-    --bg: #08100f;
-    --surface: #101716;
-    --card: #151d1b;
-    --panel: #0c1413;
-    --paper: #f7f2e8;
-    --ink: #101714;
-    --paper-muted: #5e6a63;
-    --border: #26322f;
-    --border-bright: #416256;
-    --text: #f4f7f2;
-    --muted: #9daea7;
-    --accent: #42e0a4;
-    --accent-soft: rgba(66, 224, 164, .12);
-    --accent-2: #f0c46a;
-    --accent-3: #72a6ff;
-    --danger: #ff6b6b;
+    --bg: #f4f4f3;
+    --bg-soft: #ededeb;
+    --ink: #080808;
+    --muted: #5b5c5e;
+    --muted-2: #8c8d90;
+    --line: #d9d8d3;
+    --panel: rgba(255, 255, 255, .72);
+    --white: #ffffff;
+    --blue: #5472ad;
+    --wine: #4a2432;
+    --rust: #9d5746;
+    --green: #0f8f63;
     --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-    --sans: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    --display: "Space Grotesk", var(--sans);
-    --r-ctrl: 8px;
-    --r-card: 8px;
+    --sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --radius: 18px;
+    --radius-sm: 10px;
+    --shadow: 0 24px 80px rgba(8, 8, 8, .12);
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   body {
+    margin: 0;
     font-family: var(--sans);
+    color: var(--ink);
     background:
-      linear-gradient(180deg, #07100f 0%, var(--bg) 42%, #0a0c0f 100%);
-    color: var(--text);
-    line-height: 1.65;
-    -webkit-font-smoothing: antialiased;
+      radial-gradient(circle at 18% 8%, rgba(84, 114, 173, .18), transparent 34%),
+      radial-gradient(circle at 84% 14%, rgba(157, 87, 70, .16), transparent 32%),
+      linear-gradient(180deg, #fafafa 0%, var(--bg) 42%, #e9e8e4 100%);
+    line-height: 1.55;
     overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
   }
+
   a { color: inherit; text-decoration: none; }
+  button, a { -webkit-tap-highlight-color: transparent; }
   svg { display: block; }
-  .wrap { width: min(100% - 48px, 1080px); margin: 0 auto; }
+  code { font-family: var(--mono); }
+  .wrap { width: min(100% - 40px, 1180px); margin: 0 auto; }
+  :focus-visible { outline: 3px solid rgba(84, 114, 173, .45); outline-offset: 3px; border-radius: 10px; }
 
-  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+  .site-nav {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    border-bottom: 1px solid rgba(8, 8, 8, .08);
+    background: rgba(244, 244, 243, .82);
+    backdrop-filter: blur(18px);
+  }
+  .nav-inner {
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+  .brand-mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 11px;
+    display: grid;
+    place-items: center;
+    color: var(--white);
+    background: var(--ink);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.16);
+  }
+  .brand-mark svg { width: 18px; height: 18px; }
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .nav-links a { min-height: 44px; display: inline-flex; align-items: center; }
+  .nav-links a:hover { color: var(--ink); }
+  .nav-cta {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px;
+    border-radius: 999px;
+    color: var(--white);
+    background: var(--ink);
+  }
+  @media (max-width: 820px) {
+    .nav-links a:not(.nav-cta) { display: none; }
+  }
 
-  .reveal { opacity: 0; transform: translateY(18px); transition: opacity .6s ease, transform .6s ease; }
+  .hero {
+    min-height: calc(100vh - 70px);
+    padding: 76px 0 54px;
+    display: grid;
+    align-items: center;
+  }
+  .hero-copy {
+    text-align: center;
+    max-width: 980px;
+    margin: 0 auto;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 38px;
+    padding: 0 14px;
+    border: 1px solid rgba(8,8,8,.09);
+    border-radius: 999px;
+    background: rgba(255,255,255,.66);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .eyebrow i {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 0 5px rgba(15,143,99,.12);
+  }
+  h1 {
+    margin: 24px 0 0;
+    font-size: clamp(48px, 8vw, 108px);
+    line-height: .94;
+    letter-spacing: 0;
+    font-weight: 700;
+  }
+  .hero-copy p {
+    max-width: 750px;
+    margin: 24px auto 0;
+    color: var(--muted);
+    font-size: clamp(17px, 2vw, 21px);
+  }
+  .hero-actions {
+    margin-top: 34px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .btn {
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border: 1px solid rgba(8,8,8,.1);
+    border-radius: 999px;
+    padding: 0 20px;
+    font-weight: 700;
+    cursor: pointer;
+    background: var(--white);
+    color: var(--ink);
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+  }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 16px 38px rgba(8,8,8,.09); border-color: rgba(8,8,8,.18); }
+  .btn-primary { background: var(--ink); color: var(--white); }
+  .btn svg { width: 18px; height: 18px; }
+
+  .command {
+    width: min(100%, 650px);
+    min-height: 58px;
+    margin: 34px auto 0;
+    padding: 8px 8px 8px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid rgba(8,8,8,.1);
+    border-radius: 999px;
+    background: rgba(255,255,255,.78);
+    box-shadow: 0 20px 70px rgba(8,8,8,.08);
+  }
+  .command .prompt { color: var(--blue); font-family: var(--mono); font-weight: 700; }
+  .command code {
+    min-width: 0;
+    flex: 1;
+    white-space: nowrap;
+    overflow-x: auto;
+    color: var(--ink);
+    font-size: 13px;
+  }
+  .copy {
+    min-height: 42px;
+    border: 0;
+    border-radius: 999px;
+    padding: 0 14px;
+    background: var(--bg-soft);
+    color: var(--ink);
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .copy.done { background: rgba(15,143,99,.12); color: var(--green); }
+
+  .product-frame {
+    position: relative;
+    margin: 48px auto 0;
+    width: min(100%, 1120px);
+  }
+  .product-frame::before {
+    content: "";
+    position: absolute;
+    inset: -22px 8% auto;
+    height: 160px;
+    background: linear-gradient(90deg, rgba(84,114,173,.34), rgba(157,87,70,.2), rgba(74,36,50,.16));
+    filter: blur(46px);
+    z-index: -1;
+  }
+  .console {
+    overflow: hidden;
+    border: 1px solid rgba(8,8,8,.12);
+    border-radius: 26px;
+    background: rgba(255,255,255,.74);
+    box-shadow: var(--shadow);
+  }
+  .console-top {
+    min-height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0 18px;
+    border-bottom: 1px solid rgba(8,8,8,.08);
+  }
+  .dots { display: flex; gap: 7px; }
+  .dots span { width: 11px; height: 11px; border-radius: 50%; background: #d9d8d3; }
+  .dots span:nth-child(1) { background: #e36d61; }
+  .dots span:nth-child(2) { background: #d9a93d; }
+  .dots span:nth-child(3) { background: #3aa874; }
+  .search-pill {
+    min-width: 0;
+    flex: 1;
+    max-width: 460px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    border: 1px solid rgba(8,8,8,.08);
+    border-radius: 999px;
+    background: rgba(244,244,243,.8);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .console-body {
+    display: grid;
+    grid-template-columns: 230px minmax(0, 1fr);
+    min-height: 520px;
+  }
+  .sidebar {
+    border-right: 1px solid rgba(8,8,8,.08);
+    padding: 20px;
+    background: rgba(244,244,243,.58);
+  }
+  .side-label {
+    margin-bottom: 14px;
+    color: var(--muted-2);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  .side-item {
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 12px;
+    border-radius: 12px;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .side-item svg { width: 17px; height: 17px; }
+  .side-item.active {
+    background: var(--ink);
+    color: var(--white);
+  }
+  .side-spacer { height: 20px; }
+  .mini-input {
+    margin-top: 20px;
+    padding: 14px;
+    border-radius: 16px;
+    background: var(--white);
+    border: 1px solid rgba(8,8,8,.08);
+  }
+  .mini-input strong { display: block; font-size: 13px; }
+  .mini-input span { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; }
+  .main-panel { padding: 22px; }
+  .panel-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    gap: 18px;
+    margin-bottom: 18px;
+  }
+  .panel-head h2 {
+    margin: 0;
+    font-size: clamp(26px, 4vw, 40px);
+    line-height: 1.05;
+    letter-spacing: 0;
+  }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 34px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: rgba(15,143,99,.1);
+    color: var(--green);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .metric {
+    min-height: 118px;
+    padding: 16px;
+    border: 1px solid rgba(8,8,8,.08);
+    border-radius: 18px;
+    background: var(--white);
+  }
+  .metric span {
+    display: block;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .metric strong {
+    display: block;
+    margin-top: 14px;
+    font-size: 31px;
+    line-height: 1;
+  }
+  .metric p { margin: 9px 0 0; color: var(--muted); font-size: 13px; }
+  .workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .graph, .handoff, .flow-strip {
+    border: 1px solid rgba(8,8,8,.08);
+    border-radius: 18px;
+    background: var(--white);
+  }
+  .graph { padding: 18px; min-height: 278px; }
+  .graph-title, .handoff-title {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 18px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .graph-title span, .handoff-title span { color: var(--muted); }
+  .nodes {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    align-items: center;
+  }
+  .node {
+    min-height: 88px;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: 10px;
+    color: var(--ink);
+    background: #f7f6f2;
+    border: 1px solid rgba(8,8,8,.08);
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .node:nth-child(2) { background: rgba(84,114,173,.13); }
+  .node:nth-child(3) { background: rgba(157,87,70,.13); }
+  .node:nth-child(4) { background: rgba(15,143,99,.12); }
+  .target-list { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .target-list code {
+    padding: 8px 10px;
+    border-radius: 999px;
+    background: #f4f4f3;
+    color: var(--muted);
+    font-size: 11px;
+  }
+  .handoff { padding: 16px; }
+  .handoff-list { display: grid; gap: 10px; }
+  .handoff-row {
+    display: grid;
+    grid-template-columns: 26px 1fr;
+    gap: 10px;
+    align-items: start;
+  }
+  .handoff-row i {
+    width: 26px;
+    height: 26px;
+    border-radius: 9px;
+    display: grid;
+    place-items: center;
+    background: #f4f4f3;
+    color: var(--blue);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 700;
+  }
+  .handoff-row strong { display: block; font-size: 13px; }
+  .handoff-row span { display: block; color: var(--muted); font-size: 12px; }
+  .flow-strip {
+    margin-top: 12px;
+    padding: 14px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+  }
+  .flow-strip span {
+    min-height: 48px;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: 8px;
+    border-radius: 12px;
+    background: #f7f6f2;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+
+  section { padding: 86px 0; }
+  .section-head {
+    max-width: 760px;
+    margin-bottom: 34px;
+  }
+  .section-head.center { text-align: center; margin-left: auto; margin-right: auto; }
+  .section-kicker {
+    color: var(--blue);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+  }
+  h2.section-title {
+    margin: 10px 0 0;
+    font-size: clamp(34px, 5vw, 64px);
+    line-height: 1;
+    letter-spacing: 0;
+  }
+  .section-head p { margin: 16px 0 0; color: var(--muted); font-size: 18px; }
+
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  .step-card {
+    min-height: 230px;
+    padding: 20px;
+    border: 1px solid rgba(8,8,8,.08);
+    border-radius: var(--radius);
+    background: rgba(255,255,255,.72);
+  }
+  .step-card .num {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--white);
+    background: var(--ink);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .step-card h3 { margin: 22px 0 0; font-size: 21px; line-height: 1.15; }
+  .step-card p { margin: 12px 0 0; color: var(--muted); font-size: 14px; }
+  .step-card code {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 7px 9px;
+    border-radius: 999px;
+    background: var(--bg-soft);
+    color: var(--blue);
+    font-size: 12px;
+  }
+
+  .split {
+    display: grid;
+    grid-template-columns: minmax(0, .96fr) minmax(0, 1.04fr);
+    gap: 24px;
+    align-items: stretch;
+  }
+  .terminal {
+    overflow: hidden;
+    border-radius: 24px;
+    border: 1px solid rgba(8,8,8,.1);
+    background: #0d0e10;
+    color: #f4f4f3;
+    box-shadow: var(--shadow);
+  }
+  .terminal-head {
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 18px;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  .terminal pre {
+    margin: 0;
+    padding: 22px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.85;
+  }
+  .terminal .c { color: #7a7d84; }
+  .terminal .k { color: #d6a85c; }
+  .terminal .s { color: #8fa8e8; }
+  .rules {
+    display: grid;
+    gap: 12px;
+  }
+  .rule {
+    min-height: 96px;
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 14px;
+    align-items: start;
+    padding: 18px;
+    border-radius: 18px;
+    border: 1px solid rgba(8,8,8,.08);
+    background: rgba(255,255,255,.72);
+  }
+  .rule svg {
+    width: 44px;
+    height: 44px;
+    padding: 11px;
+    border-radius: 14px;
+    background: var(--ink);
+    color: var(--white);
+  }
+  .rule strong { display: block; font-size: 17px; }
+  .rule span { display: block; margin-top: 5px; color: var(--muted); font-size: 14px; }
+
+  .final-band {
+    padding: 58px;
+    border-radius: 28px;
+    background:
+      linear-gradient(120deg, rgba(84,114,173,.14), rgba(157,87,70,.12)),
+      var(--white);
+    border: 1px solid rgba(8,8,8,.08);
+    text-align: center;
+  }
+  .final-band h2 {
+    max-width: 760px;
+    margin: 0 auto;
+    font-size: clamp(34px, 5vw, 62px);
+    line-height: 1;
+  }
+  .final-band p { max-width: 640px; margin: 18px auto 0; color: var(--muted); font-size: 18px; }
+
+  footer {
+    padding: 34px 0;
+    border-top: 1px solid rgba(8,8,8,.08);
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .footer-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .footer-links { display: flex; gap: 20px; }
+  .footer-links a { min-height: 44px; display: inline-flex; align-items: center; }
+  .footer-links a:hover { color: var(--ink); }
+
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity .55s ease, transform .55s ease; }
   .reveal.in { opacity: 1; transform: none; }
+
+  @media (max-width: 980px) {
+    .console-body { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .workspace { grid-template-columns: 1fr; }
+    .steps-grid { grid-template-columns: repeat(2, 1fr); }
+    .split { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 680px) {
+    .wrap { width: min(100% - 28px, 1180px); }
+    .hero { padding-top: 52px; }
+    .command { border-radius: 18px; align-items: stretch; flex-direction: column; padding: 14px; }
+    .command code { width: 100%; white-space: normal; overflow-wrap: anywhere; }
+    .copy { width: 100%; }
+    .console { border-radius: 18px; }
+    .console-top { align-items: start; flex-direction: column; padding: 16px; }
+    .search-pill { width: 100%; max-width: none; }
+    .main-panel { padding: 16px; }
+    .panel-head { flex-direction: column; }
+    .metrics { grid-template-columns: 1fr; }
+    .nodes { grid-template-columns: 1fr 1fr; }
+    .flow-strip { grid-template-columns: 1fr; }
+    .steps-grid { grid-template-columns: 1fr; }
+    .final-band { padding: 36px 18px; }
+  }
   @media (prefers-reduced-motion: reduce) {
-    * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+    *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
     .reveal { opacity: 1; transform: none; }
   }
-
-  /* ---- Nav ---- */
-  nav {
-    position: sticky; top: 0; z-index: 50;
-    backdrop-filter: blur(12px);
-    background: rgba(8, 16, 15, .86);
-    border-bottom: 1px solid var(--border);
-  }
-  .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 62px; }
-  .brand { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-weight: 700; letter-spacing: 0; }
-  .brand .logo { color: var(--accent); }
-  .nav-links { display: flex; gap: 26px; align-items: center; }
-  .nav-links > a { color: var(--muted); font-size: 14px; transition: color .16s; }
-  .nav-links > a:hover { color: var(--text); }
-  @media (max-width: 720px) {
-    .wrap { width: min(100% - 32px, 1080px); }
-    .nav-links > a:not(.btn) { display: none; }
-  }
-
-  /* ---- Buttons ---- */
-  .btn {
-    display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
-    padding: 11px 18px; border-radius: var(--r-ctrl); font-weight: 600; font-size: 14px;
-    font-family: var(--sans); border: 1px solid var(--border); background: var(--card); color: var(--text);
-    transition: transform .14s ease, border-color .16s, background .16s, box-shadow .16s;
-  }
-  .btn:hover { transform: translateY(-1px); border-color: var(--border-bright); }
-  .btn svg { width: 16px; height: 16px; }
-  .btn-primary { background: var(--accent); border: 1px solid var(--accent); color: #06100d; }
-  .btn-primary:hover { box-shadow: 0 12px 34px -16px var(--accent); }
-  .btn-icon { padding: 9px; color: var(--muted); }
-  .btn-icon:hover { color: var(--text); }
-  .btn-icon svg { width: 20px; height: 20px; }
-
-  /* ---- Hero ---- */
-  header.hero { position: relative; padding: 104px 0 92px; text-align: center; overflow: hidden; }
-  #bg-fx { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -2;
-    opacity: .38; pointer-events: none; }
-  .hero::before {
-    content: ""; position: absolute; inset: 0; z-index: -1;
-    background:
-      linear-gradient(180deg, rgba(66,224,164,.08), transparent 36%),
-      linear-gradient(90deg, rgba(66,224,164,.045) 1px, transparent 1px),
-      linear-gradient(180deg, rgba(240,196,106,.035) 1px, transparent 1px);
-    background-size: auto, 72px 72px, 72px 72px;
-  }
-  .pill {
-    display: inline-flex; align-items: center; gap: 9px; font-family: var(--mono);
-    padding: 6px 14px; border-radius: 999px; font-size: 12.5px; color: var(--muted);
-    border: 1px solid rgba(66,224,164,.24); background: rgba(16,23,22,.86); margin-bottom: 28px;
-  }
-  .pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
-    box-shadow: 0 0 10px var(--accent); animation: pulse 2.2s ease-in-out infinite; }
-  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
-  h1 { font-family: var(--display); font-size: clamp(42px, 7vw, 78px); line-height: .98;
-    letter-spacing: 0; font-weight: 800; }
-  h1 .glow { color: var(--accent-2); text-shadow: 0 0 18px rgba(240,196,106,.24); }
-  .sub { max-width: 760px; margin: 24px auto 0; color: var(--muted); font-size: clamp(16px, 2.4vw, 20px); }
-  .cta-row { display: flex; gap: 14px; justify-content: center; margin-top: 34px; flex-wrap: wrap; }
-
-  .hero-proof {
-    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;
-    max-width: 820px; margin: 34px auto 0;
-  }
-  .proof-card {
-    min-height: 118px; border: 1px solid rgba(66,224,164,.18); border-radius: var(--r-card);
-    background: rgba(12,20,19,.74); padding: 16px; text-align: left;
-    box-shadow: 0 24px 70px -48px rgba(66,224,164,.8);
-  }
-  .proof-card .label { font-family: var(--mono); font-size: 11px; color: var(--accent); margin-bottom: 10px; }
-  .proof-card .big { font-family: var(--display); font-size: 22px; line-height: 1.05; color: var(--text); }
-  .proof-card .mini { margin-top: 10px; color: var(--muted); font-size: 13px; line-height: 1.35; }
-  .proof-lines { display: grid; gap: 7px; margin-top: 8px; }
-  .proof-lines span { display: block; height: 8px; border-radius: 999px; background: rgba(244,247,242,.12); }
-  .proof-lines span:nth-child(1) { width: 92%; background: rgba(66,224,164,.42); }
-  .proof-lines span:nth-child(2) { width: 68%; }
-  .proof-lines span:nth-child(3) { width: 78%; background: rgba(240,196,106,.32); }
-  @media (max-width: 740px) { .hero-proof { grid-template-columns: 1fr; } }
-
-  /* ---- Install box ---- */
-  .install {
-    max-width: 560px; margin: 40px auto 0;
-    display: flex; align-items: center; gap: 12px;
-    background: rgba(12,20,19,.94); border: 1px solid rgba(66,224,164,.22); border-radius: var(--r-card);
-    padding: 15px 16px; font-family: var(--mono); font-size: 14.5px; text-align: left;
-  }
-  .install .prompt { color: var(--accent); user-select: none; }
-  .install code { flex: 1; color: var(--text); white-space: nowrap; overflow-x: auto; }
-  .copy {
-    display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
-    border: 1px solid var(--border); background: var(--card); color: var(--muted);
-    border-radius: 8px; padding: 7px 11px; font-size: 12px; font-family: var(--sans);
-    font-weight: 600; transition: color .16s, border-color .16s; white-space: nowrap;
-  }
-  .copy:hover { color: var(--text); border-color: var(--border-bright); }
-  .copy.done { color: var(--accent); border-color: var(--accent); }
-  .copy svg { width: 14px; height: 14px; }
-
-  /* ---- Sections ---- */
-  section { padding: 78px 0; }
-  .eyebrow { font-family: var(--mono); color: var(--accent); font-weight: 600; font-size: 12.5px;
-    letter-spacing: .1em; text-transform: uppercase; }
-  h2 { font-family: var(--display); font-size: clamp(28px, 4.5vw, 48px); letter-spacing: 0;
-    margin-top: 12px; font-weight: 800; line-height: 1.15; }
-  .section-sub { color: var(--muted); margin-top: 14px; max-width: 640px; font-size: 17px; }
-  .center { text-align: center; }
-  .center .section-sub { margin-left: auto; margin-right: auto; }
-
-  /* ---- Feature grid ---- */
-  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 46px; }
-  @media (max-width: 860px) { .grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
-  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-card);
-    padding: 24px; transition: transform .16s ease, border-color .16s; }
-  .card:hover { transform: translateY(-3px); border-color: var(--border-bright); }
-  .card .ico { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 11px;
-    background: var(--accent-soft); border: 1px solid rgba(66,224,164,.2); margin-bottom: 16px; color: var(--accent); }
-  .card .ico svg { width: 21px; height: 21px; }
-  .card h3 { font-family: var(--display); font-size: 18px; margin-bottom: 8px; letter-spacing: 0; }
-  .card p { color: var(--muted); font-size: 14.5px; }
-  .card code { font-family: var(--mono); font-size: 12.5px; color: var(--accent-2); background: var(--surface);
-    padding: 1px 5px; border-radius: 5px; }
-
-  /* ---- Roles ---- */
-  .roles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 46px; }
-  @media (max-width: 760px) { .roles { grid-template-columns: 1fr; } }
-  .role { border: 1px solid var(--border); border-radius: var(--r-card); padding: 26px;
-    background: linear-gradient(180deg, var(--card), var(--panel)); }
-  .role .tag { font-family: var(--mono); font-size: 11.5px; color: var(--accent); letter-spacing: .04em; }
-  .role h3 { font-family: var(--mono); font-size: 20px; margin: 8px 0 6px; }
-  .role p { color: var(--muted); font-size: 14.5px; }
-  .role code { font-family: var(--mono); font-size: 12.5px; color: var(--accent-2); }
-
-  /* ---- Storytelling artifact showcase ---- */
-  .story-shell {
-    margin-top: 46px; display: grid; grid-template-columns: .88fr 1.12fr; gap: 22px; align-items: stretch;
-  }
-  @media (max-width: 860px) { .story-shell { grid-template-columns: 1fr; } }
-  .messy-card, .artifact-card {
-    border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden;
-    background: var(--card);
-  }
-  .messy-card { padding: 22px; }
-  .messy-card h3, .artifact-card h3 { font-family: var(--display); font-size: 22px; line-height: 1.1; }
-  .messy-list { margin-top: 22px; display: grid; gap: 10px; }
-  .messy-item {
-    display: flex; gap: 11px; align-items: flex-start; padding: 12px;
-    border: 1px solid rgba(255,255,255,.07); border-radius: 8px; background: rgba(255,255,255,.025);
-    color: var(--muted); font-size: 14px;
-  }
-  .messy-item svg { width: 17px; height: 17px; flex-shrink: 0; color: var(--danger); margin-top: 2px; }
-  .artifact-card { background: var(--paper); color: var(--ink); }
-  .artifact-head { display: flex; justify-content: space-between; gap: 14px; align-items: center;
-    padding: 18px 20px; border-bottom: 1px solid rgba(16,23,20,.12); }
-  .artifact-head code { font-family: var(--mono); color: #245c47; font-size: 12px; overflow-wrap: anywhere; }
-  .artifact-body { padding: 20px; display: grid; gap: 16px; }
-  .artifact-row { display: grid; grid-template-columns: 132px 1fr; gap: 16px; align-items: start; }
-  .artifact-row .key { font-family: var(--mono); font-size: 11px; color: var(--paper-muted); text-transform: uppercase; letter-spacing: .08em; }
-  .artifact-row .value { font-size: 15px; color: var(--ink); line-height: 1.45; }
-  .artifact-pills { display: flex; flex-wrap: wrap; gap: 8px; }
-  .artifact-pills span {
-    font-family: var(--mono); font-size: 11px; padding: 6px 8px; border-radius: 999px;
-    color: #18372c; background: rgba(66,224,164,.22); border: 1px solid rgba(36,92,71,.16);
-  }
-  .flow-mini { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-  .flow-mini span {
-    min-height: 54px; border-radius: 8px; display: grid; place-items: center; text-align: center;
-    padding: 8px; font-family: var(--mono); font-size: 11px; color: #173629;
-    background: #fffaf0; border: 1px solid rgba(16,23,20,.1);
-  }
-  .flow-mini span:nth-child(2) { background: rgba(66,224,164,.24); }
-  .flow-mini span:nth-child(3) { background: rgba(114,166,255,.2); }
-  .flow-mini span:nth-child(4) { background: rgba(240,196,106,.28); }
-  @media (max-width: 620px) {
-    .artifact-row { grid-template-columns: 1fr; gap: 8px; }
-    .flow-mini { grid-template-columns: 1fr 1fr; }
-  }
-
-  /* ---- Progress showcase ---- */
-  .progress-box { margin-top: 46px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 22px; align-items: start; }
-  @media (max-width: 820px) { .progress-box { grid-template-columns: 1fr; } }
-  .steps { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--border);
-    border-radius: var(--r-card); background: var(--card); padding: 10px 6px; }
-  .step { display: flex; align-items: center; gap: 14px; padding: 13px 16px; border-radius: 12px;
-    position: relative; transition: background .3s; }
-  .step.active { background: var(--accent-soft); }
-  .step .marker { width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center;
-    border: 2px solid var(--border-bright); background: var(--surface); color: var(--muted);
-    font-family: var(--mono); font-size: 12px; font-weight: 700; transition: all .3s; }
-  .step.active .marker, .step.done .marker { border-color: var(--accent); background: var(--accent); color: #06100d; }
-  .step .marker svg { width: 15px; height: 15px; }
-  .step .txt .name { font-family: var(--mono); font-size: 14px; font-weight: 600; }
-  .step .txt .cmd { font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
-  .step.active .txt .cmd { color: var(--accent); }
-  /* connector line */
-  .step:not(:last-child)::after { content: ""; position: absolute; left: 30px; top: 43px; bottom: -13px;
-    width: 2px; background: var(--border); }
-  .step.done::after { background: var(--accent); }
-  /* terminal panel */
-  .term { border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; background: var(--panel); align-self: stretch; }
-  .term .bar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface); }
-  .term .bar .dots { display: flex; gap: 6px; }
-  .term .bar .dots i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
-  .term .bar .fname { margin-left: 8px; font-family: var(--mono); font-size: 12.5px; color: var(--muted); }
-  .term .body { padding: 18px; font-family: var(--mono); font-size: 12.5px; line-height: 1.9; min-height: 210px; }
-  .term .body .ln { white-space: pre-wrap; word-break: break-word; }
-  .term .body .p { color: var(--accent); }
-  .term .body .flag { color: var(--accent-2); }
-  .term .body .msg { color: var(--text); }
-  .term .body .ok { color: var(--muted); }
-  .term .body .cursor { display: inline-block; width: 8px; height: 15px; background: var(--accent);
-    vertical-align: text-bottom; animation: blink 1s steps(1) infinite; }
-  @keyframes blink { 50% { opacity: 0; } }
-  .blocked-note { margin-top: 20px; display: flex; align-items: flex-start; gap: 10px;
-    color: var(--muted); font-size: 14px; line-height: 1.6; }
-  .blocked-note svg { width: 18px; height: 18px; color: var(--danger); flex-shrink: 0; margin-top: 3px; }
-  .blocked-note code { font-family: var(--mono); font-size: 12.5px; color: var(--accent-2);
-    background: var(--surface); padding: 1px 5px; border-radius: 5px; }
-
-  /* ---- Code block ---- */
-  .codewrap { margin-top: 46px; border: 1px solid var(--border); border-radius: var(--r-card);
-    overflow: hidden; background: var(--panel); }
-  .codebar { display: flex; align-items: center; gap: 8px; padding: 12px 16px;
-    border-bottom: 1px solid var(--border); background: var(--surface); }
-  .codebar .dots { display: flex; gap: 6px; }
-  .codebar .dots i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
-  .codebar .fname { margin-left: 8px; font-family: var(--mono); font-size: 12.5px; color: var(--muted); }
-  pre { margin: 0; padding: 22px; overflow-x: auto; font-family: var(--mono); font-size: 13.5px; line-height: 1.8; }
-  pre .c { color: #6f827b; }
-  pre .k { color: var(--accent-2); }
-  pre .s { color: var(--accent); }
-
-  /* ---- Docs / CLI reference ---- */
-  .doc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 46px; }
-  @media (max-width: 760px) { .doc-grid { grid-template-columns: 1fr; } }
-  .doc-card { min-width: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--r-card); padding: 20px 22px; }
-  .doc-card .doc-tag { font-family: var(--mono); font-size: 11.5px; color: var(--accent); letter-spacing: .06em; text-transform: uppercase; }
-  .doc-card .doc-cmd { display: block; font-family: var(--mono); font-size: 13px; color: var(--text); background: var(--panel);
-    border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; margin: 10px 0 10px;
-    max-width: 100%; overflow-wrap: anywhere; white-space: pre-wrap; word-break: break-word; }
-  .doc-card .doc-cmd .f { color: var(--accent-2); }
-  .doc-card p { color: var(--muted); font-size: 14px; line-height: 1.6; }
-  @media (max-width: 560px) {
-    .doc-card { padding: 18px 16px; }
-    .doc-card .doc-cmd { font-size: 12px; }
-  }
-
-  /* ---- Safety list ---- */
-  .safe-list { margin-top: 34px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 30px; }
-  @media (max-width: 640px) { .safe-list { grid-template-columns: 1fr; } }
-  .safe-list li { list-style: none; display: flex; gap: 12px; align-items: flex-start;
-    color: var(--muted); font-size: 15px; }
-  .safe-list li svg { width: 18px; height: 18px; color: var(--accent); flex-shrink: 0; margin-top: 3px; }
-
-  /* ---- CTA band ---- */
-  .band { text-align: center; border: 1px solid rgba(66,224,164,.2); border-radius: var(--r-card); padding: 58px 24px;
-    background: linear-gradient(180deg, rgba(66,224,164,.08), rgba(240,196,106,.04)), var(--card); }
-  .band h2 { margin-top: 0; }
-
-  /* ---- Footer ---- */
-  footer { border-top: 1px solid var(--border); padding: 40px 0; color: var(--muted); font-size: 14px; }
-  .foot-inner { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
-  .foot-inner .brand { color: var(--muted); }
-  .foot-links { display: flex; gap: 22px; }
-  .foot-links a:hover { color: var(--text); }
 </style>
 </head>
 <body>
-
-<nav>
+<nav class="site-nav">
   <div class="wrap nav-inner">
-    <a class="brand" href="#top">
-      <span class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></span>
+    <a class="brand" href="#top" aria-label="Chạy Runtime home">
+      <span class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+      </span>
       Chạy Runtime
     </a>
     <div class="nav-links">
-      <a href="#story">Story</a>
-      <a href="#features">Tính năng</a>
-      <a href="#roles">IDE AI</a>
-      <a href="#progress">Workflow</a>
-      <a href="#quickstart">Bắt đầu</a>
-      <a href="#docs">Lệnh CLI</a>
-      <a class="btn btn-icon" href="https://github.com/dinhpham1506/chay-runtime" target="_blank" rel="noopener" aria-label="Mở repo trên GitHub" title="GitHub">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+      <a href="#workflow">Workflow</a>
+      <a href="#guardrails">Guardrails</a>
+      <a href="#quickstart">Quickstart</a>
+      <a class="nav-cta" href="https://github.com/dinhpham1506/Chay-runtime" target="_blank" rel="noopener">
+        GitHub
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>
       </a>
     </div>
   </div>
 </nav>
 
-<header class="hero" id="top">
-  <canvas id="bg-fx" aria-hidden="true"></canvas>
-  <div class="wrap">
-    <span class="pill"><span class="dot"></span> v0.1.0 · dinhpham · Node ≥ 20</span>
-    <h1>Cho IDE AI code,<br /><span class="glow">không để nó đi lạc</span></h1>
-    <p class="sub">
-      Chạy Runtime tạo feature graph, user flow, sequence diagram và handoff nhỏ cho Codex,
-      Claude, Antigravity, Cursor hoặc IDE AI bất kỳ. AI code ở ngoài; runtime giữ contract,
-      scope, docs, secrets và OWASP checks ở trong repo.
-    </p>
-
-    <div class="install">
-      <span class="prompt">$</span>
-      <code id="install-cmd">npm install -g chay-runtime@latest && cr start</code>
-      <button class="copy" id="copyBtn" onclick="copyInstall()" aria-label="Sao chép lệnh cài đặt">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        <span>Sao chép</span>
-      </button>
-    </div>
-
-    <div class="cta-row">
-      <a class="btn btn-primary" href="#quickstart">Bắt đầu ngay
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-      </a>
-      <a class="btn" href="#progress">Xem workflow</a>
-      <a class="btn" href="https://www.npmjs.com/package/chay-runtime" target="_blank" rel="noopener">Xem trên npm</a>
-    </div>
-
-    <div class="hero-proof" aria-label="Chay Runtime artifact preview">
-      <div class="proof-card">
-        <div class="label">messy input</div>
-        <div class="big">“User applies to job”</div>
-        <div class="mini">Task ngắn, repo lớn, nhiều file dễ chọn sai.</div>
-      </div>
-      <div class="proof-card">
-        <div class="label">clean contract</div>
-        <div class="proof-lines" aria-hidden="true">
-          <span></span><span></span><span></span>
+<main id="top">
+  <header class="hero">
+    <div class="wrap">
+      <div class="hero-copy reveal">
+        <span class="eyebrow"><i></i> Contract layer for external IDE AI</span>
+        <h1>Build AI coding flows grounded in your repo.</h1>
+        <p>Chạy Runtime turns a vague task into a compact feature contract, folder map, API graph, work note and handoff. Codex, Claude, Cursor or Kiro can code outside. The repo keeps the guardrails.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#quickstart">Start with CLI <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+          <a class="btn" href="#workflow">View workflow</a>
         </div>
-        <div class="mini">Feature MD + API graph + PlantUML.</div>
-      </div>
-      <div class="proof-card">
-        <div class="label">verified patch</div>
-        <div class="big">scope ok</div>
-        <div class="mini">Diff, result note, secrets, docs và OWASP được check.</div>
-      </div>
-    </div>
-  </div>
-</header>
-
-<section id="story">
-  <div class="wrap center reveal">
-    <span class="eyebrow">Học UX từ Graphy</span>
-    <h2>Biến repo lộn xộn thành một story mà AI đọc được</h2>
-    <p class="section-sub">Graphy làm dữ liệu dễ kể chuyện. Chạy Runtime làm điều tương tự cho codebase: từ task mơ hồ thành feature contract, graph, API map và handoff đủ rõ để IDE AI không đoán mò.</p>
-  </div>
-  <div class="wrap reveal">
-    <div class="story-shell">
-      <div class="messy-card">
-        <h3>Trước khi có contract</h3>
-        <div class="messy-list">
-          <div class="messy-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-            AI thấy chữ “user” rồi chọn nhầm admin user management.
-          </div>
-          <div class="messy-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-            Task bị dính path thành goal như “User applies to job client/src/lib/api.ts”.
-          </div>
-          <div class="messy-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-            Folder docs, graph, memory và audit trộn lẫn làm session mới đọc sai.
-          </div>
+        <div class="command" aria-label="Install command">
+          <span class="prompt">$</span>
+          <code id="installCommand">npm install -g chay-runtime@latest && cr start</code>
+          <button class="copy" id="copyButton" type="button">Copy</button>
         </div>
       </div>
 
-      <div class="artifact-card">
-        <div class="artifact-head">
-          <h3>Feature story output</h3>
-          <code>chay-structure/features/user_applies_to_job.md</code>
-        </div>
-        <div class="artifact-body">
-          <div class="artifact-row">
-            <div class="key">read order</div>
-            <div class="value">ai_handoff.json → feature MD → folder_structure.md → api_graph.md → PlantUML → selected files.</div>
-          </div>
-          <div class="artifact-row">
-            <div class="key">targets</div>
-            <div class="artifact-pills">
-              <span>client/src/lib/api.ts</span>
-              <span>netlify/functions/job-applications.ts</span>
+      <div class="product-frame reveal" aria-label="Chạy Runtime product console preview">
+        <div class="console">
+          <div class="console-top">
+            <div class="dots" aria-hidden="true"><span></span><span></span><span></span></div>
+            <div class="search-pill">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              cr go "Admin changes user role"
             </div>
+            <span class="status-pill">scope synced</span>
           </div>
-          <div class="artifact-row">
-            <div class="key">flow</div>
-            <div class="flow-mini">
-              <span>auth user</span>
-              <span>validate jobId</span>
-              <span>block duplicate</span>
-              <span>pending status</span>
-            </div>
+          <div class="console-body">
+            <aside class="sidebar">
+              <div class="side-label">runtime</div>
+              <div class="side-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h5"/></svg> Feature graph</div>
+              <div class="side-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h6l3-8 3 16 3-8h3"/></svg> API map</div>
+              <div class="side-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg> Handoff</div>
+              <div class="side-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg> Verify</div>
+              <div class="side-spacer"></div>
+              <div class="side-label">targets</div>
+              <div class="side-item">Codex</div>
+              <div class="side-item">Claude</div>
+              <div class="side-item">Cursor</div>
+              <div class="mini-input">
+                <strong>AI handoff prompt</strong>
+                <span>Read rules, feature MD, folder structure and API graph before editing.</span>
+              </div>
+            </aside>
+            <section class="main-panel">
+              <div class="panel-head">
+                <h2>Admin changes user role</h2>
+                <span class="status-pill">update_feature</span>
+              </div>
+              <div class="metrics">
+                <div class="metric"><span>repo tokens</span><strong>461k</strong><p>Full project context</p></div>
+                <div class="metric"><span>chay context</span><strong>4.7k</strong><p>Selected feature pack</p></div>
+                <div class="metric"><span>saved</span><strong>99%</strong><p>Maintains focus</p></div>
+              </div>
+              <div class="workspace">
+                <div class="graph">
+                  <div class="graph-title">feature flow <span>PlantUML + Markdown</span></div>
+                  <div class="nodes">
+                    <div class="node">Admin opens dashboard</div>
+                    <div class="node">Selects user role</div>
+                    <div class="node">Check super admin</div>
+                    <div class="node">Persist role update</div>
+                  </div>
+                  <div class="target-list">
+                    <code>client/src/components/AdminDashboard.tsx</code>
+                    <code>netlify/functions/admin-users-role.ts</code>
+                    <code>server/src/api/admin.ts</code>
+                  </div>
+                </div>
+                <div class="handoff">
+                  <div class="handoff-title">read order <span>for IDE AI</span></div>
+                  <div class="handoff-list">
+                    <div class="handoff-row"><i>1</i><div><strong>ai_handoff.json</strong><span>Current source of truth</span></div></div>
+                    <div class="handoff-row"><i>2</i><div><strong>feature markdown</strong><span>User flow and acceptance</span></div></div>
+                    <div class="handoff-row"><i>3</i><div><strong>folder structure</strong><span>Local architecture map</span></div></div>
+                    <div class="handoff-row"><i>4</i><div><strong>api graph</strong><span>Routes and linked code</span></div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="flow-strip">
+                <span>cr start</span>
+                <span>cr config</span>
+                <span>cr go</span>
+                <span>IDE AI edits</span>
+                <span>cr verify</span>
+              </div>
+            </section>
           </div>
-          <div class="artifact-row">
-            <div class="key">verify</div>
-            <div class="value">Patch chỉ được sửa graph code targets. Nếu target lệch business goal, AI phải dừng và hỏi scope rõ hơn.</div>
-          </div>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </header>
 
-<section id="features">
-  <div class="wrap center reveal">
-    <span class="eyebrow">Vì sao chọn Chạy Runtime</span>
-    <h2>Ít artifact hơn, nhưng artifact nào cũng có nhiệm vụ rõ</h2>
-    <p class="section-sub">Không bắt người dùng đọc schema. Runtime tách machine state vào <code>chay-memory</code>, còn docs cho người và AI nằm trong <code>chay-structure</code>.</p>
-  </div>
-  <div class="wrap">
-    <div class="grid">
-      <div class="card reveal">
-        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg></div>
-        <h3>Feature graph là source of truth</h3>
-        <p><code>chay-structure/features/&lt;feature_id&gt;.md</code> và <code>chay-memory/feature_graph.json</code> chứa user flow, sequence diagram, nhánh lỗi, code targets và lý do chọn file.</p>
+  <section id="workflow">
+    <div class="wrap">
+      <div class="section-head center reveal">
+        <span class="section-kicker">workflow</span>
+        <h2 class="section-title">One flow for new work and maintenance.</h2>
+        <p>Chạy keeps old feature contracts updated instead of creating competing docs. When scope changes, graph, context, work note and handoff move together.</p>
       </div>
-      <div class="card reveal">
-        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></div>
-        <h3>Patch guardrail</h3>
-        <p>Reject sửa ngoài scope, sửa docs human-owned khi chưa approve, đụng secrets, xóa validation hoặc thêm anti-pattern.</p>
-      </div>
-      <div class="card reveal">
-        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m16.2 7.8-2 6.3-6.4 2 2-6.3z"/></svg></div>
-        <h3>Handoff giảm token</h3>
-        <p>IDE session mới đọc <code>chay-memory/rules/chay-runtime.md</code>, <code>ai_handoff.json</code>, <code>chay-structure/features/&lt;feature_id&gt;.md</code>, <code>folder_structure.md</code> và <code>api_graph.md</code> trước, thay vì đọc lại cả repo và đoán việc đang làm.</p>
-      </div>
-      <div class="card reveal">
-        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h20M4 3v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3"/><path d="M8 21h8M12 19v2"/><path d="m9 8 2 2 4-4"/></svg></div>
-        <h3>Design pattern rules</h3>
-        <p>AI phải giữ local pattern, SOLID, validation, error handling, security checks, accessibility và tests.</p>
-      </div>
-      <div class="card reveal">
-        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="8" rx="2"/><rect x="3" y="13" width="18" height="8" rx="2"/><path d="M7 7h.01M7 17h.01"/></svg></div>
-        <h3>IDE config</h3>
-        <p><code>cr config</code> tạo instruction chung và project rules cho Codex, Claude, Antigravity, GitHub Copilot, Cursor, Kiro hoặc manual mode.</p>
-      </div>
-      <div class="card reveal">
-        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="m7 8 2 2-2 2M13 12h3"/></svg></div>
-        <h3>Verify sau khi AI code</h3>
-        <p><code>cr verify</code>, patch check và token report cho người dùng biết patch còn hỏng gì và tiết kiệm token bao nhiêu.</p>
+      <div class="steps-grid">
+        <article class="step-card reveal"><span class="num">01</span><h3>Start the runtime</h3><p>Create local rules and a clean memory folder that IDE AI can read.</p><code>cr start</code></article>
+        <article class="step-card reveal"><span class="num">02</span><h3>Configure the IDE</h3><p>Install rule files for Codex, Claude, Cursor, Kiro or manual IDE mode.</p><code>cr config codex,cursor</code></article>
+        <article class="step-card reveal"><span class="num">03</span><h3>Generate the contract</h3><p>Scan repo, select targets, create feature MD, folder structure and API graph.</p><code>cr go "Task"</code></article>
+        <article class="step-card reveal"><span class="num">04</span><h3>Verify the patch</h3><p>Check result note, diff boundary, secrets, docs ownership and OWASP prompts.</p><code>cr verify</code></article>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section id="roles" style="background: var(--surface);">
-  <div class="wrap center reveal">
-    <span class="eyebrow">IDE AI external mode</span>
-    <h2>Không điều phối subagent, chỉ cấu hình IDE và verify patch</h2>
-    <p class="section-sub">Codex, Claude, Antigravity, GitHub Copilot, Cursor hoặc Kiro code ở ngoài. Chạy Runtime chỉ tạo contract, handoff và guardrail local để IDE AI biết phải đọc gì và không được sửa gì.</p>
-  </div>
-  <div class="wrap">
-    <div class="roles">
-      <div class="role reveal">
-        <span class="tag">// config</span>
-        <h3>cr config</h3>
-        <p>Tạo <code>.chay/ide/CHAY_IDE_INSTRUCTIONS.md</code> và <code>chay-memory/ide_config.json</code> cho IDE AI đang dùng.</p>
+  <section id="guardrails">
+    <div class="wrap split">
+      <div class="section-head reveal">
+        <span class="section-kicker">guardrails</span>
+        <h2 class="section-title">The AI edits code. The contract keeps it honest.</h2>
+        <p>The runtime is intentionally small: one folder for machine state, one folder for human-readable structure, and a strict selected-file boundary.</p>
       </div>
-      <div class="role reveal">
-        <span class="tag">// one command</span>
-        <h3>cr go</h3>
-        <p>Không cần biết file từ đầu. Runtime scan repo, chọn context, tạo graph, sequence diagram, work note và handoff.</p>
-      </div>
-      <div class="role reveal">
-        <span class="tag">// verify</span>
-        <h3>cr verify</h3>
-        <p>Sau khi IDE AI code xong, runtime check result note, patch scope, human-owned docs, secrets, token budget và OWASP prompts.</p>
+      <div class="rules">
+        <div class="rule reveal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+          <div><strong>No stale scope</strong><span>When a goal narrows, old migration or API targets are dropped unless the new intent still needs them.</span></div>
+        </div>
+        <div class="rule reveal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h10"/></svg>
+          <div><strong>No generic keyword matching</strong><span>Words like user or admin are not enough to map a task into an existing feature.</span></div>
+        </div>
+        <div class="rule reveal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+          <div><strong>Readable artifacts</strong><span>Feature flow lives in Markdown. Diagrams live in PlantUML. JSON stays in chay-memory.</span></div>
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section id="progress">
-  <div class="wrap center reveal">
-    <span class="eyebrow">Workflow chính</span>
-    <h2>Graph → sequence → handoff → IDE AI → verify</h2>
-    <p class="section-sub">Local UI vẫn dùng được để inspect state, nhưng workflow chính là IDE-first. File quan trọng nhất cho session mới là <code style="font-family:var(--mono);color:var(--accent-2)">chay-memory/rules/chay-runtime.md</code>, rồi <code style="font-family:var(--mono);color:var(--accent-2)">chay-memory/ai_handoff.json</code>.</p>
-  </div>
-  <div class="wrap reveal">
-    <div class="progress-box">
-      <!-- Stepper: IDE-first workflow -->
-      <div class="steps" id="stepper">
-        <div class="step" data-step="0">
-          <div class="marker">1</div>
-          <div class="txt"><div class="name">Config IDE</div><div class="cmd">cr config</div></div>
+  <section id="quickstart">
+    <div class="wrap split">
+      <div class="terminal reveal">
+        <div class="terminal-head">
+          <div class="dots" aria-hidden="true"><span></span><span></span><span></span></div>
+          <code>terminal</code>
         </div>
-        <div class="step" data-step="1">
-          <div class="marker">2</div>
-          <div class="txt"><div class="name">Tạo feature graph</div><div class="cmd">cr go creates graph</div></div>
-        </div>
-        <div class="step" data-step="2">
-          <div class="marker">3</div>
-          <div class="txt"><div class="name">Tạo sequence diagram</div><div class="cmd">feature_graph.sequence_diagram</div></div>
-        </div>
-        <div class="step" data-step="3">
-          <div class="marker">4</div>
-          <div class="txt"><div class="name">Tạo handoff</div><div class="cmd">chay-memory/ai_handoff.json</div></div>
-        </div>
-        <div class="step" data-step="4">
-          <div class="marker">5</div>
-          <div class="txt"><div class="name">IDE AI code</div><div class="cmd">read handoff first</div></div>
-        </div>
-        <div class="step" data-step="5">
-          <div class="marker">6</div>
-          <div class="txt"><div class="name">Verify patch</div><div class="cmd">cr verify</div></div>
-        </div>
-        <div class="step" data-step="6">
-          <div class="marker">7</div>
-          <div class="txt"><div class="name">Refresh handoff</div><div class="cmd">cr handoff</div></div>
-        </div>
-        <div class="step" data-step="7">
-          <div class="marker">8</div>
-          <div class="txt"><div class="name">Human review</div><div class="cmd">review patch + graph</div></div>
-        </div>
-      </div>
-      <!-- Terminal -->
-      <div class="term">
-        <div class="bar">
-          <span class="dots"><i style="background:#ff5f56"></i><i style="background:#ffbd2e"></i><i style="background:#27c93f"></i></span>
-          <span class="fname">chay-memory/ai_handoff.json</span>
-        </div>
-        <div class="body" id="termBody"></div>
-      </div>
-    </div>
-    <p class="blocked-note">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg>
-      Local console vẫn test được: inspect feature graph, selected files, runtime status, token/eval report, validate result và patch check. Phần chạy worker là legacy/internal, không phải workflow chính.
-    </p>
-  </div>
-</section>
-
-<section id="quickstart" style="background: var(--surface);">
-  <div class="wrap center reveal">
-    <span class="eyebrow">Bắt đầu nhanh</span>
-    <h2>Cấu hình IDE AI, rồi để runtime tạo contract</h2>
-    <p class="section-sub">Một lần config cho IDE đang dùng, sau đó mỗi tính năng chỉ cần <code style="font-family:var(--mono);color:var(--accent-2)">cr go</code>. Nếu mở session mới, chạy <code style="font-family:var(--mono);color:var(--accent-2)">cr go</code> không tham số để refresh handoff.</p>
-  </div>
-  <div class="wrap reveal">
-    <div class="codewrap">
-      <div class="codebar">
-        <span class="dots"><i style="background:#ff5f56"></i><i style="background:#ffbd2e"></i><i style="background:#27c93f"></i></span>
-        <span class="fname">terminal</span>
-      </div>
-<pre><span class="c"># 1 · cài bộ công cụ</span>
+<pre><span class="c"># install</span>
 <span class="k">npm</span> install -g chay-runtime@latest
 
-<span class="c"># 2 · thiết lập ngay trong dự án của bạn</span>
-<span class="k">cd</span> du-an-cua-ban
+<span class="c"># inside your repo</span>
 <span class="k">cr</span> start
+<span class="k">cr</span> config <span class="s">codex,claude,cursor,kiro</span>
 
-<span class="c"># 3 · cấu hình IDE AI bên ngoài</span>
-<span class="k">cr</span> config <span class="s">codex,claude,anti,github-copilot,cursor,kiro</span>
+<span class="c"># new feature or maintenance branch</span>
+<span class="k">cr</span> go <span class="s">"Admin changes user role"</span>
 
-<span class="c"># 4 · tạo user flow, sequence diagram, work note và handoff</span>
-<span class="k">cr</span> go <span class="s">"User applies to job"</span>
-
-<span class="c"># 5 · mở IDE AI, rule pack sẽ bảo nó đọc đúng handoff</span>
-<span class="c"># Read chay-memory/rules/chay-runtime.md, ai_handoff.json, chay-structure/features/&lt;feature_id&gt;.md, folder_structure.md, api_graph.md and continue.</span>
-
-<span class="c"># 6 · sau khi IDE AI sửa code</span>
+<span class="c"># after IDE AI edits code</span>
 <span class="k">cr</span> verify
 <span class="k">cr</span> handoff</pre>
-    </div>
-  </div>
-</section>
-
-<section id="docs" style="background: var(--surface);">
-  <div class="wrap center reveal">
-    <span class="eyebrow">Tài liệu lệnh</span>
-    <h2>Lệnh chính cho workflow hiện tại</h2>
-    <p class="section-sub">Các lệnh cũ như <code style="font-family:var(--mono);color:var(--accent-2)">cr run</code>, <code style="font-family:var(--mono);color:var(--accent-2)">dispatch</code>, <code style="font-family:var(--mono);color:var(--accent-2)">workpack</code> vẫn còn cho legacy/internal scripting. UX chính là config IDE, tạo handoff và verify patch.</p>
-  </div>
-  <div class="wrap">
-    <div class="doc-grid">
-      <div class="doc-card reveal">
-        <span class="doc-tag">Khởi tạo &amp; thiết lập</span>
-        <code class="doc-cmd">cr start
-cr check</code>
-        <p>Tạo thư mục runtime local, IDE instructions và <code>chay-memory/ide_config.json</code>. Không chia main/worker trong workflow mới.</p>
       </div>
-      <div class="doc-card reveal">
-        <span class="doc-tag">Cấu hình IDE AI</span>
-        <code class="doc-cmd">cr config codex,claude,anti,github-copilot,cursor,kiro
-cr config check</code>
-        <p>Tạo <code>.chay/ide/CHAY_IDE_INSTRUCTIONS.md</code>, <code>chay-memory/ide_config.json</code> và project rules cho IDE AI. IDE AI code ở ngoài; Chạy Runtime giữ contract và verify.</p>
-      </div>
-      <div class="doc-card reveal">
-        <span class="doc-tag">Tạo / resume task</span>
-        <code class="doc-cmd">cr go "User applies to job"
-cr go
-cr go "User applies to job" --files src/applyService.js</code>
-        <p><code>cr go</code> scan repo, chọn context, tạo feature graph, user flow, sequence diagram, PlantUML, work note và handoff. Không tham số thì refresh handoff cho session mới.</p>
-      </div>
-      <div class="doc-card reveal">
-        <span class="doc-tag">Handoff cho session mới</span>
-        <code class="doc-cmd">cr handoff</code>
-        <p>Ghi <code>chay-memory/ai_handoff.json</code>, <code>chay-structure/features/&lt;feature_id&gt;.md</code>, <code>folder_structure.md</code>, <code>api_graph.md</code> và PlantUML để IDE AI đọc nhanh trạng thái, files liên quan, graph, guardrails và OWASP API review prompts.</p>
-      </div>
-      <div class="doc-card reveal">
-        <span class="doc-tag">Verify sau khi IDE AI code</span>
-        <code class="doc-cmd">cr verify
-cr patch check --diff .chay/tmp/current.diff --work chay-memory/&lt;agent&gt;_work_note.json</code>
-        <p>Kiểm result note, patch scope, docs human-owned, secrets, token budget và các violation hiện tại.</p>
-      </div>
-      <div class="doc-card reveal">
-        <span class="doc-tag">Token saving</span>
-        <code class="doc-cmd">cr token report</code>
-        <p>So sánh token của Chạy context với ước lượng toàn repo để chứng minh session mới đọc ít hơn.</p>
-      </div>
-      <div class="doc-card reveal">
-        <span class="doc-tag">Local inspector</span>
-        <code class="doc-cmd">cr ui serve --port 7770</code>
-        <p>UI local vẫn dùng để inspect graph, selected files, handoff, runtime status, token/eval report và patch checks. Worker runner trong UI là legacy/advanced.</p>
-      </div>
-      <div class="doc-card reveal">
-        <span class="doc-tag">Advanced / legacy</span>
-        <code class="doc-cmd">cr task "..."
-cr pack "..."
-cr run
-cr dispatch codex --agent=codex</code>
-        <p>Còn giữ cho automation cũ và scripting, nhưng không phải workflow chính cho IDE AI external mode.</p>
+      <div class="section-head reveal">
+        <span class="section-kicker">quickstart</span>
+        <h2 class="section-title">Built for production repos, not demo scaffolds.</h2>
+        <p>Use explicit files when the first feature is sensitive. After that, Chạy can maintain the existing contract and keep follow-up work on the same feature id.</p>
+        <div class="hero-actions" style="justify-content:flex-start">
+          <a class="btn btn-primary" href="https://github.com/dinhpham1506/Chay-runtime" target="_blank" rel="noopener">Open GitHub</a>
+          <a class="btn" href="https://www.npmjs.com/package/chay-runtime" target="_blank" rel="noopener">Open npm</a>
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section id="safety">
-  <div class="wrap reveal">
-    <span class="eyebrow">Mô hình an toàn</span>
-    <h2>Mặc định là từ chối</h2>
-    <p class="section-sub">Chạy Runtime "fail closed". Nếu tác tử bước ra ngoài hợp đồng, runtime sẽ chặn lại.</p>
-    <ul class="safe-list">
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Ghi chú quá dài</li>
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Ghi chú kết quả không khớp schema</li>
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Bản vá đổi quá nhiều file</li>
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Bản vá thêm quá nhiều dòng</li>
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Sửa file ngoài danh sách cho phép</li>
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Tác tử đọc Markdown kiểm toán</li>
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Ghi chú thiếu quy tắc kiến trúc / SOLID</li>
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Log kết quả tự do quá lớn</li>
-    </ul>
-  </div>
-</section>
-
-<section>
-  <div class="wrap reveal">
-    <div class="band">
-      <span class="eyebrow">Sẵn sàng chưa?</span>
-      <h2>Dùng thử Chạy Runtime chỉ với một dòng</h2>
-      <p class="section-sub center" style="margin: 12px auto 0;">Miễn phí, giấy phép MIT, chạy được với các CLI bạn đang dùng.</p>
-      <div class="install" style="margin-top: 28px;">
-        <span class="prompt">$</span>
-        <code id="cta-cmd">npm install -g chay-runtime@latest &amp;&amp; cr start &amp;&amp; cr config manual</code>
-        <button class="copy" onclick="copyText(document.getElementById('cta-cmd').textContent, this)" aria-label="Sao chép lệnh">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          <span>Sao chép</span>
-        </button>
+  <section>
+    <div class="wrap">
+      <div class="final-band reveal">
+        <h2>Give every IDE AI session the same map before it touches code.</h2>
+        <p>Feature graph, selected files, folder structure, API links, sequence diagram and handoff stay synchronized in the repo.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#top">Back to top</a>
+          <a class="btn" href="https://github.com/dinhpham1506/Chay-runtime" target="_blank" rel="noopener">View source</a>
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
+</main>
 
 <footer>
-  <div class="wrap foot-inner">
-    <span class="brand"><span class="logo" style="color:var(--muted)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span> © <span id="year"></span> dinhpham</span>
-    <div class="foot-links">
+  <div class="wrap footer-inner">
+    <span>Chạy Runtime - local contract layer for external IDE AI.</span>
+    <div class="footer-links">
+      <a href="https://github.com/dinhpham1506/Chay-runtime" target="_blank" rel="noopener">GitHub</a>
       <a href="https://www.npmjs.com/package/chay-runtime" target="_blank" rel="noopener">npm</a>
-      <a href="#top">Về đầu trang ↑</a>
     </div>
   </div>
 </footer>
 
 <script>
-  document.getElementById('year').textContent = new Date().getFullYear();
-
-  function flash(btn) {
-    const label = btn.querySelector('span');
-    const old = label.textContent;
-    label.textContent = 'Đã chép!';
-    btn.classList.add('done');
-    setTimeout(() => { label.textContent = old; btn.classList.remove('done'); }, 1600);
-  }
-  function copyText(text, btn) {
-    navigator.clipboard.writeText(text).then(() => flash(btn));
-  }
-  function copyInstall() {
-    copyText(document.getElementById('install-cmd').textContent, document.getElementById('copyBtn'));
-  }
-
-  // Scroll reveal
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
-  }, { threshold: 0.12 });
-  document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
-
-  // ---- Workflow demo (IDE-first contract + handoff) ----
-  const STEPS = [
-    { step: 'config',      msg: 'Configured external IDE AI targets' },
-    { step: 'graph',       msg: 'Created feature graph and user flow' },
-    { step: 'sequence',    msg: 'Created Mermaid and PlantUML sequence diagrams' },
-    { step: 'handoff',     msg: 'Wrote chay-memory/ai_handoff.json' },
-    { step: 'ide',         msg: 'IDE AI reads handoff before source files' },
-    { step: 'verify',      msg: 'Verified patch scope, docs, secrets, and result note' },
-    { step: 'refresh',     msg: 'Refreshed handoff for the next session' },
-    { step: 'review',      msg: 'Human reviews graph, patch, and remaining risks' },
-  ];
-  const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
-  const stepEls = Array.from(document.querySelectorAll('#stepper .step'));
-  const termBody = document.getElementById('termBody');
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  function renderLine(i) {
-    const s = STEPS[i];
-    const line = document.createElement('div');
-    line.className = 'ln';
-    line.innerHTML = '<span class="p">runtime</span> appended <span class="flag">step=</span>' + s.step
-      + ' <span class="flag">message=</span><span class="msg">"' + s.msg + '"</span> '
-      + '<span class="ok">✓</span>';
-    termBody.appendChild(line);
-  }
-
-  function setActive(i) {
-    stepEls.forEach((el, idx) => {
-      el.classList.toggle('active', idx === i);
-      if (idx < i || (idx === i && STEPS[i].step === 'done')) {
-        el.classList.add('done');
-        el.querySelector('.marker').innerHTML = CHECK;
-      }
-    });
-  }
-
-  function runDemo() {
-    termBody.innerHTML = '';
-    stepEls.forEach((el) => { el.classList.remove('active','done'); el.querySelector('.marker').textContent = (Number(el.dataset.step)+1); });
-    if (reduce) { // no animation: show final state
-      STEPS.forEach((_, i) => renderLine(i));
-      stepEls.forEach((el) => { el.classList.add('done'); el.querySelector('.marker').innerHTML = CHECK; });
-      return;
+  const copyButton = document.getElementById("copyButton");
+  const installCommand = document.getElementById("installCommand");
+  copyButton?.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(installCommand.textContent.trim());
+      copyButton.textContent = "Copied";
+      copyButton.classList.add("done");
+      window.setTimeout(() => {
+        copyButton.textContent = "Copy";
+        copyButton.classList.remove("done");
+      }, 1600);
+    } catch {
+      copyButton.textContent = "Select text";
     }
-    let i = 0;
-    const tick = () => {
-      if (i >= STEPS.length) { setTimeout(runDemo, 3200); return; }
-      setActive(i);
-      renderLine(i);
-      termBody.scrollTop = termBody.scrollHeight;
-      i++;
-      setTimeout(tick, 1100);
-    };
-    tick();
-  }
+  });
 
-  // start demo when the progress section scrolls into view
-  const progObs = new IntersectionObserver((entries) => {
-    entries.forEach((e) => { if (e.isIntersecting) { runDemo(); progObs.unobserve(e.target); } });
-  }, { threshold: 0.3 });
-  progObs.observe(document.getElementById('progress'));
-
-  // ---- Hero background "agent network" (chạy ngầm như video) ----
-  (function () {
-    const canvas = document.getElementById('bg-fx');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const hero = canvas.parentElement;
-    const GREEN = '66,224,164', BLUE = '240,196,106';
-    let W = 0, H = 0, dpr = 1, running = true;
-
-    // contract node (center) + IDE AI surfaces around it
-    let nodes = [], packets = [];
-    function layout() {
-      const cx = W * 0.5, cy = H * 0.64;
-      nodes = [{ x: cx, y: cy, r: 6, main: true, phase: 0 }];
-      const surfaces = 5, R = Math.min(W, H) * 0.28;
-      for (let i = 0; i < surfaces; i++) {
-        const a = (-Math.PI / 2) + (i / surfaces) * Math.PI * 2;
-        nodes.push({ x: cx + Math.cos(a) * R * (1 + (i % 2) * 0.18),
-                     y: cy + Math.sin(a) * R * 0.62 * (1 + (i % 2) * 0.12),
-                     r: 3.5, main: false, phase: Math.random() * 6.28 });
-      }
-      packets = [];
-      for (let i = 1; i < nodes.length; i++) {
-        // a couple of notes travelling each edge, offset in time
-        packets.push({ to: i, t: Math.random(), dir: 1, sp: 0.0016 + Math.random() * 0.0016, c: i % 2 ? GREEN : BLUE });
-        packets.push({ to: i, t: Math.random(), dir: -1, sp: 0.0016 + Math.random() * 0.0016, c: i % 2 ? BLUE : GREEN });
-      }
+  const observer = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) entry.target.classList.add("in");
     }
-    function resize() {
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
-      W = hero.clientWidth; H = hero.clientHeight;
-      canvas.width = W * dpr; canvas.height = H * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      layout();
-    }
-
-    function frame() {
-      if (!running) return;
-      ctx.clearRect(0, 0, W, H);
-      const main = nodes[0];
-
-      // edges
-      for (let i = 1; i < nodes.length; i++) {
-        const n = nodes[i];
-        const g = ctx.createLinearGradient(main.x, main.y, n.x, n.y);
-        g.addColorStop(0, 'rgba(' + GREEN + ',0.10)');
-        g.addColorStop(1, 'rgba(' + BLUE + ',0.05)');
-        ctx.strokeStyle = g; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(main.x, main.y); ctx.lineTo(n.x, n.y); ctx.stroke();
-      }
-
-      // packets (notes flowing along edges)
-      for (const p of packets) {
-        p.t += p.sp * p.dir;
-        if (p.t > 1) p.t = 0; if (p.t < 0) p.t = 1;
-        const n = nodes[p.to];
-        const x = main.x + (n.x - main.x) * p.t;
-        const y = main.y + (n.y - main.y) * p.t;
-        ctx.beginPath(); ctx.arc(x, y, 2, 0, 6.2832);
-        ctx.fillStyle = 'rgba(' + p.c + ',0.72)'; ctx.fill();
-        ctx.beginPath(); ctx.arc(x, y, 6, 0, 6.2832);
-        ctx.fillStyle = 'rgba(' + p.c + ',0.08)'; ctx.fill();
-      }
-
-      // nodes
-      const now = performance.now() / 1000;
-      for (const n of nodes) {
-        const pulse = 0.5 + 0.5 * Math.sin(now * 1.6 + n.phase);
-        const col = n.main ? GREEN : BLUE;
-        ctx.beginPath(); ctx.arc(n.x, n.y, n.r + (n.main ? 4 : 2) * pulse, 0, 6.2832);
-        ctx.fillStyle = 'rgba(' + col + ',' + (n.main ? 0.10 : 0.07) + ')'; ctx.fill();
-        ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, 6.2832);
-        ctx.fillStyle = 'rgba(' + col + ',0.76)'; ctx.fill();
-      }
-      requestAnimationFrame(frame);
-    }
-
-    function staticFrame() { // reduced-motion: draw one calm frame
-      running = false; ctx.clearRect(0, 0, W, H);
-      const main = nodes[0];
-      for (let i = 1; i < nodes.length; i++) {
-        const n = nodes[i];
-        ctx.strokeStyle = 'rgba(' + GREEN + ',0.10)'; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(main.x, main.y); ctx.lineTo(n.x, n.y); ctx.stroke();
-        ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, 6.2832); ctx.fillStyle = 'rgba(' + BLUE + ',0.8)'; ctx.fill();
-      }
-      ctx.beginPath(); ctx.arc(main.x, main.y, main.r, 0, 6.2832); ctx.fillStyle = 'rgba(' + GREEN + ',0.9)'; ctx.fill();
-    }
-
-    resize();
-    window.addEventListener('resize', () => { resize(); if (!running) staticFrame(); });
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      staticFrame();
-    } else {
-      // pause animation when hero is scrolled out of view (perf)
-      new IntersectionObserver((es) => {
-        es.forEach((e) => {
-          if (e.isIntersecting && !running) { running = true; requestAnimationFrame(frame); }
-          else if (!e.isIntersecting) { running = false; }
-        });
-      }, { threshold: 0 }).observe(hero);
-      requestAnimationFrame(frame);
-    }
-  })();
+  }, { threshold: 0.16 });
+  document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
 </script>
 </body>
 </html>
