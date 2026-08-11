@@ -93,8 +93,10 @@ function caseItem(id, ok, weight, value) {
 
 function tokenEfficiencyOk(tokenReport) {
   const fullRepoTokens = tokenReport.estimates.full_repo_tokens || 0;
+  const savingsPercent = tokenReport.estimates.savings_percent || 0;
+  if (savingsPercent < 0) return false;
   if (fullRepoTokens < 2000) return tokenReport.ok;
-  return tokenReport.estimates.savings_percent >= 50 && tokenReport.ok;
+  return savingsPercent >= 50 && tokenReport.ok;
 }
 
 function score(cases) {

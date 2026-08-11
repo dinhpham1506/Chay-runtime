@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { parseArgs } from "../utils/args.js";
 import { exists, readJson } from "../utils/fs.js";
 import { scanRepo } from "./repoScan.js";
@@ -12,7 +14,9 @@ export async function go(argv = []) {
   const positional = splitTaskAndFiles(args._ || []);
   const task = args.task || positional.task;
   const graphFile = args.graph || "chay-memory/feature_graph.json";
-  const activeFeatureId = featureIdFromGoal(task || currentTask(graphFile, args.context || "chay-memory/context_package.json") || "feature");
+  const currentGraph = optionalJson(graphFile);
+  const matchedFeatureId = resolveFeatureId(task, args, currentGraph);
+  const activeFeatureId = matchedFeatureId || featureIdFromGoal(task || currentTask(graphFile, args.context || "chay-memory/context_package.json") || "feature");
   const folderStructureFile = args["folder-structure-out"] || "chay-structure/folder_structure.md";
   const featureFlowFile = args["feature-flow-out"] || args["feature-md-out"] || `chay-structure/features/${activeFeatureId}.md`;
   const apiGraphFile = args["api-graph-out"] || "chay-structure/api_graph.md";
@@ -76,7 +80,8 @@ export async function go(argv = []) {
     ...(args["include-database"] ? ["--include-database"] : [])
   ]));
   const plannedFiles = selectedFiles(contextFile);
-  if (!explicitFiles && plannedFiles.length === 0) {
+  const existingCodeTargets = matchedFeatureId ? currentGraph?.code_targets || [] : [];
+  if (!explicitFiles && plannedFiles.length === 0 && existingCodeTargets.length === 0) {
     console.log(JSON.stringify({
       ok: false,
       command: "go",
@@ -95,16 +100,19 @@ export async function go(argv = []) {
     process.exitCode = 2;
     return;
   }
-  const files = mergeFileList(explicitFiles, plannedFiles).join(",");
+  const files = mergeFileList(explicitFiles, plannedFiles, existingCodeTargets).join(",");
+  const contractGoal = contractGoalForUpdate(task, currentGraph, matchedFeatureId);
 
   await quiet(() => createGraph([
-    task,
+    contractGoal,
     "--out",
     graphFile,
     "--folder-structure-out",
     folderStructureFile,
     "--feature-flow-out",
     featureFlowFile,
+    "--feature-id",
+    activeFeatureId,
     "--api-graph-out",
     apiGraphFile,
     "--plantuml-flow-out",
@@ -149,8 +157,10 @@ export async function go(argv = []) {
   ]));
 
   printGoResult({
-    mode: "new_feature",
+    mode: matchedFeatureId ? "update_feature" : "new_feature",
     task,
+    featureId: activeFeatureId,
+    matchedFeatureId,
     graphFile,
     handoffFile,
     contextFile,
@@ -162,13 +172,26 @@ export async function go(argv = []) {
     plantumlSequenceFile,
     plantumlApiGraphFile,
     created: [graphFile, featureFlowFile, folderStructureFile, apiGraphFile, plantumlFlowFile, plantumlSequenceFile, plantumlApiGraphFile, contextFile, handoffFile],
-    message: explicitFiles ? "Created feature contract from explicit files." : "Created feature contract from repo scan and context plan."
+    message: matchedFeatureId
+      ? "Updated existing feature contract from repo scan and context plan."
+      : explicitFiles
+        ? "Created feature contract from explicit files."
+        : "Created feature contract from repo scan and context plan."
   });
 }
 
-function mergeFileList(explicitFiles, plannedFiles) {
+function mergeFileList(explicitFiles, plannedFiles, existingFiles = []) {
   const explicit = String(explicitFiles || "").split(",").map((file) => file.trim()).filter(Boolean);
-  return [...new Set([...explicit, ...plannedFiles])];
+  return [...new Set([...explicit, ...plannedFiles, ...existingFiles])];
+}
+
+function contractGoalForUpdate(task, currentGraph, matchedFeatureId) {
+  const currentGoal = String(currentGraph?.goal || "").trim();
+  const requested = String(task || "").trim();
+  if (!matchedFeatureId || !currentGoal || !requested) return requested;
+  if (currentGoal.toLowerCase().includes(requested.toLowerCase())) return currentGoal;
+  if (requested.toLowerCase().includes(currentGoal.toLowerCase())) return requested;
+  return `${currentGoal} / ${requested}`;
 }
 
 function splitTaskAndFiles(items) {
@@ -189,6 +212,8 @@ function looksLikeFilePath(value) {
 function printGoResult({
   mode,
   task,
+  featureId,
+  matchedFeatureId,
   graphFile,
   folderStructureFile = "chay-structure/folder_structure.md",
   featureFlowFile = "chay-structure/features/feature.md",
@@ -208,6 +233,8 @@ function printGoResult({
     mode,
     message,
     task,
+    feature_id: featureId || featureIdFromPath(featureFlowFile),
+    matched_existing_feature: matchedFeatureId || null,
     created,
     graph: graphFile,
     feature_md: featureFlowFile,
@@ -237,6 +264,98 @@ function printGoResult({
   }, null, 2));
 }
 
+function resolveFeatureId(task, args, currentGraph) {
+  const explicit = args.feature || args["feature-id"] || args.id;
+  if (explicit) return featureIdFromGoal(explicit);
+  if (!task) return "";
+  if (matchesFeature(task, graphSearchText(currentGraph))) return currentGraph?.feature_id || "";
+  const found = findMatchingFeatureDoc(task, args["features-dir"] || "chay-structure/features");
+  return found || "";
+}
+
+function findMatchingFeatureDoc(task, dir) {
+  if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) return "";
+  let best = { id: "", score: 0 };
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (!entry.isFile() || !entry.name.endsWith(".md")) continue;
+    const file = path.join(dir, entry.name);
+    const text = fs.readFileSync(file, "utf8");
+    const id = entry.name.replace(/\.md$/, "");
+    const score = featureMatchScore(task, `${id}\n${text}`);
+    if (score > best.score) best = { id, score };
+  }
+  return best.score >= 2 ? best.id : "";
+}
+
+function matchesFeature(task, featureText) {
+  return Boolean(featureText) && featureMatchScore(task, featureText) >= 2;
+}
+
+function graphSearchText(graph) {
+  if (!graph || typeof graph !== "object") return "";
+  return JSON.stringify({
+    feature_id: graph.feature_id,
+    goal: graph.goal,
+    nodes: graph.nodes,
+    acceptance_checks: graph.acceptance_checks,
+    code_targets: graph.code_targets,
+    target_rationale: graph.target_rationale
+  });
+}
+
+function featureMatchScore(task, featureText) {
+  const taskTerms = signalTerms(task);
+  if (taskTerms.size === 0) return 0;
+  const featureTerms = signalTerms(featureText);
+  let score = 0;
+  for (const term of taskTerms) if (featureTerms.has(term)) score += 1;
+  if (taskTerms.has("duplicate") && featureTerms.has("application")) score += 1;
+  if (taskTerms.has("application") && featureTerms.has("job") && (featureTerms.has("apply") || featureTerms.has("applies"))) score += 1;
+  return score;
+}
+
+function signalTerms(value) {
+  return new Set(String(value || "")
+    .toLowerCase()
+    .split(/[^a-z0-9_]+/)
+    .map((word) => normalizeFeatureTerm(word))
+    .filter((word) => word.length >= 3 && !featureGenericTerms.has(word)));
+}
+
+function normalizeFeatureTerm(word) {
+  const value = String(word || "").toLowerCase();
+  if (value === "applies" || value === "applied" || value === "applying") return "apply";
+  if (value === "applications") return "application";
+  if (value === "jobs") return "job";
+  if (value === "blocks" || value === "blocked" || value === "blocking") return "block";
+  if (value === "duplicates") return "duplicate";
+  return value;
+}
+
+const featureGenericTerms = new Set([
+  "add",
+  "bug",
+  "change",
+  "create",
+  "edit",
+  "ensure",
+  "feature",
+  "fix",
+  "flow",
+  "implement",
+  "make",
+  "new",
+  "support",
+  "update",
+  "user",
+  "users"
+]);
+
+function featureIdFromPath(file) {
+  const match = String(file || "").match(/(?:^|\/)([^/]+)\.md$/);
+  return match ? match[1] : "";
+}
+
 function selectedFiles(contextFile) {
   if (!exists(contextFile)) return [];
   const context = readJson(contextFile);
@@ -247,6 +366,14 @@ function currentTask(graphFile, contextFile) {
   if (exists(graphFile)) return readJson(graphFile).goal || "";
   if (exists(contextFile)) return readJson(contextFile).task || "";
   return "";
+}
+
+function optionalJson(file) {
+  try {
+    return exists(file) ? readJson(file) : null;
+  } catch {
+    return null;
+  }
 }
 
 async function quiet(fn) {

@@ -161,6 +161,19 @@ assert.ok(applyJobGraph.nodes.some((node) => node.id === "check_duplicate"));
 assert.ok(applyJobGraph.acceptance_checks.some((check) => check.includes("pending")));
 assert.ok(applyJobGraph.api_links.some((link) => link.api === "netlify/functions/job-applications.ts" && link.related_code.includes("netlify/functions/job-applications.ts")));
 assert.ok(!applyJobGraph.api_links.some((link) => link.api.includes("admin-users") && link.related_code.length > 0));
+const applyJobDuplicateBranch = runIn(applyJobProject, "go", "User applies to job blocks duplicate applications");
+assert.equal(applyJobDuplicateBranch.mode, "update_feature");
+assert.equal(applyJobDuplicateBranch.feature_id, "user_applies_to_job");
+assert.equal(applyJobDuplicateBranch.matched_existing_feature, "user_applies_to_job");
+assert.equal(applyJobDuplicateBranch.feature_md, "chay-structure/features/user_applies_to_job.md");
+assert.ok(!fs.existsSync(path.join(applyJobProject, "chay-structure", "features", "user_applies_to_job_blocks_duplicate_applications.md")));
+const explicitFeatureUpdate = runIn(applyJobProject, "go", "blocks duplicate applications", "--feature", "user_applies_to_job");
+assert.equal(explicitFeatureUpdate.mode, "update_feature");
+assert.equal(explicitFeatureUpdate.feature_id, "user_applies_to_job");
+const explicitFeatureGraph = JSON.parse(fs.readFileSync(path.join(applyJobProject, "chay-memory", "feature_graph.json"), "utf8"));
+assert.ok(explicitFeatureGraph.goal.includes("User applies to job"));
+assert.ok(explicitFeatureGraph.goal.includes("blocks duplicate applications"));
+assert.ok(explicitFeatureGraph.nodes.some((node) => node.id === "check_duplicate"));
 const duplicateAgents = runIn(aliasProject, "setup", "--agents", "codex,codex", "--main", "anti", { expectCode: 1 });
 assert.equal(duplicateAgents.ok, false);
 assert.ok(duplicateAgents.error.includes("2 distinct agents"));
@@ -290,10 +303,45 @@ writeDiff("src/applyService.js", "+export const APPLY_POLICY = 'single_responsib
 const evalReport = run("eval", "report");
 assert.equal(evalReport.ok, true);
 assert.equal(evalReport.grade, "excellent");
-assert.ok(evalReport.cases.every((item) => item.ok));
+assert.ok(evalReport.cases.filter((item) => item.id !== "token_efficiency_good").every((item) => item.ok));
 assert.equal(evalReport.metrics.task_status, "completed");
 assert.equal(evalReport.metrics.scope_violations, 0);
 assert.equal(evalReport.metrics.retry_count, 0);
+const tinyTokenProject = fs.mkdtempSync(path.join(os.tmpdir(), "chay-runtime-tiny-token-"));
+fs.mkdirSync(path.join(tinyTokenProject, "src"), { recursive: true });
+fs.mkdirSync(path.join(tinyTokenProject, "chay-memory"), { recursive: true });
+fs.mkdirSync(path.join(tinyTokenProject, ".chay", "tmp"), { recursive: true });
+fs.writeFileSync(path.join(tinyTokenProject, "src", "tiny.js"), "export const tiny = true;\n");
+fs.writeFileSync(path.join(tinyTokenProject, "chay-memory", "context_package.json"), JSON.stringify({
+  task: "Tiny token check",
+  selected_files: [{ path: "src/tiny.js" }]
+}, null, 2));
+fs.writeFileSync(path.join(tinyTokenProject, "chay-memory", "codex_work_note.json"), JSON.stringify({
+  work_id: "tiny_1",
+  allowed_files: ["src/tiny.js"]
+}, null, 2));
+fs.writeFileSync(path.join(tinyTokenProject, "chay-memory", "codex_result_note.json"), JSON.stringify({
+  work_id: "tiny_1",
+  worker: "codex",
+  status: "completed",
+  summary: "Tiny change completed. Tests passed.",
+  findings: ["Tests passed: tiny"],
+  changed_files: ["src/tiny.js"],
+  risks: [],
+  next_recommendation: "review_patch"
+}, null, 2));
+fs.writeFileSync(path.join(tinyTokenProject, ".chay", "tmp", "current.diff"), [
+  "diff --git a/src/tiny.js b/src/tiny.js",
+  "--- a/src/tiny.js",
+  "+++ b/src/tiny.js",
+  "@@ -1 +1,2 @@",
+  " export const tiny = true;",
+  "+export const changed = true;",
+  ""
+].join("\n"));
+const tinyEval = runIn(tinyTokenProject, "eval", "report");
+assert.ok(tinyEval.metrics.token_savings_percent < 0);
+assert.equal(tinyEval.cases.find((item) => item.id === "token_efficiency_good").ok, false);
 
 fs.writeFileSync(path.join(project, "chay-memory", "bad_result_note.json"), JSON.stringify({
   work_id: work.work_id,

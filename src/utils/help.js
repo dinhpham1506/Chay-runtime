@@ -9,6 +9,7 @@ Usage:
   cr rules install --codex-skill # also add chay-runtime to Codex global Skills
   cr config check
   cr go "Fix duplicate apply bug" --files src/applyService.js
+  cr go "Block duplicate applies" --feature user_applies_to_job
   cr go "Fix duplicate apply bug" --max-files 3
   cr go                       # refresh chay-memory/ai_handoff.json for a new IDE session
   cr verify
