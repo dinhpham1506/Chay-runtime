@@ -16,12 +16,12 @@ export async function createTask(argv) {
   if (!task) throw new Error("--task is required");
   const worker = normalizeAgentName(args.worker || args.agent || defaultWorker());
 
-  await quiet(() => scanRepo(["--root", args.root || ".", "--out", args.index || ".chay-index/project_map.json"]));
+  await quiet(() => scanRepo(["--root", args.root || ".", "--out", args.index || ".chay/project_map.json"]));
   await quiet(() => planContext([
     "--task",
     task,
     "--index",
-    args.index || ".chay-index/project_map.json",
+    args.index || ".chay/project_map.json",
     "--out",
     args.context || "memory/context_package.json",
     ...(args["max-notes"] ? ["--max-notes", args["max-notes"]] : [])

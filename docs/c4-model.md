@@ -43,13 +43,13 @@ flowchart TB
     Core["Policy and validators\nsrc/core/*"]
     Utils["Filesystem, args, prompts\nsrc/utils/*"]
     Templates["Agent templates\ntemplates/*"]
-    Schemas["JSON schemas\nschemas/*"]
-    Policies["Default policy\npolicies/chay_policy.json"]
+    Schemas["Packaged contracts\ninside npm package"]
+    Policies["Default policy\ninside npm package"]
   end
 
   Memory["memory/*.json\nmachine-readable notes"]
-  Audit["audit/*.md\nhuman-only notes"]
-  Index[".chay-index/project_map.json"]
+  Audit[".chay/audit/*.md\nhuman-only notes"]
+  Index[".chay/project_map.json"]
   Tmp[".chay/tmp/current.diff"]
   UI["Chạy Console\nHTTP + SSE"]
 
@@ -72,7 +72,7 @@ flowchart TB
 - Command modules: implement user-facing workflows such as setup, task creation, repo scan, context planning, workpack creation, realtime UI, dispatch, and patch checks.
 - Core modules: enforce policies, validate note schemas, analyze diffs, and build token/eval reports.
 - Templates and schemas: provide installable agent instructions and output contracts.
-- Runtime files: store compact JSON notes, human-only audit notes, repo indexes, and scoped diffs.
+- Runtime files: store compact JSON notes in `memory/`; internal policy, schema, audit, indexes, and diffs stay under `.chay/`.
 - Chạy Console: local UI with `/api/state`, `/api/stream`, `/api/action`, `/api/progress`, and `/api/chat`.
 
 ## C3: Components
@@ -196,7 +196,7 @@ flowchart TB
 - `memory/<worker>_work_note.json`: bounded worker contract, allowed files, architecture rules, and output schema.
 - `memory/<worker>_progress.json`: live workflow step and short status message.
 - `memory/<worker>_result_note.json`: compact worker result note.
-- `.chay-index/project_map.json`: generated repo file map.
+- `.chay/project_map.json`: generated repo file map.
 - `.chay/tmp/current.diff`: generated scoped diff used by patch checks.
 
 ## Realtime Behavior
@@ -213,7 +213,7 @@ The native Chạy Console is the realtime surface:
 
 Chạy Runtime intentionally keeps the boundary local and file-based:
 
-- Agents consume compact JSON notes instead of raw logs or full audit markdown.
-- Humans can inspect Markdown audit files.
-- The realtime UI hides raw logs, diffs, prompts, stack traces, and audit markdown.
+- Agents consume compact JSON notes instead of raw logs or full `.chay/audit` markdown.
+- Humans can inspect Markdown audit files under `.chay/audit`.
+- The realtime UI hides raw logs, diffs, prompts, stack traces, and `.chay/audit` markdown.
 - Patch checks validate changed files and forbidden patterns against the work note and policy.

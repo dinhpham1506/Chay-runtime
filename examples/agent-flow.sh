@@ -15,5 +15,5 @@ cr boundary check-note --file memory/codex_work_note.json --kind work
 cr run codex --max-retries 3
 cr experience snapshot --out memory/experience_spectrum.json
 
-# Human audit note is generated, but agents must not read audit/*.md.
-cr note compile --json memory/task_note.json --out audit/task_note.md
+# Human audit note is generated, but agents must not read .chay/audit/*.md.
+cr note compile --json memory/task_note.json --out .chay/audit/task_note.md

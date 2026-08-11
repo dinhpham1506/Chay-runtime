@@ -6,7 +6,7 @@ export async function planContext(argv) {
   const args = parseArgs(argv);
   const task = args.task || args._?.join(" ") || await promptText("Task/feature/bug: ");
   if (!task) throw new Error("--task is required");
-  const indexFile = args.index || ".chay-index/project_map.json";
+  const indexFile = args.index || ".chay/project_map.json";
   const out = args.out || "memory/context_package.json";
   const maxNotes = Number(args["max-notes"] || args["max-files"] || 3);
 
@@ -40,7 +40,7 @@ export async function planContext(argv) {
     rules: [
       "Read selected files only.",
       "Return result_note JSON only.",
-      "Do not read audit markdown."
+      "Do not read .chay audit markdown."
     ]
   };
 

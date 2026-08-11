@@ -24,7 +24,7 @@ export function buildEvalReport(policy, options = {}) {
     caseItem("tests_passed_signal", tests === "passed", 15, tests),
     caseItem("scope_violations_zero", patch.scope_violations === 0, 10, String(patch.scope_violations)),
     caseItem("low_retry_count", retryCount <= 1, 5, String(retryCount)),
-    caseItem("token_efficiency_good", tokenReport.estimates.savings_percent >= 50 && tokenReport.ok, 5, `${tokenReport.estimates.savings_percent}%`)
+    caseItem("token_efficiency_good", tokenEfficiencyOk(tokenReport), 5, `${tokenReport.estimates.savings_percent}%`)
   ];
 
   return {
@@ -89,6 +89,12 @@ function countRetries() {
 
 function caseItem(id, ok, weight, value) {
   return { id, ok, weight, value };
+}
+
+function tokenEfficiencyOk(tokenReport) {
+  const fullRepoTokens = tokenReport.estimates.full_repo_tokens || 0;
+  if (fullRepoTokens < 2000) return tokenReport.ok;
+  return tokenReport.estimates.savings_percent >= 50 && tokenReport.ok;
 }
 
 function score(cases) {

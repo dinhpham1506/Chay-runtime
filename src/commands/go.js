@@ -31,7 +31,7 @@ export async function go(argv = []) {
   const explicitFiles = args.files || args.file || args["code-targets"] || "";
   const workerArgs = args.worker ? ["--worker", args.worker] : [];
   const compactArgs = args.compact === false || args["no-compact"] ? [] : ["--compact"];
-  const indexFile = args.index || ".chay-index/project_map.json";
+  const indexFile = args.index || ".chay/project_map.json";
   const maxFiles = args["max-files"] || args["max-notes"] || "3";
 
   await quiet(() => scanRepo(["--root", args.root || ".", "--out", indexFile]));

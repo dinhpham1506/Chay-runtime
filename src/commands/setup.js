@@ -26,7 +26,7 @@ export async function startProject(argv = []) {
     ok: true,
     mode: "external_ide_ai",
     message: "Chạy Runtime started",
-    initialized: ["policies", "schemas", "memory/task_note.json", "audit", ".chay-index", ".chay/tmp"],
+    initialized: ["memory/task_note.json", ".chay/audit", ".chay/tmp"],
     ide_config: ide.config_file,
     instruction_file: ide.instruction_file,
     targets: ide.targets,
@@ -66,7 +66,7 @@ export async function setupProject(argv, options = {}) {
     skills: answers.skills,
     runtime: {
       memory: "memory/*.json",
-      audit: "audit/*.md human-only",
+      audit: ".chay/audit/*.md human-only",
       retry_invalid_output: true
     }
   };

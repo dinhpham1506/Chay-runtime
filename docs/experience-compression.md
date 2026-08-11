@@ -9,8 +9,8 @@ runtime pattern:
 - Skills: procedural hints listed by name in the work note, such as
   `repo_search`, `solid_refactor`, `test_runner`, `patch_guard`, and
   `minimal_patch`.
-- Rules: declarative constraints kept behind `policy_ref`, usually
-  `policies/chay_policy.json`.
+- Rules: declarative constraints kept behind `policy_ref`, usually the packaged
+  `runtime_default_policy`.
 
 This keeps worker context small while preserving enough contract for the task to
 run end-to-end.
@@ -28,7 +28,7 @@ cr experience snapshot --out memory/experience_spectrum.json
 ```
 
 The worker reads the compact note, selected memory refs, and the files in
-`allowed_files`. It should not read audit markdown, raw logs, full prompts, or
+`allowed_files`. It should not read `.chay/audit` markdown, raw logs, full prompts, or
 the entire repository.
 
 ## Runtime Rule

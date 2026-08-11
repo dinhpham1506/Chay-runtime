@@ -72,7 +72,7 @@ export async function createHandoff(argv = []) {
       "Do not delete existing behavior unless the graph/spec explicitly requires it.",
       "Follow folder_structure first, then user_flow, then sequence_diagram before coding.",
       "Do not edit human-owned docs unless human_approved_files/human_approved_paths allows it.",
-      "Do not read or change secrets, credentials, private keys, .env files, audit markdown, raw logs, or full prompts.",
+      "Do not read or change secrets, credentials, private keys, .env files, .chay/audit markdown, raw logs, or full prompts.",
       "Follow existing design patterns and local helpers before adding abstractions or dependencies.",
       "Preserve validation, error handling, security checks, accessibility, and tests.",
       "Return/update result_note JSON only; keep it compact."

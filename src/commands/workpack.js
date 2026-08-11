@@ -71,16 +71,16 @@ export async function makeWorkpack(argv) {
     ],
     forbidden: compact ? [
       "Follow policy_ref forbiddenPatterns and forbiddenNotePaths.",
-      "Do not read audit markdown or rewrite unrelated files."
+      "Do not read .chay audit markdown or rewrite unrelated files."
     ] : [
-      "read audit markdown",
+      "read .chay audit markdown",
       "rewrite unrelated files",
       "split files only to satisfy a line-count target",
       "introduce god objects or mixed responsibilities",
       "run commands over budget",
       "return free-form long explanation"
     ],
-    policy_ref: compact ? (args.policy || "policies/chay_policy.json") : undefined,
+    policy_ref: compact ? (args.policy || "runtime_default_policy") : undefined,
     experience_compression: compact ? {
       framework: "experience_compression_spectrum_v1",
       memory_refs: [
@@ -93,7 +93,7 @@ export async function makeWorkpack(argv) {
       rules_ref: "policy_ref",
       rule: "Prefer references over copying raw history, full prompts, logs, or long policy text."
     } : undefined,
-    output_schema: "schemas/result_note.schema.json",
+    output_schema: "runtime_result_note_contract",
     max_output_tokens: Number(args["max-output-tokens"] || policy.maxResultTokens || 900)
   };
 

@@ -7,7 +7,7 @@ Read only:
 - memory/task_note.json
 - memory/context_package.json
 
-Do not read audit Markdown files.
+Do not read .chay/audit Markdown files.
 
 Architecture rules:
 - Follow the existing design pattern in the touched module.

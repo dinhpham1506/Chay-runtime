@@ -158,8 +158,8 @@ async function createUiTask(res, data, worker) {
   worker = normalizeAgentName(worker);
   const task = data.task || "";
   if (!task.trim()) return sendJson(res, 400, { ok: false, error: "task_required" });
-  await scanRepo(["--root", ".", "--out", ".chay-index/project_map.json"]);
-  await planContext(["--task", task, "--index", ".chay-index/project_map.json", "--out", "memory/context_package.json", "--max-notes", "2"]);
+  await scanRepo(["--root", ".", "--out", ".chay/project_map.json"]);
+  await planContext(["--task", task, "--index", ".chay/project_map.json", "--out", "memory/context_package.json", "--max-notes", "2"]);
   const files = selectedFiles("memory/context_package.json").join(",");
   await makeWorkpack(["--worker", worker, "--goal", task, "--out", workNotePath(worker), "--compact", ...(files ? ["--allowed-files", files] : [])]);
   writeProgress(worker, "assigned", "Task assigned from Chạy Runtime UI", task);

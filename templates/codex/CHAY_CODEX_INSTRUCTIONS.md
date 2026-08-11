@@ -29,7 +29,7 @@ Rules:
 - Follow minimal_patch_rules or policy_ref minimalPatchRules before writing code.
 - Follow output_contract exactly.
 - Do not modify files outside allowed_files when allowed_files is provided.
-- Do not read audit/*.md.
+- Do not read .chay/audit/*.md.
 - Do not run more commands than budget.
 - Return result_note JSON only.
 

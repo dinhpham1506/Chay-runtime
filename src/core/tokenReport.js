@@ -49,7 +49,7 @@ function fileTokens(file) {
 }
 
 function estimateFullRepoTokens() {
-  const index = optionalJson(".chay-index/project_map.json");
+  const index = optionalJson(".chay/project_map.json") || optionalJson(".chay-index/project_map.json");
   if (index?.files?.length) {
     return sum(index.files.map((file) => Number(file.lines || 0) * 12));
   }

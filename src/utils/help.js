@@ -31,15 +31,15 @@ Checks:
   cr login codex
   cr boundary check-graph --file memory/feature_graph.json
   cr boundary check-note --file memory/task_note.json
-  cr boundary validate-output --file memory/codex_result_note.json --schema schemas/result_note.schema.json
+  cr boundary validate-output --file memory/codex_result_note.json
 
 Repo intelligence:
-  cr repo scan --root . --out .chay-index/project_map.json
+  cr repo scan --root . --out .chay/project_map.json
   cr context plan
-  cr context plan --task "Fix duplicate apply bug" --index .chay-index/project_map.json --out memory/context_package.json
+  cr context plan --task "Fix duplicate apply bug" --index .chay/project_map.json --out memory/context_package.json
 
 Notes:
-  cr note compile --json memory/task_note.json --out audit/task_note.md
+  cr note compile --json memory/task_note.json --out .chay/audit/task_note.md
 
 Patch guard:
   cr patch check --diff .chay/tmp/current.diff --work memory/codex_work_note.json

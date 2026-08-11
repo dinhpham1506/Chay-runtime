@@ -123,7 +123,7 @@ function instructionMarkdown(targets) {
     "- Preserve the existing folder/layer structure and local design pattern so the feature remains maintainable and scalable.",
     "- Treat human-confirmed docs/specs as source of truth; do not rewrite them unless explicitly approved.",
     "- Edit only allowed files / graph code targets.",
-    "- Do not read or change secrets, `.env`, credentials, audit markdown, raw logs, or full prompts.",
+    "- Do not read or change secrets, `.env`, credentials, `.chay/audit` markdown, raw logs, or full prompts.",
     "- Preserve validation, error handling, security checks, design patterns, accessibility, and tests.",
     "- Do not delete existing behavior unless the graph/spec explicitly requires it.",
     "- After editing, refresh `.chay/tmp/current.diff` and update the result note JSON.",

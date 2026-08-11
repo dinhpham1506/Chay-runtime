@@ -9,7 +9,7 @@ const generatedParts = new Set(["obj", "bin", "generated", ".chay", ".chay-index
 export async function scanRepo(argv) {
   const args = parseArgs(argv);
   const root = path.resolve(args.root || ".");
-  const out = args.out || ".chay-index/project_map.json";
+  const out = args.out || ".chay/project_map.json";
   const previous = previousIndex(out);
 
   const files = walk(root)

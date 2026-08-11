@@ -4,7 +4,7 @@ import { readJson, writeText } from "../utils/fs.js";
 export async function compileNote(argv) {
   const args = parseArgs(argv);
   if (!args.json) throw new Error("--json is required");
-  const out = args.out || args.json.replace("memory/", "audit/").replace(".json", ".md");
+  const out = args.out || args.json.replace("memory/", ".chay/audit/").replace(".json", ".md");
   const data = readJson(args.json);
 
   const md = toMarkdown(data, args.json);

@@ -642,9 +642,9 @@ function compactWorkNote({ worker, workFile, policy }) {
   ];
   work.forbidden = [
     "Follow policy_ref forbiddenPatterns and forbiddenNotePaths.",
-    "Do not read audit markdown or rewrite unrelated files."
+    "Do not read .chay audit markdown or rewrite unrelated files."
   ];
-  work.policy_ref = work.policy_ref || "policies/chay_policy.json";
+  work.policy_ref = work.policy_ref || "runtime_default_policy";
   work.experience_compression = {
     framework: "experience_compression_spectrum_v1",
     memory_refs: [
@@ -686,8 +686,6 @@ function prepareIsolatedWorkspace({ worker, workFile, resultFile, diffFile, logF
     "vite.config.js",
     "vitest.config.js",
     "jest.config.js",
-    "policies/chay_policy.json",
-    "schemas/result_note.schema.json",
     ...safeList(work.inputs),
     ...safeList(work.allowed_files),
     ...contextSelectedFiles()

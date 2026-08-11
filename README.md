@@ -5,7 +5,7 @@ chay-runtime is a note-based policy runtime for multi-agent coding CLIs.
 ## Core idea
 
 - Agents read compact JSON notes from `memory/*.json`.
-- Humans inspect Markdown notes from `audit/*.md`.
+- Humans inspect Markdown notes from `.chay/audit/*.md`.
 - Boundary tools validate note size, output schema, patch size, and scope.
 - Feature graphs define the user flow source of truth before code changes.
 - Architecture rules require workers to follow existing design patterns and SOLID principles.
@@ -28,7 +28,7 @@ turns coding agents into a bounded workflow:
   output contract.
 - The runtime validates result JSON, patch scope, forbidden patterns, retry
   behavior, progress notes, and optional tests before treating the work as done.
-- Humans get audit notes and a local UI without exposing raw prompts, logs, or
+- Humans get `.chay/audit` notes and a local UI without exposing raw prompts, logs, or
   long agent chatter.
 
 The useful part is control: you can let multiple coding tools help while keeping
@@ -193,7 +193,7 @@ Progress API:
 cr progress update --agent codex --step editing --message "Updating backend structure"
 ```
 
-The UI does not expose raw logs, `audit/*.md`, `.chay/tmp/current.diff`, stack traces, command output, or full prompts.
+The UI does not expose raw logs, `.chay/audit/*.md`, `.chay/tmp/current.diff`, stack traces, command output, or full prompts.
 
 ## Publish to npm
 
@@ -287,7 +287,7 @@ layers:
   session. It lists read order, unfinished status, relevant files, graph/code
   targets, current violations, guardrails, and OWASP API review prompts.
 - Skills: short procedural names in the work note.
-- Rules: `policy_ref` pointing to `policies/chay_policy.json`.
+- Rules: `policy_ref` pointing to the packaged `runtime_default_policy`.
 
 Use `cr pack "Task" --compact` to avoid copying long policy/rule text into
 each work note, and `cr experience snapshot` to inspect the memory/skills/rules
@@ -315,7 +315,7 @@ See [docs/c4-model.md](docs/c4-model.md) for the C4 system model, including the 
 - user-selected controller LLM, worker LLM, and worker skills
 - realtime Chạy Console state without raw logs
 - task/work/result note validation
-- audit Markdown compilation
+- `.chay/audit` Markdown compilation
 - patch boundary rejection for out-of-scope files and forbidden anti-patterns
 - Claude integration creates `chay-main`, `chay-reviewer`, and `chay-<worker>-worker`
 
@@ -363,7 +363,7 @@ Chạy Runtime rejects:
 - patches that add too many lines
 - edits outside allowed files
 - isolated worker edits outside allowed files before they reach the real project
-- agents reading audit Markdown
+- agents reading `.chay/audit` Markdown
 - worker notes that omit architecture/SOLID rules
 - large free-form result logs
 

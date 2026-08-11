@@ -1,8 +1,23 @@
 import { readJson, exists } from "../utils/fs.js";
 
-export function loadPolicy(file = "policies/chay_policy.json") {
+export function loadPolicy(file = "runtime_default_policy") {
+  if (!file || ["runtime_default_policy", "default"].includes(file)) {
+    return defaultPolicy();
+  }
+  if (file && !["runtime_default_policy", "default"].includes(file) && exists(file)) {
+    return readJson(file);
+  }
+  if (!exists(file) && exists("policies/chay_policy.json")) {
+    return readJson("policies/chay_policy.json");
+  }
   if (!exists(file)) {
-    return {
+    return defaultPolicy();
+  }
+  return readJson(file);
+}
+
+function defaultPolicy() {
+  return {
       maxNoteTokens: 1200,
       maxResultTokens: 900,
       maxChangedFiles: 6,
@@ -40,7 +55,7 @@ export function loadPolicy(file = "policies/chay_policy.json") {
         "minimal_patch"
       ],
       allowedDomains: ["ai_orchestration", "backend_architecture", "coding_agent_runtime", "repo_intelligence"],
-      forbiddenNotePaths: ["audit/"],
+      forbiddenNotePaths: [".chay/audit/", "audit/"],
       humanOwnedPaths: ["README.md", "CHANGELOG.md", "docs/", "product/", "requirements/", "specs/"],
       sensitivePaths: [".env", ".env.", "secrets/", "credentials/", "private/", ".aws/", ".ssh/"],
       forbiddenPatterns: [
@@ -64,6 +79,4 @@ export function loadPolicy(file = "policies/chay_policy.json") {
         "fake_success_response"
       ]
     };
-  }
-  return readJson(file);
 }
