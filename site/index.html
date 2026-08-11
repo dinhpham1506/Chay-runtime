@@ -164,6 +164,34 @@
     flex-wrap: wrap;
     gap: 12px;
   }
+  .language-switch {
+    width: fit-content;
+    min-height: 44px;
+    margin: 24px auto 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid rgba(8,8,8,.1);
+    border-radius: 999px;
+    background: rgba(255,255,255,.68);
+  }
+  .language-switch button {
+    min-width: 58px;
+    min-height: 36px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .language-switch button.active {
+    background: var(--ink);
+    color: var(--white);
+  }
   .btn {
     min-height: 48px;
     display: inline-flex;
@@ -672,12 +700,17 @@
   <header class="hero">
     <div class="wrap">
       <div class="hero-copy reveal">
-        <span class="eyebrow"><i></i> Contract layer for external IDE AI</span>
-        <h1>Build AI coding flows grounded in your repo.</h1>
-        <p>Chạy Runtime turns a vague task into a compact feature contract, folder map, API graph, work note and handoff. Codex, Claude, Cursor or Kiro can code outside. The repo keeps the guardrails.</p>
+        <span class="eyebrow"><i></i> <span data-i18n="eyebrow">Contract layer for external IDE AI</span></span>
+        <h1 data-i18n="headline">Build AI coding flows grounded in your repo.</h1>
+        <p data-i18n="subhead">Chạy Runtime turns a vague task into a compact feature contract, folder map, API graph, work note and handoff. Codex, Claude, Cursor or Kiro can code outside. The repo keeps the guardrails.</p>
+        <div class="language-switch" aria-label="Language">
+          <button class="active" type="button" data-lang="en" aria-pressed="true">EN</button>
+          <button type="button" data-lang="vi" aria-pressed="false">VI</button>
+        </div>
         <div class="hero-actions">
-          <a class="btn btn-primary" href="#quickstart">Start with CLI <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
-          <a class="btn" href="#workflow">View workflow</a>
+          <a class="btn btn-primary" href="#quickstart"><span data-i18n="startCta">Start with CLI</span> <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+          <a class="btn" href="#workflow" data-i18n="workflowCta">View workflow</a>
+          <a class="btn" href="https://www.npmjs.com/package/chay-runtime" target="_blank" rel="noopener" data-i18n="npmCta">View npm</a>
         </div>
         <div class="command" aria-label="Install command">
           <span class="prompt">$</span>
@@ -719,18 +752,23 @@
                 <span class="status-pill">update_feature</span>
               </div>
               <div class="metrics">
-                <div class="metric"><span>repo tokens</span><strong>461k</strong><p>Full project context</p></div>
-                <div class="metric"><span>chay context</span><strong>4.7k</strong><p>Selected feature pack</p></div>
-                <div class="metric"><span>saved</span><strong>99%</strong><p>Maintains focus</p></div>
+                <div class="metric"><span>feature id</span><strong>Role</strong><p>One contract folder for one business feature.</p></div>
+                <div class="metric"><span>diagrams</span><strong>3 views</strong><p>User flow, sequence and API graph per feature.</p></div>
+                <div class="metric"><span>scope</span><strong>Files</strong><p>Only files linked to that feature contract.</p></div>
               </div>
               <div class="workspace">
                 <div class="graph">
-                  <div class="graph-title">feature flow <span>PlantUML + Markdown</span></div>
+                  <div class="graph-title">per-feature diagrams <span>admin_changes_user_role</span></div>
                   <div class="nodes">
-                    <div class="node">Admin opens dashboard</div>
-                    <div class="node">Selects user role</div>
-                    <div class="node">Check super admin</div>
-                    <div class="node">Persist role update</div>
+                    <div class="node">User flow</div>
+                    <div class="node">Sequence</div>
+                    <div class="node">API graph</div>
+                    <div class="node">Folder map</div>
+                  </div>
+                  <div class="target-list">
+                    <code>chay-structure/features/admin_changes_user_role.md</code>
+                    <code>chay-structure/diagrams/admin_changes_user_role-sequence.puml</code>
+                    <code>chay-structure/diagrams/admin_changes_user_role-api-graph.puml</code>
                   </div>
                   <div class="target-list">
                     <code>client/src/components/AdminDashboard.tsx</code>
@@ -860,6 +898,43 @@
 </footer>
 
 <script>
+  const translations = {
+    en: {
+      eyebrow: "Contract layer for external IDE AI",
+      headline: "Build AI coding flows grounded in your repo.",
+      subhead: "Chạy Runtime turns a vague task into a compact feature contract, folder map, API graph, work note and handoff. Codex, Claude, Cursor or Kiro can code outside. The repo keeps the guardrails.",
+      startCta: "Start with CLI",
+      workflowCta: "View workflow",
+      npmCta: "View npm"
+    },
+    vi: {
+      eyebrow: "Lớp contract cho IDE AI bên ngoài",
+      headline: "Cho AI code theo đúng repo của bạn.",
+      subhead: "Chạy Runtime biến task mơ hồ thành feature contract gọn, folder map, API graph, work note và handoff. Codex, Claude, Cursor hoặc Kiro code bên ngoài; repo giữ guardrail bên trong.",
+      startCta: "Bắt đầu bằng CLI",
+      workflowCta: "Xem workflow",
+      npmCta: "Xem npm"
+    }
+  };
+
+  function setLanguage(lang) {
+    const dictionary = translations[lang] || translations.en;
+    document.documentElement.lang = lang;
+    document.querySelectorAll("[data-i18n]").forEach((element) => {
+      const key = element.getAttribute("data-i18n");
+      if (dictionary[key]) element.textContent = dictionary[key];
+    });
+    document.querySelectorAll("[data-lang]").forEach((button) => {
+      const active = button.getAttribute("data-lang") === lang;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+  }
+
+  document.querySelectorAll("[data-lang]").forEach((button) => {
+    button.addEventListener("click", () => setLanguage(button.getAttribute("data-lang")));
+  });
+
   const copyButton = document.getElementById("copyButton");
   const installCommand = document.getElementById("installCommand");
   copyButton?.addEventListener("click", async () => {
