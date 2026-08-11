@@ -189,11 +189,42 @@ function inferredFeatureTargets(index, taskWords, options = {}) {
   }
 
   if (options.includeDatabase) {
-    const migration = files.find((file) => isDatabasePath(file) && /job|application|user/i.test(file.path));
-    if (migration) addExisting(targets, files, migration.path, "Database file included because database intent was explicit.");
+    const migration = applyJobDatabaseTarget(files, paths);
+    if (migration.existing) {
+      addExisting(targets, files, migration.path, "Database file included because it matches job/application schema intent.");
+    } else if (migration.path) {
+      targets.push({
+        path: migration.path,
+        role: "database",
+        lines: 0,
+        score: 90,
+        matched_terms: ["job", "application", "schema"],
+        reason: "Proposed new migration for job applications because no existing job/application schema migration was found."
+      });
+    }
   }
 
   return targets;
+}
+
+function applyJobDatabaseTarget(files, paths) {
+  const databaseFiles = files.filter((file) => isDatabasePath(file));
+  const normalized = (file) => normalize(file.path || file);
+  const exact = databaseFiles.find((file) => {
+    const value = normalized(file);
+    return value.includes("job") && value.includes("application");
+  });
+  if (exact) return { existing: true, path: exact.path };
+
+  const jobOnly = databaseFiles.find((file) => {
+    const value = normalized(file);
+    return value.includes("job") && !value.includes("user-status") && !value.includes("teams");
+  });
+  if (jobOnly) return { existing: true, path: jobOnly.path };
+
+  if (hasFolder(paths, "migrations")) return { existing: false, path: "migrations/create-job-applications.sql" };
+  if (paths.has("supabase-schema.sql")) return { existing: true, path: "supabase-schema.sql" };
+  return { existing: false, path: "" };
 }
 
 function addExisting(targets, files, pathValue, reason) {

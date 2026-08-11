@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { parseArgs } from "../utils/args.js";
-import { exists, readJson } from "../utils/fs.js";
+import { exists, readJson, writeJson } from "../utils/fs.js";
 import { scanRepo } from "./repoScan.js";
 import { planContext } from "./contextPlan.js";
 import { createGraph } from "./graph.js";
@@ -25,6 +25,7 @@ export async function go(argv = []) {
   const plantumlApiGraphFile = args["plantuml-api-graph-out"] || `chay-structure/diagrams/${activeFeatureId}-api-graph.puml`;
   const handoffFile = args.handoff || "chay-memory/ai_handoff.json";
   const contextFile = args.context || "chay-memory/context_package.json";
+  const contractGoal = contractGoalForUpdate(task, currentGraph, matchedFeatureId, activeFeatureId);
 
   if (!task) {
     await quiet(() => createHandoff([
@@ -70,7 +71,7 @@ export async function go(argv = []) {
   await quiet(() => scanRepo(["--root", args.root || ".", "--out", indexFile]));
   await quiet(() => planContext([
     "--task",
-    task,
+    contractGoal || task,
     "--index",
     indexFile,
     "--out",
@@ -101,7 +102,7 @@ export async function go(argv = []) {
     return;
   }
   const files = mergeFileList(explicitFiles, plannedFiles, existingCodeTargets).join(",");
-  const contractGoal = contractGoalForUpdate(task, currentGraph, matchedFeatureId);
+  syncContextSelectedFiles(contextFile, files, contractGoal || task);
 
   await quiet(() => createGraph([
     contractGoal,
@@ -185,13 +186,39 @@ function mergeFileList(explicitFiles, plannedFiles, existingFiles = []) {
   return [...new Set([...explicit, ...plannedFiles, ...existingFiles])];
 }
 
-function contractGoalForUpdate(task, currentGraph, matchedFeatureId) {
+function contractGoalForUpdate(task, currentGraph, matchedFeatureId, featureId = "") {
   const currentGoal = String(currentGraph?.goal || "").trim();
   const requested = String(task || "").trim();
   if (!matchedFeatureId || !currentGoal || !requested) return requested;
+  if (featureIdFromGoal(requested) === (featureId || matchedFeatureId)) return requested;
   if (currentGoal.toLowerCase().includes(requested.toLowerCase())) return currentGoal;
   if (requested.toLowerCase().includes(currentGoal.toLowerCase())) return requested;
   return `${currentGoal} / ${requested}`;
+}
+
+function syncContextSelectedFiles(contextFile, filesCsv, task) {
+  const files = String(filesCsv || "").split(",").map((file) => file.trim()).filter(Boolean);
+  if (files.length === 0 || !contextFile) return;
+  const context = optionalJson(contextFile) || {};
+  const byPath = new Map((context.selected_files || []).map((file) => [file.path, file]));
+  context.task = task || context.task || "";
+  context.selected_files = files.map((file) => byPath.get(file) || {
+    path: file,
+    role: roleFromPath(file),
+    lines: 0,
+    score: 100,
+    matched_terms: [],
+    reason: "Synchronized from final feature graph code_targets."
+  });
+  context.synced_with_graph = true;
+  writeJson(contextFile, context);
+}
+
+function roleFromPath(file) {
+  const value = String(file || "").toLowerCase();
+  if (value.endsWith(".sql") || value.includes("/migrations/") || value.startsWith("migrations/") || value.includes("supabase")) return "database";
+  if (value.includes("netlify/functions/") || value.includes("/api/")) return "api_controller";
+  return "source";
 }
 
 function splitTaskAndFiles(items) {

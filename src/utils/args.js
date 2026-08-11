@@ -15,6 +15,11 @@ export function parseArgs(argv) {
     }
 
     const key = raw;
+    if (booleanArgs.has(key)) {
+      args[key] = true;
+      continue;
+    }
+
     const next = argv[i + 1];
 
     if (!next || next.startsWith("--")) {
@@ -27,3 +32,21 @@ export function parseArgs(argv) {
   }
   return args;
 }
+
+const booleanArgs = new Set([
+  "auth",
+  "codex",
+  "codex-skill",
+  "compact",
+  "force",
+  "global",
+  "help",
+  "include-database",
+  "isolate",
+  "login",
+  "no-compact",
+  "require-existing",
+  "skip-login",
+  "skip-token-check",
+  "version"
+]);
