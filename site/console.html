@@ -329,12 +329,12 @@
   <div class="layout">
     <aside class="sidebar" aria-label="Task controls / Điều khiển task">
       <section class="panel">
-        <h2>Worker run / Chạy worker</h2>
-        <label for="taskText">Task for worker / Việc giao cho worker</label>
-        <textarea id="taskText" placeholder="Describe the task / Mô tả task"></textarea>
+        <h2>Task run / Chạy task</h2>
+        <label for="taskText">Task / Việc cần làm</label>
+        <textarea id="taskText" placeholder="Fix duplicate apply service / Sửa lỗi apply bị trùng"></textarea>
         <div class="form-grid">
           <div>
-            <label for="workerName">Worker / Agent xử lý</label>
+            <label for="workerName">Worker / Agent làm việc</label>
             <select id="workerName"></select>
           </div>
           <div>
@@ -352,13 +352,13 @@
           <div class="field-full">
             <label for="testCommand">Test command / Lệnh test</label>
             <input id="testCommand" placeholder="npm test">
-            <span class="field-help">Optional / Tuỳ chọn. Dispatch emits testing only when this command is set / Dispatch chỉ ghi bước testing khi có lệnh này.</span>
+            <span class="field-help">Optional / Tuỳ chọn. <code>cr run</code> chỉ ghi bước testing khi có lệnh này.</span>
           </div>
         </div>
         <div class="actions">
-          <button type="button" class="secondary" data-action="create-note">Create note / Tạo ghi chú</button>
+          <button type="button" class="secondary" data-action="create-note">Create task / Tạo task</button>
           <button type="button" data-action="create-task">Create + Run / Tạo + chạy</button>
-          <button type="button" class="secondary" data-action="run-worker">Run worker / Chạy worker</button>
+          <button type="button" class="secondary" data-action="run-worker">Run / Chạy</button>
         </div>
       </section>
 
@@ -427,6 +427,11 @@
 
     <aside class="inspector" aria-label="Project context / Context dự án">
       <section class="panel">
+        <h2>Feature graph / Luồng tính năng</h2>
+        <div id="featureGraph"></div>
+      </section>
+
+      <section class="panel">
         <h2>Selected files / File đã chọn</h2>
         <div id="files" class="files"></div>
       </section>
@@ -440,7 +445,7 @@
         <h2>Runtime / Bộ chạy</h2>
         <div id="runtime"></div>
         <div class="actions">
-          <button type="button" class="secondary" data-action="runtime-status">Check auth / Kiểm tra đăng nhập</button>
+          <button type="button" class="secondary" data-action="runtime-status">Check runtime / Kiểm tra runtime</button>
         </div>
       </section>
 
@@ -492,6 +497,7 @@
       results: $("results"),
       timeline: $("timeline"),
       ledger: $("ledger"),
+      featureGraph: $("featureGraph"),
       files: $("files"),
       experience: $("experience"),
       runtime: $("runtime"),
@@ -583,6 +589,7 @@
       els.timeline.innerHTML = renderTimeline(state.progress_history || []);
       els.results.innerHTML = renderResults(state.result_notes || []);
       els.ledger.innerHTML = renderLedger(state.plan_ledger);
+      els.featureGraph.innerHTML = renderFeatureGraph(state.feature_graph);
       els.experience.innerHTML = renderExperience(state.experience);
       els.runtime.innerHTML = renderRuntime(state.agent_runtime || []);
       els.chat.innerHTML = state.chat.map((message) => [
@@ -734,6 +741,21 @@
       ].join("")).join("") || "<p class=\"muted\">No completed steps / Chưa có bước hoàn tất</p>";
     }
 
+    function renderFeatureGraph(graph) {
+      if (!graph) return "<p class=\"muted\">No feature graph / Chưa có graph</p>";
+      const nodes = graph.nodes || [];
+      const edges = graph.edges || [];
+      return [
+        `<div class="item"><b>${esc(graph.feature_id || "feature")}</b><p>${esc(graph.goal || "")}</p></div>`,
+        `<div class="item">nodes / node ${esc(nodes.length)}<br>edges / cạnh ${esc(edges.length)}<br>code targets / file code ${esc((graph.code_targets || []).join(", "))}</div>`,
+        nodes.slice(0, 8).map((node) => `<div class="item"><b>${esc(node.id)}</b> <span class="status">${esc(node.type)}</span><br><small>${esc(node.label)}</small></div>`).join(""),
+        graph.user_flow || graph.mermaid ? `<div class="log">${esc(graph.user_flow || graph.mermaid)}</div>` : "",
+        graph.sequence_diagram ? `<div class="log">${esc(graph.sequence_diagram)}</div>` : "",
+        graph.plantuml_flow ? `<div class="log">${esc(graph.plantuml_flow)}</div>` : "",
+        graph.plantuml_sequence ? `<div class="log">${esc(graph.plantuml_sequence)}</div>` : ""
+      ].join("");
+    }
+
     function renderExperience(experience) {
       if (!experience) return "<p class=\"muted\">No snapshot yet / Chưa có snapshot</p>";
       return [
@@ -775,7 +797,7 @@
     async function createNote() {
       const task = els.taskText.value.trim();
       if (!task) return;
-      showResult({ ok: true, status: "creating_work_note" });
+      showResult({ ok: true, status: "creating_task_note", cli: "cr task" });
       showResult(await api("/api/action", { action: "create_task", task, run: false, ...runOptions() }));
       load();
     }
@@ -783,14 +805,14 @@
     async function createTask() {
       const task = els.taskText.value.trim();
       if (!task) return;
-      showResult({ ok: true, status: "creating_task_and_dispatching" });
+      showResult({ ok: true, status: "creating_task_and_running", cli: "cr task && cr run" });
       showResult(await api("/api/action", { action: "create_task", task, run: true, ...runOptions() }));
       els.taskText.value = "";
       load();
     }
 
     async function runWorker() {
-      showResult({ ok: true, status: "dispatching_worker" });
+      showResult({ ok: true, status: "running_worker", cli: "cr run" });
       showResult(await api("/api/action", { action: "run_worker", ...runOptions() }));
       load();
     }

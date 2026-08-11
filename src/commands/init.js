@@ -1,4 +1,5 @@
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { copyDir, writeJson, writeText } from "../utils/fs.js";
 
 export async function initProject() {
@@ -9,7 +10,7 @@ export async function initProject() {
 }
 
 export function createProjectFiles(root = process.cwd()) {
-  const pkgRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../..");
+  const pkgRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
   copyDir(path.join(pkgRoot, "policies"), path.join(root, "policies"));
   copyDir(path.join(pkgRoot, "schemas"), path.join(root, "schemas"));

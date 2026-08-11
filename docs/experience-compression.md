@@ -18,22 +18,12 @@ run end-to-end.
 ## How People Use It
 
 ```bash
-cr repo scan --root . --out .chay-index/project_map.json
-cr context plan \
-  --task "Fix duplicate apply service" \
-  --index .chay-index/project_map.json \
-  --out memory/context_package.json \
-  --max-notes 2
-
-cr workpack make \
-  --worker codex \
-  --goal "Fix duplicate apply service" \
-  --allowed-files "src/applyService.js" \
-  --compact \
-  --out memory/codex_work_note.json
+cr scan
+cr plan "Fix duplicate apply service" --max-notes 2
+cr pack "Fix duplicate apply service" --worker codex --files src/applyService.js --compact
 
 cr boundary check-note --file memory/codex_work_note.json --kind work
-cr dispatch codex --agent=codex --max-retries 3
+cr run codex --max-retries 3
 cr experience snapshot --out memory/experience_spectrum.json
 ```
 

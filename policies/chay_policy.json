@@ -45,7 +45,35 @@
   "forbiddenNotePaths": [
     "audit/"
   ],
+  "humanOwnedPaths": [
+    "README.md",
+    "CHANGELOG.md",
+    "docs/",
+    "product/",
+    "requirements/",
+    "specs/"
+  ],
+  "sensitivePaths": [
+    ".env",
+    ".env.",
+    "secrets/",
+    "credentials/",
+    "private/",
+    ".aws/",
+    ".ssh/"
+  ],
   "forbiddenPatterns": [
+    "sk-",
+    "BEGIN PRIVATE KEY",
+    "AWS_SECRET_ACCESS_KEY",
+    "GOOGLE_APPLICATION_CREDENTIALS",
+    "DATABASE_URL=",
+    "PASSWORD=",
+    "SECRET_KEY=",
+    "access_token",
+    "refresh_token",
+    "console.log(req.headers.authorization)",
+    "console.log(request.headers.authorization)",
     "hardcoded_test_value",
     "bypass_validation",
     "catch_exception_and_ignore",

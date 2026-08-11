@@ -235,6 +235,8 @@ function buildState() {
     tasks: taskList(notes, context),
     result_notes: resultNotes(notes),
     selected_files: context.selected_files || [],
+    feature_graph: optionalJson("memory/feature_graph.json"),
+    handoff: optionalJson("memory/ai_handoff.json"),
     progress_history: progressHistory,
     plan_ledger: optionalJson("memory/plan_ledger.json"),
     experience: optionalJson("memory/experience_spectrum.json"),

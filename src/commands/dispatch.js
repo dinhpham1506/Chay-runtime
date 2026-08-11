@@ -12,6 +12,7 @@ import { commandForAgent, isSupportedAgent, supportedAgentNames } from "../core/
 import { buildTokenReport } from "../core/tokenReport.js";
 import { normalizeAgentName } from "../core/agents.js";
 import { resolveWorker } from "../core/host.js";
+import { featureGraphCodeTargets } from "../core/featureGraph.js";
 
 const lockDir = ".chay/locks";
 
@@ -286,7 +287,8 @@ function buildPrompt({ worker, workFile, resultFile, diffFile, retryInstruction,
   return [
     `You are the bounded Chạy Runtime ${worker} worker. Execute the task in ${workFile}.`,
     `The repo root is the current working directory.`,
-    `Read memory/task_note.json, memory/context_package.json, ${workFile}, and only files listed in allowed_files when allowed_files is present.`,
+    `Read memory/task_note.json, memory/context_package.json, ${workFile}, any feature_graph input listed by the work note, and only files listed in allowed_files when allowed_files is present.`,
+    `If a feature_graph is present, treat it as the source of truth for user flow, branches, handled errors, code_targets, and acceptance checks. Do not rediscover or rewrite the feature contract from source code.`,
     `Before editing, apply minimal_patch: reuse existing code, prefer native/standard features, avoid new dependencies, and make the smallest correct patch without removing validation, security, accessibility, or tests.`,
     `You may emit worker progress with cr progress update --agent ${worker} for reading, planning, editing, testing when you run tests, or blocked. Dispatch writes assigned, validate_result, patch_check, and done.`,
     `Before finishing, refresh the scoped diff with git diff --no-ext-diff -- . > ${diffFile}.`,
@@ -415,6 +417,7 @@ function validateResultFile(resultFile, policy, work, worker) {
     const violations = [...result.violations];
     if (note.work_id !== work.work_id) violations.push({ type: "work_id_mismatch", expected: work.work_id, actual: note.work_id });
     if (note.worker !== worker) violations.push({ type: "worker_mismatch", expected: worker, actual: note.worker });
+    violations.push(...validateGraphChangedFiles(note, work));
     return {
       ...result,
       ok: violations.length === 0,
@@ -429,6 +432,15 @@ function validateResultFile(resultFile, policy, work, worker) {
   }
 }
 
+function validateGraphChangedFiles(note, work) {
+  const targets = graphCodeTargetsFromWork(work);
+  if (targets.length === 0 || !Array.isArray(note.changed_files)) return [];
+  const allowed = new Set(targets);
+  return note.changed_files
+    .filter((file) => !allowed.has(file))
+    .map((file) => ({ type: "changed_file_outside_feature_graph", file, allowed: targets }));
+}
+
 function checkPatchBoundary({ diffFile, workFile, work, policy, cwd = process.cwd() }) {
   const refreshed = refreshDiff(diffFile, cwd);
   if (!refreshed.ok) return refreshed;
@@ -437,15 +449,32 @@ function checkPatchBoundary({ diffFile, workFile, work, policy, cwd = process.cw
   const diffText = readText(diffFile);
   const analysis = analyzeDiff(diffText);
   const result = validateDiff(analysis, work, policy, diffText);
+  const graphViolations = validateGraphPatchFiles(analysis, work);
+  const violations = [...result.violations, ...graphViolations];
   return {
-    ok: result.ok,
+    ok: violations.length === 0,
     diff: diffFile,
     work: displayPath(workFile),
     refreshed: refreshed.refreshed,
     warning: refreshed.warning,
     analysis,
-    violations: result.violations
+    violations
   };
+}
+
+function validateGraphPatchFiles(analysis, work) {
+  const targets = graphCodeTargetsFromWork(work);
+  if (targets.length === 0) return [];
+  const allowed = new Set(targets);
+  return (analysis.changedFiles || [])
+    .filter((file) => !allowed.has(file))
+    .map((file) => ({ type: "patch_file_outside_feature_graph", file, allowed: targets }));
+}
+
+function graphCodeTargetsFromWork(work) {
+  if (Array.isArray(work.feature_graph?.code_targets)) return work.feature_graph.code_targets.filter(Boolean);
+  if (work.feature_graph && Array.isArray(work.feature_graph.nodes)) return featureGraphCodeTargets(work.feature_graph);
+  return [];
 }
 
 function updatePlanLedger({ worker, work, resultFile, patch }) {

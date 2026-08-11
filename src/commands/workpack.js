@@ -3,11 +3,13 @@ import { exists, readJson, writeJson } from "../utils/fs.js";
 import { loadPolicy } from "../core/policy.js";
 import { promptText } from "../utils/prompt.js";
 import { defaultWorker } from "../core/host.js";
+import { normalizeAgentName } from "../core/agents.js";
+import { featureGraphCodeTargets, featureGraphInput } from "../core/featureGraph.js";
 
 export async function makeWorkpack(argv) {
   const args = parseArgs(argv);
   const fallbackWorker = defaultWorker();
-  const worker = args.worker || await promptText(`Worker agent [${fallbackWorker}]: `) || fallbackWorker;
+  const worker = normalizeAgentName(args.worker || args.agent || fallbackWorker);
   const goal = args.goal || args._?.join(" ") || await promptText("Goal/task: ");
   if (!goal) throw new Error("--goal is required");
 
@@ -17,6 +19,10 @@ export async function makeWorkpack(argv) {
   const out = args.out || `memory/${worker}_work_note.json`;
   const skills = listArg(args.skills || args["worker-skills"] || hostWorker?.skills || policy.agentSkills || []);
   const compact = Boolean(args.compact);
+  const graphFile = args["from-graph"] || args.graph || featureGraphInput();
+  const graph = graphFile && exists(graphFile) ? readJson(graphFile) : null;
+  const graphFiles = graph ? featureGraphCodeTargets(graph) : [];
+  const allowedFiles = listArg(args.files || args.file || args["allowed-files"] || graphFiles.join(","));
 
   const work = {
     work_id: args.work_id || `work_${Date.now()}`,
@@ -35,8 +41,15 @@ export async function makeWorkpack(argv) {
     inputs: [
       "memory/task_note.json",
       "memory/context_package.json",
+      ...(graphFile ? [graphFile] : []),
       ...(compact ? ["memory/plan_ledger.json"] : [])
     ],
+    feature_graph: graphFile ? {
+      file: graphFile,
+      feature_id: graph?.feature_id,
+      source_of_truth: true,
+      code_targets: graphFiles
+    } : undefined,
     architecture_rules: compact ? ["Follow policy_ref architectureRules."] : policy.architectureRules || [],
     minimal_patch_rules: compact ? ["Follow policy_ref minimalPatchRules before editing."] : ["Follow runtime policy minimalPatchRules before editing."],
     skills,
@@ -50,7 +63,7 @@ export async function makeWorkpack(argv) {
       status: ["completed", "failed", "blocked", "partial"],
       retry_until_valid: true
     },
-    allowed_files: args["allowed-files"] ? args["allowed-files"].split(",").map((x) => x.trim()) : [],
+    allowed_files: allowedFiles,
     allowed_tools: args["allowed-tools"] ? args["allowed-tools"].split(",").map((x) => x.trim()) : [
       "repo_reader",
       "code_search",

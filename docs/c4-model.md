@@ -188,6 +188,7 @@ flowchart TB
 ## Runtime Data Model
 
 - `memory/host_config.json`: enabled agents, main controller, workers, models, skills, and runtime folders.
+- `memory/feature_graph.json`: user-flow source of truth with nodes, edges, handled error branches, code targets, and acceptance checks.
 - `memory/task_note.json`: compact task intent and constraints.
 - `memory/context_package.json`: selected files and repo context for the worker.
 - `memory/plan_ledger.json`: runtime-owned task continuity ledger, written only after dispatch validation and patch checks pass.

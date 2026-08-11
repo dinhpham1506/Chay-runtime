@@ -1,0 +1,42 @@
+{
+  "type": "object",
+  "required": ["feature_id", "goal", "nodes", "edges", "code_targets", "user_flow", "sequence_diagram", "plantuml_flow", "plantuml_sequence"],
+  "properties": {
+    "feature_id": { "type": "string" },
+    "goal": { "type": "string" },
+    "contract": { "type": "object" },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "type"],
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" },
+          "type": { "type": "string" },
+          "code_targets": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["from", "to"],
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "condition": { "type": "string" }
+        }
+      }
+    },
+    "error_nodes": { "type": "array", "items": { "type": "string" } },
+    "code_targets": { "type": "array", "items": { "type": "string" } },
+    "user_flow": { "type": "string" },
+    "sequence_diagram": { "type": "string" },
+    "plantuml_flow": { "type": "string" },
+    "plantuml_sequence": { "type": "string" },
+    "acceptance_checks": { "type": "array", "items": { "type": "string" } },
+    "mermaid": { "type": "string" }
+  }
+}

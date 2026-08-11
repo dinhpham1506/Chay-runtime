@@ -44,6 +44,8 @@ export function validateDiff(diff, work, policy, diffText = "") {
     }
   }
 
+  violations.push(...findHumanOwnedPathHits(diff.changedFiles, work, policy));
+  violations.push(...findSensitivePathHits(diff.changedFiles, policy));
   violations.push(...findForbiddenPatternHits(diffText, policy));
 
   return {
@@ -60,6 +62,38 @@ function isAllowedPath(file, allowedFile) {
 
 function normalizeRelativePath(file) {
   return String(file || "").replace(/\\/g, "/").replace(/^\.\/+/, "");
+}
+
+function findHumanOwnedPathHits(files, work, policy) {
+  const protectedPaths = policy.humanOwnedPaths || [];
+  const approved = new Set([
+    ...(work.human_approved_files || []),
+    ...(work.human_approved_paths || []),
+    ...(work.humanApprovedFiles || []),
+    ...(work.humanApprovedPaths || [])
+  ].map(normalizeRelativePath));
+
+  return files
+    .map(normalizeRelativePath)
+    .filter((file) => matchesAny(file, protectedPaths) && !Array.from(approved).some((entry) => isAllowedPath(file, normalizeRelativePath(entry))))
+    .map((file) => ({ type: "human_owned_path_requires_approval", file }));
+}
+
+function findSensitivePathHits(files, policy) {
+  const sensitive = policy.sensitivePaths || [];
+  return files
+    .map(normalizeRelativePath)
+    .filter((file) => matchesAny(file, sensitive))
+    .map((file) => ({ type: "sensitive_path_change_blocked", file }));
+}
+
+function matchesAny(file, patterns) {
+  return patterns.some((pattern) => {
+    const normalized = normalizeRelativePath(pattern);
+    if (!normalized) return false;
+    if (normalized.endsWith("/")) return file.startsWith(normalized);
+    return file === normalized || file.startsWith(`${normalized}/`) || file.includes(`/${normalized}`);
+  });
 }
 
 function findForbiddenPatternHits(diffText, policy) {

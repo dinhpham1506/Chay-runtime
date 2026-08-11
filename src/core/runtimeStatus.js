@@ -26,8 +26,18 @@ const runtimeChecks = {
   }
 };
 
+export function supportedRuntimeAgents() {
+  return Object.keys(runtimeChecks);
+}
+
 export function agentRuntimeStatus(options = {}) {
   return Object.keys(runtimeChecks).map((agent) => runtimeStatus(agent, options));
+}
+
+export function runtimeLoginHint(agent) {
+  const normalized = normalizeAgentName(agent);
+  const check = runtimeChecks[normalized];
+  return check?.loginHint || "Unsupported agent";
 }
 
 export function runtimeStatus(agent, options = {}) {

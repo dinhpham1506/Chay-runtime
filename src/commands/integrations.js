@@ -1,7 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { copyDir } from "../utils/fs.js";
 import { parseArgs } from "../utils/args.js";
+import { normalizeAgentName } from "../core/agents.js";
 
 const agentTargets = ["claude", "codex", "antigravity"];
 const targets = [...agentTargets];
@@ -9,30 +11,32 @@ const targets = [...agentTargets];
 export async function installIntegration(argv) {
   const args = parseArgs(argv);
   if (!args.target) throw new Error("--target is required: claude | codex | antigravity");
-  if (!targets.includes(args.target)) {
-    throw new Error("--target must be claude, codex, or antigravity");
+  const target = normalizeAgentName(args.target);
+  if (!targets.includes(target)) {
+    throw new Error("--target must be claude, codex, antigravity, or anti");
   }
 
-  const installed = installIntegrationFiles(args.target, process.cwd());
+  const installed = installIntegrationFiles(target, process.cwd());
   const workers = configuredWorkers(args);
-  if (args.target === "claude") configureClaudeAgents(process.cwd(), workers);
+  if (target === "claude") configureClaudeAgents(process.cwd(), workers);
 
   console.log(JSON.stringify({
     ok: true,
-    target: args.target,
+    target,
     installed,
-    workers: args.target === "claude" ? workers : undefined,
-    message: `Installed ${args.target} integration templates into current project`
+    workers: target === "claude" ? workers : undefined,
+    message: `Installed ${target} integration templates into current project`
   }, null, 2));
 }
 
 export function installIntegrationFiles(target, root = process.cwd()) {
-  if (!targets.includes(target)) throw new Error(`Unknown integration target: ${target}`);
-  const pkgRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../..");
-  const src = path.join(pkgRoot, "templates", target);
+  const normalized = normalizeAgentName(target);
+  if (!targets.includes(normalized)) throw new Error(`Unknown integration target: ${target}`);
+  const pkgRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+  const src = path.join(pkgRoot, "templates", normalized);
 
   copyDir(src, root);
-  return target;
+  return normalized;
 }
 
 export function installConfiguredIntegrations(answers, root = process.cwd()) {

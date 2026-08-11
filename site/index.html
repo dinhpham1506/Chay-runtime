@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Chạy Runtime — Runtime chính sách cho các CLI code đa tác tử</title>
-<meta name="description" content="Runtime chính sách dựa trên ghi chú (note-based) cho các CLI code đa tác tử. Chọn main và worker từ Claude, Codex hoặc Antigravity — trong ranh giới nghiêm ngặt, có thể kiểm toán." />
+<title>Chạy Runtime — Contract, guardrail và handoff cho IDE AI</title>
+<meta name="description" content="Local contract, guardrail và resume handoff cho IDE AI coding. Tạo feature graph, user flow, sequence diagram, rồi verify patch theo scope, docs, secrets và OWASP." />
 <meta property="og:title" content="Chạy Runtime" />
-<meta property="og:description" content="Runtime chính sách dựa trên ghi chú cho các CLI code đa tác tử: Claude, Codex và Antigravity." />
+<meta property="og:description" content="Contract, guardrail và handoff layer cho Codex, Claude, Antigravity, Cursor và IDE AI." />
 <meta property="og:type" content="website" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -268,8 +268,8 @@
     </a>
     <div class="nav-links">
       <a href="#features">Tính năng</a>
-      <a href="#roles">Vai trò</a>
-      <a href="#progress">Console</a>
+      <a href="#roles">IDE AI</a>
+      <a href="#progress">Workflow</a>
       <a href="#quickstart">Bắt đầu</a>
       <a href="#docs">Lệnh CLI</a>
       <a class="btn btn-icon" href="https://github.com/dinhpham1506/chay-runtime" target="_blank" rel="noopener" aria-label="Mở repo trên GitHub" title="GitHub">
@@ -283,16 +283,16 @@
   <canvas id="bg-fx" aria-hidden="true"></canvas>
   <div class="wrap">
     <span class="pill"><span class="dot"></span> v0.1.0 · dinhpham · Node ≥ 20</span>
-    <h1>Giao việc cho AI,<br /><span class="glow">giữ ranh giới rõ ràng</span></h1>
+    <h1>Cho IDE AI code,<br /><span class="glow">không để nó đi lạc</span></h1>
     <p class="sub">
-      Chạy Runtime là runtime chính sách dựa trên ghi chú (note-based) cho các CLI code đa tác tử.
-      Tạo work note, dispatch worker, validate result_note, chạy test tuỳ chọn và kiểm tra patch boundary
-      trước khi báo done.
+      Chạy Runtime tạo feature graph, user flow, sequence diagram và handoff nhỏ cho Codex,
+      Claude, Antigravity, Cursor hoặc IDE AI bất kỳ. AI code ở ngoài; runtime giữ contract,
+      scope, docs, secrets và OWASP checks ở trong repo.
     </p>
 
     <div class="install">
       <span class="prompt">$</span>
-      <code id="install-cmd">npm install -g chay-runtime</code>
+      <code id="install-cmd">npm install -g chay-runtime && cr start</code>
       <button class="copy" id="copyBtn" onclick="copyInstall()" aria-label="Sao chép lệnh cài đặt">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         <span>Sao chép</span>
@@ -303,7 +303,7 @@
       <a class="btn btn-primary" href="#quickstart">Bắt đầu ngay
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
       </a>
-      <a class="btn" href="#progress">Xem console realtime</a>
+      <a class="btn" href="#progress">Xem workflow</a>
       <a class="btn" href="https://www.npmjs.com/package/chay-runtime" target="_blank" rel="noopener">Xem trên npm</a>
     </div>
   </div>
@@ -312,40 +312,40 @@
 <section id="features">
   <div class="wrap center reveal">
     <span class="eyebrow">Vì sao chọn Chạy Runtime</span>
-    <h2>Ranh giới runtime giữa tác tử và mã nguồn của bạn</h2>
-    <p class="section-sub">Tác tử đọc các ghi chú JSON gọn nhẹ, con người đọc bản kiểm toán Markdown, và mọi bản vá đều được kiểm tra trước khi áp dụng.</p>
+    <h2>Contract nhỏ cho IDE AI, verify mạnh cho repo thật</h2>
+    <p class="section-sub">Người dùng không cần nhớ nhiều lệnh. <code>cr go</code> tạo graph + sequence + handoff; IDE AI đọc một file nhỏ rồi code đúng phạm vi.</p>
   </div>
   <div class="wrap">
     <div class="grid">
       <div class="card reveal">
         <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg></div>
-        <h3>Ngữ cảnh dựa trên ghi chú</h3>
-        <p>Tác tử đọc ghi chú JSON gọn từ <code>memory/*.json</code>. Con người xem Markdown từ <code>audit/*.md</code>. Không rò rỉ log thô.</p>
+        <h3>Feature graph là source of truth</h3>
+        <p><code>memory/feature_graph.json</code> chứa user flow, sequence diagram, nhánh lỗi, code targets và acceptance checks.</p>
       </div>
       <div class="card reveal">
         <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></div>
-        <h3>Kiểm tra ranh giới</h3>
-        <p>Kiểm tra kích thước ghi chú, schema đầu ra, kích thước bản vá và phạm vi file. Sửa ngoài phạm vi và anti-pattern đều bị từ chối.</p>
+        <h3>Patch guardrail</h3>
+        <p>Reject sửa ngoài scope, sửa docs human-owned khi chưa approve, đụng secrets, xóa validation hoặc thêm anti-pattern.</p>
       </div>
       <div class="card reveal">
         <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m16.2 7.8-2 6.3-6.4 2 2-6.3z"/></svg></div>
-        <h3>Trí tuệ về repo</h3>
-        <p>Chọn sẵn một gói ngữ cảnh nhỏ trước khi tác tử đọc mã, giúp worker tập trung và tiết kiệm.</p>
+        <h3>Handoff giảm token</h3>
+        <p>IDE session mới đọc <code>memory/ai_handoff.json</code> trước, thay vì đọc lại cả repo và đoán việc đang làm.</p>
       </div>
       <div class="card reveal">
         <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h20M4 3v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3"/><path d="M8 21h8M12 19v2"/><path d="m9 8 2 2 4-4"/></svg></div>
-        <h3>Quy tắc kiến trúc</h3>
-        <p>Worker phải tuân theo các mẫu thiết kế sẵn có và nguyên tắc SOLID — được cưỡng chế, không chỉ gợi ý.</p>
+        <h3>Design pattern rules</h3>
+        <p>AI phải giữ local pattern, SOLID, validation, error handling, security checks, accessibility và tests.</p>
       </div>
       <div class="card reveal">
         <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="8" rx="2"/><rect x="3" y="13" width="18" height="8" rx="2"/><path d="M7 7h.01M7 17h.01"/></svg></div>
-        <h3>Nén trải nghiệm</h3>
-        <p>Bộ nhớ, kỹ năng và quy tắc được phân tầng để ghi chú công việc luôn nhỏ gọn với ngân sách token có giới hạn.</p>
+        <h3>IDE config</h3>
+        <p><code>cr config</code> tạo instruction chung cho Codex, Claude, Antigravity, GitHub Copilot, Cursor, Kiro hoặc manual mode.</p>
       </div>
       <div class="card reveal">
         <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="m7 8 2 2-2 2M13 12h3"/></svg></div>
-        <h3>Giao diện quy trình gốc</h3>
-        <p>Chạy <code>cr ui serve</code> để tạo task, dispatch worker, validate result, patch check, token/eval report, runtime/auth status, chat và xem SSE realtime.</p>
+        <h3>Verify sau khi AI code</h3>
+        <p><code>cr verify</code>, patch check và token report cho người dùng biết patch còn hỏng gì và tiết kiệm token bao nhiêu.</p>
       </div>
     </div>
   </div>
@@ -353,26 +353,26 @@
 
 <section id="roles" style="background: var(--surface);">
   <div class="wrap center reveal">
-    <span class="eyebrow">Vai trò agent</span>
-    <h2>Main và worker được cấu hình theo từng dự án</h2>
-    <p class="section-sub">Chọn agent nào điều phối, agent nào thực thi trong <code>cr setup</code>; runtime giữ tất cả đúng phạm vi. Model label được truyền vào engine khi dispatch, nhưng đăng nhập vẫn thuộc CLI thật trên máy.</p>
+    <span class="eyebrow">IDE AI external mode</span>
+    <h2>Không điều phối subagent, chỉ cấu hình IDE và verify patch</h2>
+    <p class="section-sub">Codex, Claude, Antigravity, GitHub Copilot, Cursor hoặc Kiro code ở ngoài. Chạy Runtime chỉ tạo contract, handoff và guardrail local để IDE AI biết phải đọc gì và không được sửa gì.</p>
   </div>
   <div class="wrap">
     <div class="roles">
       <div class="role reveal">
-        <span class="tag">// main hoặc worker</span>
-        <h3>Claude</h3>
-        <p>Có integration controller đóng gói sẵn: <code>chay-main</code>, reviewer và worker agents. Cũng có thể được chọn làm worker.</p>
+        <span class="tag">// config</span>
+        <h3>cr config</h3>
+        <p>Tạo <code>.chay/ide/CHAY_IDE_INSTRUCTIONS.md</code> và <code>memory/ide_config.json</code> cho IDE AI đang dùng.</p>
       </div>
       <div class="role reveal">
-        <span class="tag">// main hoặc worker</span>
-        <h3>Codex</h3>
-        <p>Có thể được chọn trong <code>host_config</code> làm main hoặc worker. Dispatch truyền model qua <code>codex exec --model</code> khi bạn cấu hình worker LLM.</p>
+        <span class="tag">// one command</span>
+        <h3>cr go</h3>
+        <p>Không cần biết file từ đầu. Runtime scan repo, chọn context, tạo graph, sequence diagram, work note và handoff.</p>
       </div>
       <div class="role reveal">
-        <span class="tag">// main hoặc worker</span>
-        <h3>Antigravity</h3>
-        <p>Có thể được chọn trong <code>host_config</code> làm main hoặc worker. Login chạy qua Antigravity IDE; non-interactive dispatch cần <code>CHAY_ANTIGRAVITY_COMMAND</code>.</p>
+        <span class="tag">// verify</span>
+        <h3>cr verify</h3>
+        <p>Sau khi IDE AI code xong, runtime check result note, patch scope, human-owned docs, secrets, token budget và OWASP prompts.</p>
       </div>
     </div>
   </div>
@@ -380,59 +380,59 @@
 
 <section id="progress">
   <div class="wrap center reveal">
-    <span class="eyebrow">Console realtime</span>
-    <h2>Không chỉ xem trạng thái, có thể thao tác trực tiếp</h2>
-    <p class="section-sub"><code style="font-family:var(--mono);color:var(--accent-2)">cr ui serve</code> mở dashboard local dùng API thật: tạo work note, chạy worker, ghi progress, validate output, patch check, token/eval report, runtime/auth status, experience snapshot và chat. State được đẩy qua SSE và watcher trên <code style="font-family:var(--mono);color:var(--accent-2)">memory/</code> + <code style="font-family:var(--mono);color:var(--accent-2)">.chay/tmp</code>.</p>
+    <span class="eyebrow">Workflow chính</span>
+    <h2>Graph → sequence → handoff → IDE AI → verify</h2>
+    <p class="section-sub">Local UI vẫn dùng được để inspect state, nhưng workflow chính là IDE-first. File quan trọng nhất cho session mới là <code style="font-family:var(--mono);color:var(--accent-2)">memory/ai_handoff.json</code>.</p>
   </div>
   <div class="wrap reveal">
     <div class="progress-box">
-      <!-- Stepper: 8 bước khi dispatch có --test-command; không có test command thì bỏ qua testing -->
+      <!-- Stepper: IDE-first workflow -->
       <div class="steps" id="stepper">
         <div class="step" data-step="0">
           <div class="marker">1</div>
-          <div class="txt"><div class="name">Nhận việc</div><div class="cmd">dispatch writes: assigned</div></div>
+          <div class="txt"><div class="name">Config IDE</div><div class="cmd">cr config</div></div>
         </div>
         <div class="step" data-step="1">
           <div class="marker">2</div>
-          <div class="txt"><div class="name">Đọc ghi chú</div><div class="cmd">dispatch writes: reading</div></div>
+          <div class="txt"><div class="name">Tạo feature graph</div><div class="cmd">cr go creates graph</div></div>
         </div>
         <div class="step" data-step="2">
           <div class="marker">3</div>
-          <div class="txt"><div class="name">Chuẩn bị prompt</div><div class="cmd">dispatch writes: planning</div></div>
+          <div class="txt"><div class="name">Tạo sequence diagram</div><div class="cmd">feature_graph.sequence_diagram</div></div>
         </div>
         <div class="step" data-step="3">
           <div class="marker">4</div>
-          <div class="txt"><div class="name">Worker đang chạy</div><div class="cmd">dispatch writes: editing</div></div>
+          <div class="txt"><div class="name">Tạo handoff</div><div class="cmd">memory/ai_handoff.json</div></div>
         </div>
         <div class="step" data-step="4">
           <div class="marker">5</div>
-          <div class="txt"><div class="name">Validate result_note</div><div class="cmd">dispatch writes: validate_result</div></div>
+          <div class="txt"><div class="name">IDE AI code</div><div class="cmd">read handoff first</div></div>
         </div>
         <div class="step" data-step="5">
           <div class="marker">6</div>
-          <div class="txt"><div class="name">Chạy test</div><div class="cmd">--test-command: testing</div></div>
+          <div class="txt"><div class="name">Verify patch</div><div class="cmd">cr verify</div></div>
         </div>
         <div class="step" data-step="6">
           <div class="marker">7</div>
-          <div class="txt"><div class="name">Kiểm tra bản vá</div><div class="cmd">dispatch writes: patch_check</div></div>
+          <div class="txt"><div class="name">Refresh handoff</div><div class="cmd">cr handoff</div></div>
         </div>
         <div class="step" data-step="7">
           <div class="marker">8</div>
-          <div class="txt"><div class="name">Hoàn tất</div><div class="cmd">dispatch writes: done</div></div>
+          <div class="txt"><div class="name">Human review</div><div class="cmd">review patch + graph</div></div>
         </div>
       </div>
       <!-- Terminal -->
       <div class="term">
         <div class="bar">
           <span class="dots"><i style="background:#ff5f56"></i><i style="background:#ffbd2e"></i><i style="background:#27c93f"></i></span>
-          <span class="fname">codex · memory/codex_progress_history.json</span>
+          <span class="fname">memory/ai_handoff.json</span>
         </div>
         <div class="body" id="termBody"></div>
       </div>
     </div>
     <p class="blocked-note">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg>
-      Console cũng có nút ghi progress thủ công để kiểm tra realtime. Không có <code>--test-command</code> thì dispatch bỏ qua step <code>testing</code>; khi lỗi sẽ chuyển sang <code>blocked</code>.
+      Local console vẫn test được: inspect feature graph, selected files, runtime status, token/eval report, validate result và patch check. Phần chạy worker là legacy/internal, không phải workflow chính.
     </p>
   </div>
 </section>
@@ -440,8 +440,8 @@
 <section id="quickstart" style="background: var(--surface);">
   <div class="wrap center reveal">
     <span class="eyebrow">Bắt đầu nhanh</span>
-    <h2>Thiết lập trong dự án của bạn</h2>
-    <p class="section-sub">Cài đặt toàn cục, rồi chạy setup ngay trong repo bạn muốn tác tử làm việc.</p>
+    <h2>Cấu hình IDE AI, rồi để runtime tạo contract</h2>
+    <p class="section-sub">Một lần config cho IDE đang dùng, sau đó mỗi tính năng chỉ cần <code style="font-family:var(--mono);color:var(--accent-2)">cr go</code>. Nếu mở session mới, chạy <code style="font-family:var(--mono);color:var(--accent-2)">cr go</code> không tham số để refresh handoff.</p>
   </div>
   <div class="wrap reveal">
     <div class="codewrap">
@@ -454,17 +454,20 @@
 
 <span class="c"># 2 · thiết lập ngay trong dự án của bạn</span>
 <span class="k">cd</span> du-an-cua-ban
-<span class="k">cr</span> setup --agents <span class="s">codex,anti</span> --main <span class="s">anti</span>
+<span class="k">cr</span> start
 
-<span class="c"># 3 · tạo task compact và giao cho worker</span>
-<span class="k">cr</span> task <span class="s">"Sửa lỗi apply job bị trùng"</span> --compact --max-notes <span class="s">2</span>
+<span class="c"># 3 · cấu hình IDE AI bên ngoài</span>
+<span class="k">cr</span> config <span class="s">codex,claude,anti,github-copilot,cursor,kiro</span>
 
-<span class="c"># 4 · chạy worker, tự ghi progress + history realtime</span>
-<span class="k">cr</span> dispatch <span class="s">codex</span> --agent=<span class="s">codex</span> --max-retries <span class="s">3</span> \
-  --test-command <span class="s">"npm test"</span>
+<span class="c"># 4 · tạo user flow, sequence diagram, work note và handoff</span>
+<span class="k">cr</span> go <span class="s">"User applies to job"</span>
 
-<span class="c"># hoặc mở console rồi bấm Create + Run</span>
-<span class="k">cr</span> ui serve --port <span class="s">7770</span></pre>
+<span class="c"># 5 · mở IDE AI và bảo nó đọc handoff</span>
+<span class="c"># Read memory/ai_handoff.json and continue the task.</span>
+
+<span class="c"># 6 · sau khi IDE AI sửa code</span>
+<span class="k">cr</span> verify
+<span class="k">cr</span> handoff</pre>
     </div>
   </div>
 </section>
@@ -472,82 +475,58 @@
 <section id="docs" style="background: var(--surface);">
   <div class="wrap center reveal">
     <span class="eyebrow">Tài liệu lệnh</span>
-    <h2>Toàn bộ lệnh CLI, khớp 1-1 với mã nguồn</h2>
-    <p class="section-sub">Đây là toàn bộ lệnh thật của <code style="font-family:var(--mono);color:var(--accent-2)">cr</code> (xem <code style="font-family:var(--mono);color:var(--accent-2)">cr help</code> hoặc <code style="font-family:var(--mono);color:var(--accent-2)">src/utils/help.js</code>), không phải ví dụ minh hoạ.</p>
+    <h2>Lệnh chính cho workflow hiện tại</h2>
+    <p class="section-sub">Các lệnh cũ như <code style="font-family:var(--mono);color:var(--accent-2)">cr run</code>, <code style="font-family:var(--mono);color:var(--accent-2)">dispatch</code>, <code style="font-family:var(--mono);color:var(--accent-2)">workpack</code> vẫn còn cho legacy/internal scripting. UX chính là config IDE, tạo handoff và verify patch.</p>
   </div>
   <div class="wrap">
     <div class="doc-grid">
       <div class="doc-card reveal">
         <span class="doc-tag">Khởi tạo &amp; thiết lập</span>
-        <code class="doc-cmd">cr init
-cr setup --agents codex,anti --main anti
-cr doctor</code>
-        <p>Tạo cấu trúc thư mục dự án, hỏi/nhận danh sách agent rồi ghi <code>memory/host_config.json</code>. <code>--main</code> nhận <code>claude</code>, <code>codex</code> hoặc <code>antigravity</code>; <code>anti</code> là alias của <code>antigravity</code>. <code>cr doctor</code> kiểm tra CLI, login, model/provider và reachability.</p>
+        <code class="doc-cmd">cr start
+cr check</code>
+        <p>Tạo thư mục runtime local và kiểm tra CLI/login khi cần. Không bắt buộc chia main/worker trong workflow mới.</p>
       </div>
       <div class="doc-card reveal">
-        <span class="doc-tag">Task nhanh</span>
-        <code class="doc-cmd">cr task "Sửa lỗi apply job bị trùng" --compact --max-notes 2</code>
-        <p>Gộp việc tạo <code>task_note</code>, <code>context_package</code> và <code>work_note</code> vào một lệnh duy nhất.</p>
+        <span class="doc-tag">Cấu hình IDE AI</span>
+        <code class="doc-cmd">cr config codex,claude,anti,github-copilot,cursor,kiro
+cr config check</code>
+        <p>Tạo <code>.chay/ide/CHAY_IDE_INSTRUCTIONS.md</code> và <code>memory/ide_config.json</code>. IDE AI code ở ngoài; Chạy Runtime giữ contract và verify.</p>
       </div>
       <div class="doc-card reveal">
-        <span class="doc-tag">Console realtime</span>
+        <span class="doc-tag">Tạo / resume task</span>
+        <code class="doc-cmd">cr go "User applies to job"
+cr go
+cr go "User applies to job" --files src/applyService.js</code>
+        <p><code>cr go</code> scan repo, chọn context, tạo feature graph, user flow, sequence diagram, PlantUML, work note và handoff. Không tham số thì refresh handoff cho session mới.</p>
+      </div>
+      <div class="doc-card reveal">
+        <span class="doc-tag">Handoff cho session mới</span>
+        <code class="doc-cmd">cr handoff</code>
+        <p>Ghi <code>memory/ai_handoff.json</code> để IDE AI đọc nhanh trạng thái, files liên quan, graph, sequence, PlantUML, guardrails và OWASP API review prompts.</p>
+      </div>
+      <div class="doc-card reveal">
+        <span class="doc-tag">Verify sau khi IDE AI code</span>
+        <code class="doc-cmd">cr verify
+cr patch check --diff .chay/tmp/current.diff --work memory/&lt;agent&gt;_work_note.json</code>
+        <p>Kiểm result note, patch scope, docs human-owned, secrets, token budget và các violation hiện tại.</p>
+      </div>
+      <div class="doc-card reveal">
+        <span class="doc-tag">Token saving</span>
+        <code class="doc-cmd">cr token report</code>
+        <p>So sánh token của Chạy context với ước lượng toàn repo để chứng minh session mới đọc ít hơn.</p>
+      </div>
+      <div class="doc-card reveal">
+        <span class="doc-tag">Local inspector</span>
         <code class="doc-cmd">cr ui serve --port 7770</code>
-        <p>Mở dashboard local để thao tác trực tiếp: tạo task, chạy worker, ghi progress, validate result, patch check, xem token/eval report, runtime/auth status, chat và theo dõi SSE realtime.</p>
+        <p>UI local vẫn dùng để inspect graph, selected files, handoff, runtime status, token/eval report và patch checks. Worker runner trong UI là legacy/advanced.</p>
       </div>
       <div class="doc-card reveal">
-        <span class="doc-tag">Ranh giới (Boundary)</span>
-        <code class="doc-cmd">cr boundary check-note --file memory/task_note.json --kind task
-cr boundary validate-output --file memory/codex_result_note.json</code>
-        <p>Validate một ghi chú JSON theo schema và ngân sách token của policy; với result note còn trả về <code>retry_instruction</code> gọn nếu sai.</p>
-      </div>
-      <div class="doc-card reveal">
-        <span class="doc-tag">Trí tuệ repo</span>
-        <code class="doc-cmd">cr repo scan --root . --out .chay-index/project_map.json
-cr context plan --task "..." --out memory/context_package.json</code>
-        <p>Quét repo và cache theo mtime + size, rồi chấm điểm file theo từ khóa trong task để chọn tối đa N file liên quan nhất.</p>
-      </div>
-      <div class="doc-card reveal">
-        <span class="doc-tag">Ghi chú → Markdown</span>
-        <code class="doc-cmd">cr note compile --json memory/task_note.json --out audit/task_note.md</code>
-        <p>Chuyển một ghi chú JSON thành file Markdown cho con người đọc — agent không được đọc file audit này.</p>
-      </div>
-      <div class="doc-card reveal">
-        <span class="doc-tag">Kiểm tra bản vá</span>
-        <code class="doc-cmd">cr patch check --diff .chay/tmp/current.diff --work memory/codex_work_note.json</code>
-        <p>Đối chiếu git diff với <code>allowed_files</code> và giới hạn số file/số dòng thay đổi trong policy.</p>
-      </div>
-      <div class="doc-card reveal">
-        <span class="doc-tag">Tiến độ</span>
-        <code class="doc-cmd">cr progress update --agent codex --step editing --message "..."
-cr progress update --agent codex --step validate_result --message "..."</code>
-        <p>Ghi một mốc tiến độ vào <code>memory/&lt;agent&gt;_progress.json</code> và nối vào lịch sử <code>_progress_history.json</code>. Console đọc các file này realtime qua SSE.</p>
-      </div>
-      <div class="doc-card reveal">
-        <span class="doc-tag">Đo lường &amp; báo cáo</span>
-        <code class="doc-cmd">cr token report
-cr eval report</code>
-        <p>So sánh token ghi chú hiện tại với ước lượng cả repo để tính % tiết kiệm; và chấm điểm 0–100 cho task vừa chạy (hoàn thành, khớp work/result, patch đúng phạm vi, tín hiệu test, số lần retry).</p>
-      </div>
-      <div class="doc-card reveal">
-        <span class="doc-tag">Gói việc</span>
-        <code class="doc-cmd">cr workpack make --worker codex --goal "..." --compact --out memory/codex_work_note.json</code>
-        <p>Tạo work_note JSON gọn cho một worker: <code>allowed_files</code>, quy tắc kiến trúc, và <code>output_contract</code>.</p>
-      </div>
-      <div class="doc-card reveal">
-        <span class="doc-tag">Điều phối</span>
-        <code class="doc-cmd">cr dispatch codex --agent=codex --model gpt-5 --max-retries 3
-CHAY_ANTIGRAVITY_COMMAND="your-worker-command" cr dispatch antigravity --agent=anti</code>
-        <p>Chạy worker thật, truyền model vào engine hỗ trợ headless, ghi progress từng bước, validate + retry result_note, chạy test command nếu có, rồi kiểm tra patch boundary trước khi báo "done".</p>
-      </div>
-      <div class="doc-card reveal">
-        <span class="doc-tag">Nén trải nghiệm</span>
-        <code class="doc-cmd">cr experience snapshot --out memory/experience_spectrum.json</code>
-        <p>Xuất bản tóm tắt memory/skills/rules đang dùng theo khung Experience Compression Spectrum.</p>
-      </div>
-      <div class="doc-card reveal">
-        <span class="doc-tag">Tích hợp</span>
-        <code class="doc-cmd">cr integration install --target claude|codex|antigravity</code>
-        <p>Copy template tích hợp vào dự án: subagent Claude, hoặc file hướng dẫn cho Codex/Antigravity.</p>
+        <span class="doc-tag">Advanced / legacy</span>
+        <code class="doc-cmd">cr task "..."
+cr pack "..."
+cr run
+cr dispatch codex --agent=codex</code>
+        <p>Còn giữ cho automation cũ và scripting, nhưng không phải workflow chính cho IDE AI external mode.</p>
       </div>
     </div>
   </div>
@@ -579,7 +558,7 @@ CHAY_ANTIGRAVITY_COMMAND="your-worker-command" cr dispatch antigravity --agent=a
       <p class="section-sub center" style="margin: 12px auto 0;">Miễn phí, giấy phép MIT, chạy được với các CLI bạn đang dùng.</p>
       <div class="install" style="margin-top: 28px;">
         <span class="prompt">$</span>
-        <code id="cta-cmd">npm install -g chay-runtime &amp;&amp; cr doctor</code>
+        <code id="cta-cmd">npm install -g chay-runtime &amp;&amp; cr start &amp;&amp; cr config manual</code>
         <button class="copy" onclick="copyText(document.getElementById('cta-cmd').textContent, this)" aria-label="Sao chép lệnh">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           <span>Sao chép</span>
@@ -622,16 +601,16 @@ CHAY_ANTIGRAVITY_COMMAND="your-worker-command" cr dispatch antigravity --agent=a
   }, { threshold: 0.12 });
   document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
 
-  // ---- Progress demo (mô phỏng progress history do `cr dispatch` tự ghi) ----
+  // ---- Workflow demo (IDE-first contract + handoff) ----
   const STEPS = [
-    { step: 'assigned',    msg: 'Dispatching codex via codex' },
-    { step: 'reading',     msg: 'Reading work note and compact context' },
-    { step: 'planning',    msg: 'Preparing bounded worker prompt' },
-    { step: 'editing',     msg: 'Worker process running' },
-    { step: 'validate_result', msg: 'Worker finished; validating result note' },
-    { step: 'testing',     msg: 'Running test command' },
-    { step: 'patch_check', msg: 'Validating patch boundary' },
-    { step: 'done',        msg: 'Worker result accepted' },
+    { step: 'config',      msg: 'Configured external IDE AI targets' },
+    { step: 'graph',       msg: 'Created feature graph and user flow' },
+    { step: 'sequence',    msg: 'Created Mermaid and PlantUML sequence diagrams' },
+    { step: 'handoff',     msg: 'Wrote memory/ai_handoff.json' },
+    { step: 'ide',         msg: 'IDE AI reads handoff before source files' },
+    { step: 'verify',      msg: 'Verified patch scope, docs, secrets, and result note' },
+    { step: 'refresh',     msg: 'Refreshed handoff for the next session' },
+    { step: 'review',      msg: 'Human reviews graph, patch, and remaining risks' },
   ];
   const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
   const stepEls = Array.from(document.querySelectorAll('#stepper .step'));
@@ -693,14 +672,14 @@ CHAY_ANTIGRAVITY_COMMAND="your-worker-command" cr dispatch antigravity --agent=a
     const GREEN = '66,224,164', BLUE = '240,196,106';
     let W = 0, H = 0, dpr = 1, running = true;
 
-    // controller (center) + workers around it
+    // contract node (center) + IDE AI surfaces around it
     let nodes = [], packets = [];
     function layout() {
       const cx = W * 0.5, cy = H * 0.64;
       nodes = [{ x: cx, y: cy, r: 6, main: true, phase: 0 }];
-      const workers = 5, R = Math.min(W, H) * 0.28;
-      for (let i = 0; i < workers; i++) {
-        const a = (-Math.PI / 2) + (i / workers) * Math.PI * 2;
+      const surfaces = 5, R = Math.min(W, H) * 0.28;
+      for (let i = 0; i < surfaces; i++) {
+        const a = (-Math.PI / 2) + (i / surfaces) * Math.PI * 2;
         nodes.push({ x: cx + Math.cos(a) * R * (1 + (i % 2) * 0.18),
                      y: cy + Math.sin(a) * R * 0.62 * (1 + (i % 2) * 0.12),
                      r: 3.5, main: false, phase: Math.random() * 6.28 });

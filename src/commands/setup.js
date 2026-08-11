@@ -7,13 +7,14 @@ import { loadPolicy } from "../core/policy.js";
 import { normalizeAgentName, normalizeAgentList } from "../core/agents.js";
 import { createProjectFiles } from "./init.js";
 import { installConfiguredIntegrations, agentIntegrationTargets } from "./integrations.js";
+import { ensureAgentAuth } from "./auth.js";
 
-const defaultSetupAgents = ["codex", "antigravity"];
+const defaultSetupAgents = ["codex", "claude", "antigravity"];
 
-export async function setupProject(argv) {
+export async function setupProject(argv, options = {}) {
   const args = parseArgs(argv);
   const policy = loadPolicy(args.policy);
-  const answers = await resolveSetup(args, policy);
+  const answers = await resolveSetup(args, policy, options);
   const root = process.cwd();
 
   createProjectFiles(root);
@@ -40,31 +41,39 @@ export async function setupProject(argv) {
   };
 
   writeJson(path.join(root, "memory/host_config.json"), config);
+  const login = Boolean(args.login || options.login) && !args["skip-login"];
+  const auth = ensureAgentAuth(answers.agents, { login });
 
   console.log(JSON.stringify({
     ok: true,
-    message: "Chạy Runtime configured",
+    message: options.friendly ? "Chạy Runtime started" : "Chạy Runtime configured",
     installed,
     host_config: "memory/host_config.json",
     main: config.main,
     workers: config.workers,
+    auth,
     next_actions: [
-      "cr repo scan --root . --out .chay-index/project_map.json",
-      "cr context plan --task \"...\" --out memory/context_package.json",
-      "cr workpack make --controller <main> --worker <worker> --goal \"...\" --out memory/<worker>_work_note.json"
+      ...(auth.next_actions.length > 0 ? auth.next_actions : []),
+      "cr task \"Fix something\"",
+      "cr run",
+      "cr ui serve --port 7770"
     ]
   }, null, 2));
 }
 
-async function resolveSetup(args, policy) {
+async function resolveSetup(args, policy, options = {}) {
   if (!shouldPrompt(args)) return normalizeAnswers(args, policy);
 
   const rl = readline.createInterface({ input: process.stdin, output: process.stderr });
   try {
     const agents = await askAgents(rl);
     const main = await ask(rl, `Main host agent (${agents.join("|")}) [${agents[0]}]: `) || agents[0];
-    const mainLlm = await ask(rl, "Main host LLM/model [user-selected]: ") || "user-selected";
     const workers = list(await ask(rl, `Worker agents [${agents.filter((agent) => agent !== main).join(",")}]: `), agents.filter((agent) => agent !== main));
+    if (options.friendly && !args.advanced) {
+      return normalizeAnswers({ agents, main, workers, skills: policy.agentSkills || [] }, policy);
+    }
+
+    const mainLlm = await ask(rl, "Main host LLM/model [user-selected]: ") || "user-selected";
     const skills = list(await ask(rl, `Worker skills, not model names [${(policy.agentSkills || []).join(",")}]: `), policy.agentSkills || []);
     const workerLlms = {};
 
@@ -79,7 +88,7 @@ async function resolveSetup(args, policy) {
 }
 
 function normalizeAnswers(args, policy) {
-  const requestedAgents = list(args.agents, defaultSetupAgents);
+  const requestedAgents = list(args.agents || args.agent, defaultSetupAgents);
   if (args.anti || args.antigravity) requestedAgents.push("antigravity");
   const agents = validateAgents(normalizeAgentList(requestedAgents));
   const main = normalizeAgentName(args.main || args.controller || agents[0]);
@@ -106,7 +115,7 @@ function normalizeAnswers(args, policy) {
 }
 
 function shouldPrompt(args) {
-  return process.stdin.isTTY && process.stdout.isTTY && !args.yes && !args.agents;
+  return process.stdin.isTTY && process.stdout.isTTY && !args.yes && !args.agents && !args.agent;
 }
 
 function validateAgents(agents) {
@@ -143,7 +152,7 @@ async function ask(rl, question) {
 
 async function askAgents(rl) {
   while (true) {
-    const agents = list(await ask(rl, "Enable agents, comma-separated, at least 2 [codex,antigravity]: "), defaultSetupAgents).map(normalizeAgentName);
+    const agents = list(await ask(rl, "Choose agents, comma-separated, at least 2 [codex,claude,anti]: "), defaultSetupAgents).map(normalizeAgentName);
     try {
       return validateAgents(agents);
     } catch (error) {

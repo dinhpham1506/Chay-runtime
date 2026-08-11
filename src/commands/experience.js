@@ -69,7 +69,7 @@ function buildExperienceSnapshot(args) {
     },
     usage: [
       "Run context plan with a small --max-notes value.",
-      "Create compact work notes with cr workpack make --compact.",
+      "Create compact work notes with cr pack \"Task\" --compact.",
       "Workers read memory refs and allowed_files; they do not read audit markdown, raw logs, or full history.",
       "Runtime dispatch writes plan_ledger only after result validation and patch check pass.",
       "Use policy_ref for rules instead of copying long policy text into every work note."
