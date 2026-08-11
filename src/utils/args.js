@@ -47,6 +47,7 @@ const booleanArgs = new Set([
   "no-compact",
   "require-existing",
   "skip-login",
+  "skip-context-plan",
   "skip-token-check",
   "version"
 ]);

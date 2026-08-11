@@ -8,6 +8,7 @@ import { createGraph } from "./graph.js";
 import { createTask } from "./task.js";
 import { createHandoff } from "./handoff.js";
 import { featureIdFromGoal } from "../core/featureGraph.js";
+import { defaultWorker } from "../core/host.js";
 
 export async function go(argv = []) {
   const args = parseArgs(argv);
@@ -16,7 +17,7 @@ export async function go(argv = []) {
   const graphFile = args.graph || "chay-memory/feature_graph.json";
   const currentGraph = optionalJson(graphFile);
   const matchedFeatureId = resolveFeatureId(task, args, currentGraph);
-  const activeFeatureId = matchedFeatureId || featureIdFromGoal(task || currentTask(graphFile, args.context || "chay-memory/context_package.json") || "feature");
+  const activeFeatureId = matchedFeatureId || (!task && currentGraph?.feature_id) || featureIdFromGoal(task || currentTask(graphFile, args.context || "chay-memory/context_package.json") || "feature");
   const folderStructureFile = args["folder-structure-out"] || "chay-structure/folder_structure.md";
   const featureFlowFile = args["feature-flow-out"] || args["feature-md-out"] || `chay-structure/features/${activeFeatureId}.md`;
   const apiGraphFile = args["api-graph-out"] || "chay-structure/api_graph.md";
@@ -26,8 +27,21 @@ export async function go(argv = []) {
   const handoffFile = args.handoff || "chay-memory/ai_handoff.json";
   const contextFile = args.context || "chay-memory/context_package.json";
   const contractGoal = contractGoalForUpdate(task, currentGraph, matchedFeatureId, activeFeatureId);
+  const workerArgs = args.worker ? ["--worker", args.worker] : [];
+  const compactArgs = args.compact === false || args["no-compact"] ? [] : ["--compact"];
 
   if (!task) {
+    if (exists(graphFile)) {
+      await quiet(() => createTask([
+        "--from-graph",
+        graphFile,
+        "--context",
+        contextFile,
+        "--skip-context-plan",
+        ...workerArgs,
+        ...compactArgs
+      ]));
+    }
     await quiet(() => createHandoff([
       "--out",
       handoffFile,
@@ -48,6 +62,8 @@ export async function go(argv = []) {
     return printGoResult({
       mode: "resume",
       task: currentTask(graphFile, contextFile),
+      featureId: activeFeatureId,
+      matchedFeatureId,
       graphFile,
       featureFlowFile,
       apiGraphFile,
@@ -57,14 +73,12 @@ export async function go(argv = []) {
       handoffFile,
       contextFile,
       selectedFiles: selectedFiles(contextFile),
-      created: ["chay-memory/ai_handoff.json"],
-      message: exists(graphFile) ? "Resume existing feature from handoff." : "No task provided; handoff was refreshed from current runtime state."
+      created: exists(graphFile) ? ["chay-memory/ai_handoff.json", workNoteFile(args.worker)] : ["chay-memory/ai_handoff.json"],
+      message: exists(graphFile) ? "Resume existing feature from refreshed work note and handoff." : "No task provided; handoff was refreshed from current runtime state."
     });
   }
 
   const explicitFiles = args.files || args.file || args["code-targets"] || positional.files.join(",");
-  const workerArgs = args.worker ? ["--worker", args.worker] : [];
-  const compactArgs = args.compact === false || args["no-compact"] ? [] : ["--compact"];
   const indexFile = args.index || ".chay/project_map.json";
   const maxFiles = args["max-files"] || args["max-notes"] || "3";
 
@@ -135,6 +149,7 @@ export async function go(argv = []) {
     graphFile,
     "--context",
     contextFile,
+    "--skip-context-plan",
     ...workerArgs,
     ...compactArgs
   ]));
@@ -179,6 +194,10 @@ export async function go(argv = []) {
         ? "Created feature contract from explicit files."
         : "Created feature contract from repo scan and context plan."
   });
+}
+
+function workNoteFile(worker) {
+  return `chay-memory/${worker || defaultWorker()}_work_note.json`;
 }
 
 function mergeFileList(explicitFiles, plannedFiles, existingFiles = []) {

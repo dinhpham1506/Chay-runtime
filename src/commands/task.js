@@ -16,16 +16,18 @@ export async function createTask(argv) {
   if (!task) throw new Error("--task is required");
   const worker = normalizeAgentName(args.worker || args.agent || defaultWorker());
 
-  await quiet(() => scanRepo(["--root", args.root || ".", "--out", args.index || ".chay/project_map.json"]));
-  await quiet(() => planContext([
-    "--task",
-    task,
-    "--index",
-    args.index || ".chay/project_map.json",
-    "--out",
-    args.context || "chay-memory/context_package.json",
-    ...(args["max-notes"] ? ["--max-notes", args["max-notes"]] : [])
-  ]));
+  if (!args["skip-context-plan"]) {
+    await quiet(() => scanRepo(["--root", args.root || ".", "--out", args.index || ".chay/project_map.json"]));
+    await quiet(() => planContext([
+      "--task",
+      task,
+      "--index",
+      args.index || ".chay/project_map.json",
+      "--out",
+      args.context || "chay-memory/context_package.json",
+      ...(args["max-notes"] ? ["--max-notes", args["max-notes"]] : [])
+    ]));
+  }
   const graphFiles = graph ? featureGraphCodeTargets(graph).join(",") : "";
   const allowedFiles = args.files || args.file || args["allowed-files"] || graphFiles || selectedFiles(args.context || "chay-memory/context_package.json").join(",");
   await quiet(() => makeWorkpack([
