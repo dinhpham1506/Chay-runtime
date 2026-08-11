@@ -123,6 +123,16 @@ Reinstall only the rule pack with:
 cr rules install
 ```
 
+If you want Chay Runtime to appear in the Codex Skills picker/list, also install
+the lightweight global Codex Skill wrapper:
+
+```bash
+cr rules install --codex-skill
+```
+
+That writes `chay-runtime` under `${CODEX_HOME:-~/.codex}/skills/`. Restart or
+refresh Codex after installing it.
+
 If you still need the old bounded worker automation, use `cr setup` explicitly:
 
 ```bash

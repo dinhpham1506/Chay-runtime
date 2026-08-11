@@ -32,6 +32,22 @@ export async function installIntegration(argv) {
   }, null, 2));
 }
 
+export function installRules(argv = [], root = process.cwd()) {
+  const args = parseArgs(argv);
+  const project = installIdeRulePack(root);
+  const codexSkill = args["codex-skill"] || args.codex || args.global
+    ? installCodexSkill(args)
+    : null;
+  return {
+    installed: project.installed,
+    codex_skill: codexSkill,
+    next_actions: [
+      ...(codexSkill ? ["Restart Codex or refresh the Skills list, then select/use chay-runtime."] : ["Run cr rules install --codex-skill if you want chay-runtime to appear in Codex Skills."]),
+      "Run cr go \"Task\" to refresh feature contracts before coding."
+    ]
+  };
+}
+
 export function installIntegrationFiles(target, root = process.cwd()) {
   const normalized = normalizeAgentName(target);
   if (!targets.includes(normalized)) throw new Error(`Unknown integration target: ${target}`);
@@ -69,6 +85,23 @@ export function installIdeRulePack(root = process.cwd()) {
     ""
   ].join("\n"));
   return { installed };
+}
+
+export function installCodexSkill(args = {}) {
+  const targetRoot = path.resolve(args["codex-home"] || process.env.CODEX_HOME || path.join(process.env.HOME || "", ".codex"));
+  if (!targetRoot || targetRoot === path.resolve(".")) {
+    throw new Error("Cannot resolve Codex home. Set CODEX_HOME or pass --codex-home /path/to/codex-home.");
+  }
+  const pkgRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+  const src = path.join(pkgRoot, "templates", "codex-skill", "chay-runtime");
+  const dest = path.join(targetRoot, "skills", "chay-runtime");
+  copyDir(src, dest);
+  return {
+    installed: true,
+    path: dest,
+    skill: "chay-runtime",
+    list_hint: "It should appear in Codex Skills after Codex refresh/restart."
+  };
 }
 
 export function installConfiguredIntegrations(answers, root = process.cwd()) {

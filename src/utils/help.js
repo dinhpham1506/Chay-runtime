@@ -6,6 +6,7 @@ Usage:
   cr start                    # initialize external IDE AI workflow
   cr config codex,claude,anti,github-copilot,cursor,kiro
   cr rules install             # install IDE project rules into this project
+  cr rules install --codex-skill # also add chay-runtime to Codex global Skills
   cr config check
   cr go "Fix duplicate apply bug" --files src/applyService.js
   cr go "Fix duplicate apply bug" --max-files 3
@@ -78,6 +79,7 @@ Experience compression:
 
 Integrations:
   cr rules install
+  cr rules install --codex-skill
   cr integration install --target claude
   cr integration install --target codex
   cr integration install --target antigravity
