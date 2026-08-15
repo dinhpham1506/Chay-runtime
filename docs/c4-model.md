@@ -4,7 +4,7 @@ This document describes the current Chạy Runtime architecture using the C4 mod
 
 ## Scope
 
-Chạy Runtime is a local, note-based policy boundary for multi-agent coding CLIs. It prepares compact context, creates bounded work notes, validates worker outputs, checks patch scope, and exposes a sanitized realtime console for humans.
+Chạy Runtime is a local, feature-context policy boundary for IDE AI coding sessions. It prepares compact context, creates bounded work notes, validates worker outputs, checks patch scope, and exposes a sanitized realtime console for humans.
 
 ## C1: System Context
 

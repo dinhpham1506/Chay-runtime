@@ -1,7 +1,7 @@
 {
   "name": "chay-runtime",
   "version": "0.1.0",
-  "description": "Note-based policy runtime for multi-agent coding CLIs: Claude, Codex, and Antigravity.",
+  "description": "Feature-context runtime and contract layer for IDE AI coding sessions.",
   "type": "module",
   "license": "MIT",
   "repository": {
@@ -46,7 +46,7 @@
     "codex",
     "claude-code",
     "antigravity",
-    "orchestration"
+    "feature-context"
   ],
   "engines": {
     "node": ">=20"

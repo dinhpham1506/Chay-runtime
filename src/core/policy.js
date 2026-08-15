@@ -33,7 +33,7 @@ function defaultPolicy() {
         "Follow local patterns.",
         "Apply SOLID where useful.",
         "Split by responsibility, not line count.",
-        "Separate validation, orchestration, persistence, and presentation.",
+        "Separate validation, policy checks, persistence, and presentation.",
         "Use explicit dependencies; avoid hidden global state."
       ],
       minimalPatchRules: [
@@ -54,7 +54,7 @@ function defaultPolicy() {
         "patch_guard",
         "minimal_patch"
       ],
-      allowedDomains: ["ai_orchestration", "backend_architecture", "coding_agent_runtime", "repo_intelligence"],
+      allowedDomains: ["feature_context_runtime", "backend_architecture", "coding_agent_runtime", "repo_intelligence"],
       forbiddenNotePaths: [".chay/audit/", "audit/"],
       humanOwnedPaths: ["README.md", "CHANGELOG.md", "docs/", "product/", "requirements/", "specs/"],
       sensitivePaths: [".env", ".env.", "secrets/", "credentials/", "private/", ".aws/", ".ssh/"],

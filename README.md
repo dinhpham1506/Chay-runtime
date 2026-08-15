@@ -4,7 +4,7 @@
 [![npm version](https://img.shields.io/npm/v/chay-runtime.svg)](https://www.npmjs.com/package/chay-runtime)
 [![License](https://img.shields.io/npm/l/chay-runtime.svg)](LICENSE)
 
-chay-runtime is a note-based policy runtime for multi-agent coding CLIs.
+chay-runtime is a feature-context runtime and contract layer for IDE AI coding sessions.
 
 ## Core idea
 

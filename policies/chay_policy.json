@@ -14,7 +14,7 @@
     "Follow local patterns.",
     "Apply SOLID where useful.",
     "Split by responsibility, not line count.",
-    "Separate validation, orchestration, persistence, and presentation.",
+    "Separate validation, policy checks, persistence, and presentation.",
     "Use explicit dependencies; avoid hidden global state."
   ],
   "minimalPatchRules": [
@@ -36,7 +36,7 @@
     "minimal_patch"
   ],
   "allowedDomains": [
-    "ai_orchestration",
+    "feature_context_runtime",
     "backend_architecture",
     "coding_agent_runtime",
     "repo_intelligence",
