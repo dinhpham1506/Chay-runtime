@@ -16,6 +16,14 @@ chay-runtime is a note-based policy runtime for multi-agent coding CLIs.
 - Repo intelligence selects a small context package before agents read code.
 - `cr start` boots the external IDE AI handoff workflow; legacy main/worker agent setup stays behind `cr setup`.
 
+## Docs
+
+- [Recommended `cr start` workflow](docs/start.md): external IDE AI handoff, feature contracts, chatbot/rule install, verify/handoff.
+- [Legacy `cr setup` workflow](docs/setup-legacy.md): older main/worker automation, `cr run`, dispatch, and wrapper-based Antigravity notes.
+- [C4 model](docs/c4-model.md): local runtime architecture.
+- [Experience compression](docs/experience-compression.md): compact notes, feature graph, handoff, and policy references.
+- [Contributing](CONTRIBUTING.md): development, PR, issue, and safety-boundary guidelines.
+
 ## What Chạy answers
 
 Every AI coding session has to answer three practical questions:
@@ -191,43 +199,10 @@ cr rules install --codex-skill
 That writes `chay-runtime` under `${CODEX_HOME:-~/.codex}/skills/`. Restart or
 refresh Codex after installing it.
 
-If you still need the old bounded worker automation, use `cr setup` explicitly:
-
-```bash
-cr setup --agents codex,anti --main anti
-cr setup --agents codex,claude,anti --main claude
-```
-
-After legacy setup, `cr task`, `cr pack`, and `cr run` automatically use `chay-memory/host_config.json`
-for the default worker, controller, worker LLM, and skills unless flags override
-them. Any two supported agents can be selected from `claude`, `codex`, and
-`antigravity`; one is the main/controller and the rest are workers.
-If `--workers` is omitted, every enabled agent except `--main` becomes a worker.
-`anti` is accepted as a short alias for `antigravity`.
-`--main-llm` and `--worker-llms` are optional model labels, not agent names.
-When a worker model is set, `cr run` passes it to Codex and Claude with
-`--model`. Antigravity IDE currently exposes GUI chat and login, not a stable
-non-interactive `run --prompt-file --model` command; use
-`CHAY_ANTIGRAVITY_COMMAND` if you have a local wrapper that writes the required
-result note. The model label does not log in to that provider; the matching CLI
-or IDE must already be installed and authenticated. Run `cr check` to see CLI
-presence, auth status, configured model/provider, and provider reachability.
-Run `cr login codex`, `cr auth --agent codex --login`, or `cr auth --agents codex,claude --login`
-to check and start login for selected CLI agents. `anti` is accepted as an
-alias for `antigravity`.
-
-Current integration capability:
-
-| Agent | `cr setup` legacy role | Packaged integration |
-| --- | --- | --- |
-| Claude | main/controller or worker | Claude Code agents for `chay-main`, `chay-reviewer`, and `chay-<worker>-worker` |
-| Codex | main/controller or worker | Worker instruction/template for bounded `cr run` tasks |
-| Antigravity | main/controller or worker | Worker instruction/template for bounded `cr run` tasks |
-
-`host_config.json` can record any supported agent as main, but the packaged
-controller integration is currently most complete for Claude Code. Codex and
-Antigravity are supported as bounded worker templates unless you provide your
-own controller workflow around the generated notes.
+If you still need the old bounded worker automation, use `cr setup`
+explicitly. It is documented separately in
+[docs/setup-legacy.md](docs/setup-legacy.md) so the recommended IDE handoff path
+stays easy to follow.
 
 Optional local workflow UI:
 
@@ -292,6 +267,8 @@ npm publish --access public
 cr start
 cr config codex,claude,anti,github-copilot,cursor,kiro
 cr go "Fix duplicate job apply bug"
+cr verify
+cr handoff
 ```
 
 `cr go` selects at most 3 files by default and skips database/migration files
@@ -303,60 +280,13 @@ cr go "Fix duplicate job apply bug" --files src/applyService.js
 cr go "Update RLS policy" --include-database
 ```
 
-With a known file scope:
-
-```bash
-cr graph "Fix duplicate job apply bug" --files src/applyService.js
-cr task --from-graph chay-memory/feature_graph.json --compact
-cr handoff
-cr run
-```
-
-Without a graph:
-
-```bash
-cr task "Fix duplicate job apply bug" --files src/applyService.js --compact
-cr run
-```
-
-Manual flow:
-
-```bash
-WORKER=codex
-cr scan
-cr plan "Fix duplicate job apply bug"
-cr pack "Fix duplicate job apply bug" --worker "$WORKER" --files src/applyService.js --compact
-cr boundary check-note --file chay-memory/task_note.json
-cr boundary check-note --file "chay-memory/${WORKER}_work_note.json" --kind work
-cr run "$WORKER" --max-retries 3
-cr run "$WORKER" --max-retries 3 --isolate
-cr experience snapshot --out chay-memory/experience_spectrum.json
-```
-
 `cr repo scan` reuses unchanged file metadata from the previous project map
 with an `mtime + size` cache, so UI task creation does not need to reread every
 source file on each run.
 
-## Agent flow
-
-Use Chạy Runtime as the runtime boundary. The main agent creates compact JSON notes, and worker agents read only those notes plus scoped source files.
-
-```bash
-# main/controller agent
-cr setup --agents codex,anti --main anti
-cr scan
-cr plan "Fix duplicate apply service"
-
-# main/controller assigns a small worker task
-cr pack "Fix duplicate apply service" --worker codex --files src/applyService.js --compact
-
-# worker/reviewer boundary checks
-cr boundary check-note --file chay-memory/task_note.json --kind task
-cr boundary check-note --file chay-memory/codex_work_note.json --kind work
-cr run codex --max-retries 3
-```
-
-`examples/agent-flow.sh` contains the same flow as a runnable script.
+Lower-level `cr graph`, `cr task`, `cr pack`, `cr run`, and dispatch commands
+remain available for scripting and legacy worker automation. See
+[docs/setup-legacy.md](docs/setup-legacy.md) and `examples/agent-flow.sh`.
 
 ## Experience compression
 
@@ -432,11 +362,13 @@ Then use `CHAY_CODEX_INSTRUCTIONS.md` as the worker instruction. `cr run` uses
 cr integration install --target antigravity
 ```
 
-Then use `CHAY_ANTIGRAVITY_INSTRUCTIONS.md` as the worker instruction. Login is
-managed in Antigravity IDE via the Command Palette command `Log in to IDE`.
-For non-interactive `cr run`, provide `CHAY_ANTIGRAVITY_COMMAND` as a local
-wrapper that reads `CHAY_DISPATCH_PROMPT_FILE` and writes the required result
-note JSON.
+Then use `CHAY_ANTIGRAVITY_INSTRUCTIONS.md` as the worker instruction.
+Antigravity support is currently best-effort because Antigravity IDE manages
+chat/login in the GUI and does not expose a stable non-interactive worker CLI.
+For `cr run`, provide `CHAY_ANTIGRAVITY_COMMAND` as a local wrapper that reads
+`CHAY_DISPATCH_PROMPT_FILE` and writes the required result note JSON. Treat this
+as more fragile than the Claude/Codex paths until Antigravity exposes a stable
+automation surface.
 
 ## Safety model
 

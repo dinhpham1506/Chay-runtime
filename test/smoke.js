@@ -20,6 +20,18 @@ assert.ok(readme.includes("Continue existing feature"));
 assert.ok(readme.includes("Add or change feature"));
 assert.ok(readme.includes("Verify AI edit"));
 assert.ok(readme.includes("feature memory before code, feature boundary after code"));
+assert.ok(readme.includes("docs/start.md"));
+assert.ok(readme.includes("docs/setup-legacy.md"));
+assert.ok(readme.includes("CONTRIBUTING.md"));
+const startDocs = fs.readFileSync(path.join(repoRoot, "docs", "start.md"), "utf8");
+assert.ok(startDocs.includes("recommended entry point"));
+assert.ok(startDocs.includes("cr verify"));
+const legacyDocs = fs.readFileSync(path.join(repoRoot, "docs", "setup-legacy.md"), "utf8");
+assert.ok(legacyDocs.includes("Use this only"));
+assert.ok(legacyDocs.includes("Antigravity automation as best-effort"));
+assert.ok(fs.existsSync(path.join(repoRoot, "CONTRIBUTING.md")));
+assert.ok(fs.existsSync(path.join(repoRoot, ".github", "ISSUE_TEMPLATE", "bug_report.md")));
+assert.ok(fs.existsSync(path.join(repoRoot, ".github", "ISSUE_TEMPLATE", "feature_request.md")));
 
 const deletedSecretDiff = [
   "diff --git a/secrets/.env b/secrets/.env",

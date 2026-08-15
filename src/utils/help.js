@@ -10,7 +10,7 @@ Cases:
   C. Verify AI edit: check whether the patch stayed inside feature boundary
 
 Usage:
-  cr start                    # initialize external IDE AI workflow
+  cr start                    # recommended: initialize external IDE AI workflow
   cr config codex,claude,anti,github-copilot,cursor,kiro
   cr chat install              # add Chay Runtime directly to Codex/chatbot rules
   cr chat install --target cursor # install direct IDE/chatbot rules for this repo
@@ -71,6 +71,7 @@ Efficiency:
   cr eval report
 
 Legacy bounded worker mode:
+  # advanced path; see docs/setup-legacy.md
   cr setup --agents codex,anti --main anti
   cr task "Fix bug" --files src/file.js --compact
   cr run
@@ -83,6 +84,7 @@ Legacy bounded worker mode:
   cr dispatch codex --agent=codex --test-command "npm test"
   cr dispatch codex --agent=codex --isolate
   CHAY_ANTIGRAVITY_COMMAND="your-antigravity-worker-command" cr dispatch antigravity --agent=anti
+  # Antigravity non-interactive execution is best-effort and wrapper-based.
 
 Experience compression:
   cr experience snapshot --out chay-memory/experience_spectrum.json

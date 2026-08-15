@@ -26,7 +26,8 @@
     "schemas",
     "site",
     "templates",
-    "README.md"
+    "README.md",
+    "CONTRIBUTING.md"
   ],
   "scripts": {
     "postinstall": "node ./bin/postinstall.js",

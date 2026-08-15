@@ -18,7 +18,7 @@ flowchart LR
   Console["Chạy Console"]
   Chạy Runtime["Chạy Runtime CLI"]
 
-  Human -->|"runs setup/task/ui commands"| Chạy Runtime
+  Human -->|"runs start/go/verify/ui commands"| Chạy Runtime
   Chạy Runtime -->|"scans files, writes notes, checks patches"| Repo
   Chạy Runtime -->|"installs controller/worker instructions"| Claude
   Chạy Runtime -->|"writes bounded worker notes"| Codex
@@ -29,7 +29,7 @@ flowchart LR
 ### External Actors
 
 - Human developer: starts tasks, reviews notes, and commits approved changes.
-- Claude Code, Codex, and Antigravity: supported coding agents that can be selected as main/controller or bounded worker roles in `cr setup`. The packaged controller integration is currently most complete for Claude Code; Codex and Antigravity ship as bounded worker instruction/template integrations.
+- Claude Code, Codex, Cursor, GitHub Copilot, Kiro, Windsurf, and Antigravity: IDE/chat surfaces that can read Chay Runtime handoff files and installed project rules. Legacy `cr setup` can still record Claude, Codex, and Antigravity as main/controller or bounded worker roles; the packaged controller integration is currently most complete for Claude Code.
 - Chạy Console: local realtime workflow UI served by Chạy Runtime.
 - Target project repo: the codebase being worked on.
 
@@ -119,8 +119,9 @@ flowchart LR
 
 ### Main Workflows
 
-- Setup: creates Chạy Runtime folders, installs integration files, and writes `chay-memory/host_config.json`.
-- Task creation: scans the repo, plans a compact context package, generates a work note, and validates it.
+- Start/config: creates Chạy Runtime folders, installs IDE rule files, and writes external IDE handoff configuration.
+- Task creation: scans the repo, plans a compact context package, generates a feature graph, writes handoff files, and validates scoped notes.
+- Legacy setup: creates `chay-memory/host_config.json` for older main/worker automation.
 - Worker execution: `cr dispatch <worker>` runs a configured worker engine, writes progress notes, validates result notes with a retry cap, and checks patch scope.
 - Output validation: validates result notes against schema and returns compact retry instructions when invalid.
 - Patch validation: refreshes a scoped git diff and rejects out-of-scope or forbidden changes.
@@ -185,7 +186,8 @@ flowchart TB
 
 ## Runtime Data Model
 
-- `chay-memory/host_config.json`: enabled agents, main controller, workers, models, skills, and runtime folders.
+- `chay-memory/ide_config.json`: configured external IDE/chatbot targets for the recommended `cr start` workflow.
+- `chay-memory/host_config.json`: legacy enabled agents, main controller, workers, models, skills, and runtime folders.
 - `chay-memory/feature_graph.json`: user-flow source of truth with nodes, edges, handled error branches, code targets, and acceptance checks.
 - `chay-memory/task_note.json`: compact task intent and constraints.
 - `chay-memory/context_package.json`: selected files and repo context for the worker.
