@@ -75,6 +75,7 @@ The short version: **feature memory before code, feature boundary after code.**
 - [Legacy `cr setup` workflow](docs/setup-legacy.md): older main/worker automation, `cr run`, dispatch, and wrapper-based Antigravity notes.
 - [C4 model](docs/c4-model.md): local runtime architecture.
 - [Experience compression](docs/experience-compression.md): compact notes, feature graph, handoff, and policy references.
+- [Changelog](CHANGELOG.md): notable changes by release.
 - [Contributing](CONTRIBUTING.md): development, PR, issue, and safety-boundary guidelines.
 
 ## What Chạy answers

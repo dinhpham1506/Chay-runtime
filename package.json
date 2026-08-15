@@ -27,7 +27,8 @@
     "site",
     "templates",
     "README.md",
-    "CONTRIBUTING.md"
+    "CONTRIBUTING.md",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "postinstall": "node ./bin/postinstall.js",
