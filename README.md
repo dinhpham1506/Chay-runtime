@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="site/assets/chay-logo.svg" alt="Chay Runtime logo" width="96" height="96">
+</p>
+
 # chay-runtime
 
 [![CI](https://github.com/dinhpham1506/Chay-runtime/actions/workflows/ci.yml/badge.svg)](https://github.com/dinhpham1506/Chay-runtime/actions/workflows/ci.yml)
@@ -5,6 +9,55 @@
 [![License](https://img.shields.io/npm/l/chay-runtime.svg)](LICENSE)
 
 chay-runtime is a feature-context runtime and contract layer for IDE AI coding sessions.
+
+It turns a human task like `Admin changes user role` into a small, reviewable feature contract before an AI edits code, then verifies the resulting patch stays inside that feature boundary.
+
+- GitHub Pages: https://dinhpham1506.github.io/Chay-runtime/
+- GitHub repo: https://github.com/dinhpham1506/Chay-runtime
+- npm package: https://www.npmjs.com/package/chay-runtime
+
+## Quickstart
+
+```bash
+npm install -g chay-runtime@latest
+cd your-project
+cr start
+cr go "Admin changes user role"
+```
+
+Then open Codex, Claude Code, Cursor, Kiro, GitHub Copilot, or another IDE AI and tell it to read:
+
+```text
+chay-memory/ai_handoff.json
+chay-structure/features/<feature_id>.md
+chay-structure/folder_structure.md
+chay-structure/api_graph.md
+chay-memory/feature_graph.json
+selected files only
+```
+
+After the AI edits code:
+
+```bash
+git diff > .chay/tmp/current.diff
+cr verify
+cr handoff
+```
+
+## What This Repo Does
+
+Chay Runtime creates and checks these artifacts inside your repo:
+
+| Artifact | Why it exists |
+| --- | --- |
+| `chay-structure/features/<feature_id>.md` | Human-readable feature contract: user flow, acceptance, selected code targets. |
+| `chay-memory/feature_graph.json` | Machine-readable source of truth for feature flow, code targets, API links, inferred runtime sequence, and acceptance checks. |
+| `chay-structure/diagrams/*.puml` | PlantUML user flow, sequence, and API flowchart per feature. |
+| `chay-memory/ai_handoff.json` | Compact resume context for a fresh IDE AI session. |
+| `chay-memory/context_package.json` | Small selected-file context so the AI does not scan the whole repo blindly. |
+| `cr verify` | Diff boundary check against allowed files, sensitive paths, human-owned files, and forbidden patterns. |
+
+The short version: **feature memory before code, feature boundary after code.**
 
 ## Core idea
 

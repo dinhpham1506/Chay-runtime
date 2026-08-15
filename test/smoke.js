@@ -16,6 +16,14 @@ assert.deepEqual(commandForAgent("claude", { prompt: "hi", worker: "codex", mode
 assert.equal(commandForAgent("anti", { promptFile: "prompt.txt", model: "gemini-pro" }), null);
 
 const readme = fs.readFileSync(path.join(repoRoot, "README.md"), "utf8");
+assert.ok(readme.includes("site/assets/chay-logo.svg"));
+assert.ok(readme.includes("https://dinhpham1506.github.io/Chay-runtime/"));
+assert.ok(readme.includes("## Quickstart"));
+assert.ok(readme.includes("## What This Repo Does"));
+assert.ok(readme.includes("Admin changes user role"));
+assert.ok(readme.includes("chay-structure/features/<feature_id>.md"));
+assert.ok(readme.includes("chay-memory/ai_handoff.json"));
+assert.ok(readme.includes("Diff boundary check"));
 assert.ok(readme.includes("Continue existing feature"));
 assert.ok(readme.includes("Add or change feature"));
 assert.ok(readme.includes("Verify AI edit"));
@@ -661,6 +669,9 @@ function verifyUiTemplate() {
   }
   for (const text of ["CASE A", "Continue existing feature", "Add or change feature", "Verify AI edit", "Feature memory before code. Feature boundary after code."]) {
     assert.ok(landing.includes(text), `missing landing case message: ${text}`);
+  }
+  for (const text of ["what this repo does", "Feature contract", "Inferred runtime sequence", "Fresh session context", "Patch boundary", "cr chat install", "cr ui serve"]) {
+    assert.ok(landing.includes(text), `missing landing repo-purpose message: ${text}`);
   }
   for (const text of ["assets/chay-logo.svg", "rel=\"icon\" type=\"image/svg+xml\"", "apple-touch-icon", "og:image", "og:image:type", "twitter:image"]) {
     assert.ok(landing.includes(text), `missing landing logo asset: ${text}`);

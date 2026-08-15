@@ -4,9 +4,9 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Chạy Runtime - IDE AI Contract Layer</title>
-<meta name="description" content="Chạy Runtime tạo feature graph, handoff và guardrail để IDE AI code đúng scope trong repo production." />
+<meta name="description" content="Chạy Runtime tạo feature contract, inferred runtime sequence, IDE AI handoff và diff boundary để AI code đúng scope trong repo production." />
 <meta property="og:title" content="Chạy Runtime" />
-<meta property="og:description" content="Contract, handoff và verify layer cho Codex, Claude, Cursor, Kiro và IDE AI." />
+<meta property="og:description" content="Feature contract, handoff và verify layer cho Codex, Claude, Cursor, Kiro và IDE AI." />
 <meta property="og:type" content="website" />
 <meta property="og:image" content="https://dinhpham1506.github.io/Chay-runtime/assets/chay-logo.svg" />
 <meta property="og:image:type" content="image/svg+xml" />
@@ -619,6 +619,55 @@
   }
   .section-head p { margin: 16px 0 0; color: var(--muted); font-size: 18px; }
 
+  .output-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .output-card {
+    min-height: 214px;
+    display: grid;
+    align-content: start;
+    gap: 14px;
+    padding: 20px;
+    border: 1px solid rgba(8,8,8,.08);
+    border-radius: var(--radius);
+    background: rgba(255,255,255,.72);
+  }
+  .output-card span {
+    width: fit-content;
+    min-height: 28px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: rgba(84,114,173,.12);
+    color: var(--blue);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .output-card strong {
+    display: block;
+    font-size: 21px;
+    line-height: 1.14;
+  }
+  .output-card p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .output-card code {
+    width: fit-content;
+    max-width: 100%;
+    padding: 7px 9px;
+    border-radius: 999px;
+    background: var(--bg-soft);
+    color: var(--blue);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
+
   .steps-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -861,6 +910,7 @@
     .console-body { grid-template-columns: 1fr; }
     .sidebar { display: none; }
     .workspace { grid-template-columns: 1fr; }
+    .output-grid { grid-template-columns: repeat(2, 1fr); }
     .case-grid { grid-template-columns: 1fr; }
     .steps-grid { grid-template-columns: repeat(2, 1fr); }
     .split { grid-template-columns: 1fr; }
@@ -882,6 +932,7 @@
     .nodes::before,
     .nodes::after { display: none; }
     .flow-strip { grid-template-columns: 1fr; }
+    .output-grid { grid-template-columns: 1fr; }
     .steps-grid { grid-template-columns: 1fr; }
     .final-band { padding: 36px 18px; }
   }
@@ -905,6 +956,7 @@
       Chạy Runtime
     </a>
     <div class="nav-links">
+      <a href="#what" data-i18n="navWhat">What it does</a>
       <a href="#workflow" data-i18n="navWorkflow">Workflow</a>
       <a href="#guardrails" data-i18n="navGuardrails">Guardrails</a>
       <a href="#quickstart" data-i18n="navQuickstart">Quickstart</a>
@@ -920,9 +972,9 @@
   <header class="hero">
     <div class="wrap">
       <div class="hero-copy reveal">
-        <span class="eyebrow"><i></i> <span data-i18n="eyebrow">Contract layer for external IDE AI</span></span>
-        <h1 data-i18n="headline">Build AI coding flows grounded in your repo.</h1>
-        <p data-i18n="subhead">Chạy Runtime turns a vague task into feature memory before code and a feature boundary after code. Codex, Claude, Cursor or Kiro can continue, change and verify work without losing the feature context.</p>
+        <span class="eyebrow"><i></i> <span data-i18n="eyebrow">Feature contracts for IDE AI</span></span>
+        <h1 data-i18n="headline">Make AI code from the same feature map every time.</h1>
+        <p data-i18n="subhead">Chạy Runtime turns a task into a feature contract, inferred runtime sequence, API/code map and handoff before AI edits code. Afterward, it verifies the patch stayed inside the feature boundary.</p>
         <div class="language-switch" aria-label="Language">
           <button class="active" type="button" data-lang="en" aria-pressed="true">EN</button>
           <button type="button" data-lang="vi" aria-pressed="false">VI</button>
@@ -1019,6 +1071,54 @@
       </div>
     </div>
   </header>
+
+  <section id="what">
+    <div class="wrap">
+      <div class="section-head center reveal">
+        <span class="section-kicker" data-i18n="whatKicker">what this repo does</span>
+        <h2 class="section-title" data-i18n="whatTitle">It gives your IDE AI a feature contract, then checks the diff.</h2>
+        <p data-i18n="whatText">Run one command for a task. Chạy writes human-readable docs, machine-readable graph state, diagrams, selected files and a handoff prompt inside the repo.</p>
+      </div>
+      <div class="output-grid">
+        <article class="output-card reveal">
+          <span data-i18n="output1Label">before code</span>
+          <strong data-i18n="output1Title">Feature contract</strong>
+          <p data-i18n="output1Text">User flow, acceptance checks, selected code targets and folder structure for one business feature.</p>
+          <code>chay-structure/features/*.md</code>
+        </article>
+        <article class="output-card reveal">
+          <span data-i18n="output2Label">repo map</span>
+          <strong data-i18n="output2Title">Inferred runtime sequence</strong>
+          <p data-i18n="output2Text">A reviewable sequence inferred from routes, imports, roles and selected targets, with confidence and evidence.</p>
+          <code>feature_graph.json</code>
+        </article>
+        <article class="output-card reveal">
+          <span data-i18n="output3Label">handoff</span>
+          <strong data-i18n="output3Title">Fresh session context</strong>
+          <p data-i18n="output3Text">A compact read order so Codex, Claude, Cursor or Kiro continues the same feature instead of rediscovering the repo.</p>
+          <code>ai_handoff.json</code>
+        </article>
+        <article class="output-card reveal">
+          <span data-i18n="output4Label">after code</span>
+          <strong data-i18n="output4Title">Patch boundary</strong>
+          <p data-i18n="output4Text">Diff checks reject out-of-scope files, sensitive paths, oversized patches and forbidden patterns.</p>
+          <code>cr verify</code>
+        </article>
+        <article class="output-card reveal">
+          <span data-i18n="output5Label">direct chat</span>
+          <strong data-i18n="output5Title">Chatbot rules</strong>
+          <p data-i18n="output5Text">Install rules once so your IDE chatbot knows the Chạy read order without pasting a long prompt every time.</p>
+          <code>cr chat install</code>
+        </article>
+        <article class="output-card reveal">
+          <span data-i18n="output6Label">public page</span>
+          <strong data-i18n="output6Title">Local-first tooling</strong>
+          <p data-i18n="output6Text">The GitHub Page explains the product; the local console stays private because it reads and writes project files.</p>
+          <code>cr ui serve</code>
+        </article>
+      </div>
+    </div>
+  </section>
 
   <section id="workflow">
     <div class="wrap">
@@ -1153,13 +1253,14 @@
 <script>
   const translations = {
     en: {
+      navWhat: "What it does",
       navWorkflow: "Workflow",
       navGuardrails: "Guardrails",
       navQuickstart: "Quickstart",
       navGithub: "GitHub",
-      eyebrow: "Contract layer for external IDE AI",
-      headline: "Build AI coding flows grounded in your repo.",
-      subhead: "Chay Runtime turns a vague task into feature memory before code and a feature boundary after code. Codex, Claude, Cursor or Kiro can continue, change and verify work without losing the feature context.",
+      eyebrow: "Feature contracts for IDE AI",
+      headline: "Make AI code from the same feature map every time.",
+      subhead: "Chay Runtime turns a task into a feature contract, inferred runtime sequence, API/code map and handoff before AI edits code. Afterward, it verifies the patch stayed inside the feature boundary.",
       startCta: "Start with CLI",
       workflowCta: "View workflow",
       npmCta: "View npm",
@@ -1197,6 +1298,27 @@
       readOrderApi: "API flowchart",
       readOrder4: "Routes and linked code",
       flowIdeEdits: "IDE AI edits",
+      whatKicker: "what this repo does",
+      whatTitle: "It gives your IDE AI a feature contract, then checks the diff.",
+      whatText: "Run one command for a task. Chay writes human-readable docs, machine-readable graph state, diagrams, selected files and a handoff prompt inside the repo.",
+      output1Label: "before code",
+      output1Title: "Feature contract",
+      output1Text: "User flow, acceptance checks, selected code targets and folder structure for one business feature.",
+      output2Label: "repo map",
+      output2Title: "Inferred runtime sequence",
+      output2Text: "A reviewable sequence inferred from routes, imports, roles and selected targets, with confidence and evidence.",
+      output3Label: "handoff",
+      output3Title: "Fresh session context",
+      output3Text: "A compact read order so Codex, Claude, Cursor or Kiro continues the same feature instead of rediscovering the repo.",
+      output4Label: "after code",
+      output4Title: "Patch boundary",
+      output4Text: "Diff checks reject out-of-scope files, sensitive paths, oversized patches and forbidden patterns.",
+      output5Label: "direct chat",
+      output5Title: "Chatbot rules",
+      output5Text: "Install rules once so your IDE chatbot knows the Chay read order without pasting a long prompt every time.",
+      output6Label: "public page",
+      output6Title: "Local-first tooling",
+      output6Text: "The GitHub Page explains the product; the local console stays private because it reads and writes project files.",
       workflowKicker: "workflow",
       workflowTitle: "One flow for new work and maintenance.",
       workflowText: "Chay keeps old feature contracts updated instead of creating competing docs. When scope changes, graph, context, work note and handoff move together.",
@@ -1239,13 +1361,14 @@
       footerText: "Chay Runtime - local contract layer for external IDE AI."
     },
     vi: {
+      navWhat: "Repo làm gì",
       navWorkflow: "Quy trình",
       navGuardrails: "Guardrail",
       navQuickstart: "Bắt đầu",
       navGithub: "GitHub",
-      eyebrow: "Lớp contract cho IDE AI bên ngoài",
-      headline: "Cho AI code theo đúng repo của bạn.",
-      subhead: "Chạy Runtime biến task mơ hồ thành feature memory trước khi code và feature boundary sau khi code. Codex, Claude, Cursor hoặc Kiro có thể tiếp tục, thay đổi và verify mà không mất context feature.",
+      eyebrow: "Feature contract cho IDE AI",
+      headline: "Cho AI code từ cùng một bản đồ feature mỗi lần.",
+      subhead: "Chạy Runtime biến task thành feature contract, inferred runtime sequence, API/code map và handoff trước khi AI sửa code. Sau đó nó verify patch vẫn nằm trong feature boundary.",
       startCta: "Bắt đầu bằng CLI",
       workflowCta: "Xem quy trình",
       npmCta: "Xem npm",
@@ -1283,6 +1406,27 @@
       readOrderApi: "API flowchart",
       readOrder4: "Route và code liên quan",
       flowIdeEdits: "IDE AI sửa code",
+      whatKicker: "repo này làm gì",
+      whatTitle: "Nó đưa cho IDE AI một feature contract, rồi check diff sau khi sửa.",
+      whatText: "Chạy một lệnh cho một task. Chạy ghi docs dễ đọc, graph state cho máy, diagrams, selected files và handoff prompt ngay trong repo.",
+      output1Label: "trước khi code",
+      output1Title: "Feature contract",
+      output1Text: "User flow, acceptance checks, selected code targets và folder structure cho một business feature.",
+      output2Label: "repo map",
+      output2Title: "Inferred runtime sequence",
+      output2Text: "Sequence có thể review, infer từ routes, imports, roles và selected targets, kèm confidence và evidence.",
+      output3Label: "handoff",
+      output3Title: "Context cho session mới",
+      output3Text: "Read order gọn để Codex, Claude, Cursor hoặc Kiro tiếp tục cùng feature thay vì tự mò lại repo.",
+      output4Label: "sau khi code",
+      output4Title: "Patch boundary",
+      output4Text: "Diff check chặn file ngoài scope, sensitive paths, patch quá lớn và forbidden patterns.",
+      output5Label: "direct chat",
+      output5Title: "Rules cho chatbot",
+      output5Text: "Cài rules một lần để IDE chatbot biết read order của Chạy mà không cần paste prompt dài mỗi lần.",
+      output6Label: "public page",
+      output6Title: "Local-first tooling",
+      output6Text: "GitHub Page giải thích product; local console vẫn private vì nó đọc và ghi file trong project.",
       workflowKicker: "quy trình",
       workflowTitle: "Một flow cho feature mới và maintain feature cũ.",
       workflowText: "Chạy cập nhật contract cũ thay vì tạo docs cạnh tranh. Khi scope đổi, graph, context, work note và handoff đi cùng nhau.",
