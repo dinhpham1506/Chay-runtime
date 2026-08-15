@@ -726,6 +726,10 @@ function verifyUiTemplate() {
   assert.ok(landing.includes("\"IntersectionObserver\" in window"), "reveal animation must have an IntersectionObserver fallback");
   assert.ok(landing.includes(".nodes {\n    position: relative;\n    isolation: isolate;"), "flowchart animation must create a stacking context");
   assert.ok(landing.includes("z-index: 0;\n  }\n  .nodes::before"), "flowchart connector track must stay behind cards");
+  assert.ok(landing.includes("class=\"flow-fish\" aria-hidden=\"true\""), "flowchart should include the fish motion layer");
+  assert.ok(landing.includes("animation: fish-swim 5.6s ease-in-out infinite;"), "fish motion should be animated");
+  assert.ok(landing.includes(".flow-fish { display: none; }"), "fish motion must not crowd small screens");
+  assert.ok(landing.includes("pointer-events: none;"), "decorative fish motion must not block UI interaction");
   assert.ok(landing.includes(".node {\n    position: relative;\n    z-index: 2;"), "flowchart cards must render above animated connector lines");
   assert.ok(fs.existsSync(path.join(repoRoot, "site", "assets", "chay-logo.svg")), "missing GitHub Pages SVG logo asset");
   for (const text of ["Continue existing feature", "Add or change feature", "Verify AI edit", "feature memory before code, feature boundary after code"]) {
