@@ -706,6 +706,10 @@ function verifyUiTemplate() {
   }
   assert.ok(html.includes("class=\"readonly-field\""), "IDE targets must render as read-only status");
   assert.ok(!html.includes("<input id=\"targets\""), "IDE targets must not be directly editable in the UI");
+  assert.ok(html.includes("data-lang=\"en\""), "Inspector must expose English language toggle");
+  assert.ok(html.includes("data-lang=\"vi\""), "Inspector must expose Vietnamese language toggle");
+  assert.ok(html.includes("Tạo Contract"), "Inspector must include Vietnamese UI copy");
+  assert.ok(html.includes("Create Contract"), "Inspector must include English UI copy");
   for (const text of ["Token Saving", "Token Report", "data-action=\"token\"", "id=\"tokens\""]) {
     assert.ok(!html.includes(text), `removed token UI should stay hidden: ${text}`);
   }

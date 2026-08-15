@@ -166,6 +166,32 @@
       font-size: 12px;
     }
 
+    .lang-switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 3px;
+      background: #0e1317;
+    }
+
+    .lang-btn {
+      min-height: 28px;
+      border: 0;
+      border-radius: 999px;
+      padding: 4px 9px;
+      background: transparent;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .lang-btn.active {
+      background: var(--accent);
+      color: var(--accent-ink);
+    }
+
     .shell {
       display: grid;
       gap: 14px;
@@ -500,14 +526,21 @@
   <header>
     <div class="topbar">
       <div class="brand"><span class="dot"></span> Chạy Inspector</div>
-      <div class="meta"><span id="streamStatus">connecting</span><span id="stamp">--:--:--</span></div>
+      <div class="meta">
+        <div class="lang-switch" aria-label="Language">
+          <button class="lang-btn" data-lang="en" type="button">EN</button>
+          <button class="lang-btn" data-lang="vi" type="button">VI</button>
+        </div>
+        <span id="streamStatus">connecting</span>
+        <span id="stamp">--:--:--</span>
+      </div>
     </div>
   </header>
 
   <main class="shell">
     <section class="panel hero" aria-live="polite">
       <div>
-        <span class="eyebrow">Feature workspace</span>
+        <span class="eyebrow" data-i18n="eyebrow">Feature workspace</span>
         <h1 id="headline">No feature contract yet</h1>
         <p id="nextStep" class="subtext">Create a contract first so the AI can read the right feature context before editing.</p>
       </div>
@@ -520,51 +553,51 @@
     <section class="panel compose">
       <div class="field-stack">
         <div>
-          <label for="taskText">Feature / task</label>
+          <label for="taskText" data-i18n="taskLabel">Feature / task</label>
           <textarea id="taskText" placeholder="Admin changes user role"></textarea>
         </div>
         <div>
-          <label for="filesText">Files override</label>
+          <label for="filesText" data-i18n="filesLabel">Files override</label>
           <input id="filesText" placeholder="client/src/components/AdminDashboard.tsx,netlify/functions/admin-users-role.ts">
         </div>
         <div>
-          <label for="targets">IDE targets</label>
+          <label for="targets" data-i18n="targetsLabel">IDE targets</label>
           <div id="targets" class="readonly-field" data-value="codex" role="status">codex</div>
         </div>
       </div>
       <div class="actions">
-        <button class="primary wide" data-action="go">Create Contract</button>
-        <button data-action="handoff">Refresh Handoff</button>
-        <button data-action="patch">Patch Check</button>
-        <button data-action="verify">Verify</button>
-        <button data-action="config">Configure IDE</button>
-        <button data-action="refresh">Refresh UI</button>
+        <button class="primary wide" data-action="go" data-i18n="btnCreate">Create Contract</button>
+        <button data-action="handoff" data-i18n="btnHandoff">Refresh Handoff</button>
+        <button data-action="patch" data-i18n="btnPatch">Patch Check</button>
+        <button data-action="verify" data-i18n="btnVerify">Verify</button>
+        <button data-action="config" data-i18n="btnConfig">Configure IDE</button>
+        <button data-action="refresh" data-i18n="btnRefresh">Refresh UI</button>
       </div>
     </section>
 
     <section class="cards" aria-label="Runtime summary">
       <article class="card">
-        <div class="card-title">Feature Graph</div>
+        <div class="card-title" data-i18n="cardFeature">Feature Graph</div>
         <div id="featureMetric" class="metric">Missing</div>
         <div id="featureCaption" class="caption">Run Create Contract</div>
       </article>
       <article class="card">
-        <div class="card-title">Selected Files</div>
+        <div class="card-title" data-i18n="cardFiles">Selected Files</div>
         <div id="filesMetric" class="metric">0</div>
         <div id="filesCaption" class="caption">No boundary yet</div>
       </article>
       <article class="card">
-        <div class="card-title">AI Activity</div>
+        <div class="card-title" data-i18n="cardActivity">AI Activity</div>
         <div id="activityMetric" class="metric">Idle</div>
         <div id="activityCaption" class="caption">No worker running</div>
       </article>
       <article class="card">
-        <div class="card-title">Connected IDE</div>
+        <div class="card-title" data-i18n="cardIde">Connected IDE</div>
         <div id="ideMetric" class="metric">Codex</div>
         <div id="ideCaption" class="caption">Configured target</div>
       </article>
       <article class="card">
-        <div class="card-title">Verify</div>
+        <div class="card-title" data-i18n="cardVerify">Verify</div>
         <div id="verifyMetric" class="metric">--</div>
         <div id="verifyCaption" class="caption">No report yet</div>
       </article>
@@ -574,7 +607,7 @@
       <div class="stack">
         <section class="panel">
           <div class="section-title">
-            <h2>Feature Contract</h2>
+            <h2 data-i18n="panelContract">Feature Contract</h2>
             <span id="contractState" class="pill">missing</span>
           </div>
           <div id="overview" class="kv"></div>
@@ -582,7 +615,7 @@
 
         <section class="panel">
           <div class="section-title">
-            <h2>Selected Files</h2>
+            <h2 data-i18n="panelFiles">Selected Files</h2>
             <span id="filesState" class="pill">0 files</span>
           </div>
           <div id="files" class="list"></div>
@@ -590,29 +623,29 @@
 
         <section class="panel">
           <div class="section-title">
-            <h2>Folder Structure</h2>
+            <h2 data-i18n="panelFolders">Folder Structure</h2>
           </div>
           <div id="folders" class="kv"></div>
         </section>
 
         <section class="panel">
           <div class="section-title">
-            <h2>Diagrams</h2>
+            <h2 data-i18n="panelDiagrams">Diagrams</h2>
           </div>
           <details open>
-            <summary>User Flow</summary>
+            <summary data-i18n="summaryUserFlow">User Flow</summary>
             <pre id="userFlow" class="log"></pre>
           </details>
           <details open>
-            <summary>Runtime Sequence</summary>
+            <summary data-i18n="summarySequence">Runtime Sequence</summary>
             <pre id="sequence" class="log"></pre>
           </details>
           <details>
-            <summary>PlantUML user flow</summary>
+            <summary data-i18n="summaryPlantFlow">PlantUML user flow</summary>
             <pre id="plantFlow" class="log"></pre>
           </details>
           <details>
-            <summary>PlantUML sequence <span class="muted">plantuml_sequence</span></summary>
+            <summary><span data-i18n="summaryPlantSequence">PlantUML sequence</span> <span class="muted">plantuml_sequence</span></summary>
             <pre id="plantSequence" class="log"></pre>
           </details>
         </section>
@@ -621,7 +654,7 @@
       <div class="stack">
         <section class="panel">
           <div class="section-title">
-            <h2>Connected IDE</h2>
+            <h2 data-i18n="panelIde">Connected IDE</h2>
             <span id="ideState" class="pill">codex</span>
           </div>
           <div id="ideAgents" class="agent-grid"></div>
@@ -629,7 +662,7 @@
 
         <section class="panel">
           <div class="section-title">
-            <h2>AI Activity</h2>
+            <h2 data-i18n="panelActivity">AI Activity</h2>
             <span id="activityState" class="pill">idle</span>
           </div>
           <div id="activity" class="timeline"></div>
@@ -637,15 +670,15 @@
 
         <section class="panel">
           <div class="section-title">
-            <h2>IDE Prompt</h2>
-            <button data-action="copy-prompt">Copy</button>
+            <h2 data-i18n="panelPrompt">IDE Prompt</h2>
+            <button data-action="copy-prompt" data-i18n="btnCopy">Copy</button>
           </div>
           <pre id="idePrompt" class="log short prompt"></pre>
         </section>
 
         <section class="panel">
           <div class="section-title">
-            <h2>Verify</h2>
+            <h2 data-i18n="panelVerify">Verify</h2>
             <span id="verifyState" class="pill">unknown</span>
           </div>
           <div id="verify" class="kv"></div>
@@ -653,7 +686,7 @@
 
         <section class="panel">
           <div class="section-title">
-            <h2>Worker Log</h2>
+            <h2 data-i18n="panelWorkerLog">Worker Log</h2>
             <span class="pill">.chay/tmp/ui-dispatch.log</span>
           </div>
           <pre id="dispatchLog" class="log short"></pre>
@@ -661,7 +694,7 @@
 
         <section class="panel">
           <div class="section-title">
-            <h2>Last Action</h2>
+            <h2 data-i18n="panelLastAction">Last Action</h2>
           </div>
           <pre id="actionResult" class="log short"></pre>
         </section>
@@ -709,8 +742,211 @@
       plantFlow: $("plantFlow"),
       plantSequence: $("plantSequence")
     };
+    const translations = {
+      en: {
+        eyebrow: "Feature workspace",
+        headlineEmpty: "No feature contract yet",
+        nextNoGraph: "Create a contract first, then give the IDE Prompt to Codex or Claude.",
+        nextRunning: "AI worker is running. Watch AI Activity and Worker Log.",
+        nextNoFiles: "Contract exists but no selected files were found. Re-run Create Contract with Files override.",
+        nextViolations: "Verify found issues. Fix the listed violations before accepting the patch.",
+        nextResult: "AI result exists. Run Patch Check, then review the diff.",
+        nextPatch: "Copy IDE Prompt into Codex or Claude. After edits, run Patch Check.",
+        taskLabel: "Feature / task",
+        filesLabel: "Files override",
+        targetsLabel: "IDE targets",
+        btnCreate: "Create Contract",
+        btnHandoff: "Refresh Handoff",
+        btnPatch: "Patch Check",
+        btnVerify: "Verify",
+        btnConfig: "Configure IDE",
+        btnRefresh: "Refresh UI",
+        btnCopy: "Copy",
+        working: "Working",
+        cardFeature: "Feature Graph",
+        cardFiles: "Selected Files",
+        cardActivity: "AI Activity",
+        cardIde: "Connected IDE",
+        cardVerify: "Verify",
+        panelContract: "Feature Contract",
+        panelFiles: "Selected Files",
+        panelFolders: "Folder Structure",
+        panelDiagrams: "Diagrams",
+        panelIde: "Connected IDE",
+        panelActivity: "AI Activity",
+        panelPrompt: "IDE Prompt",
+        panelVerify: "Verify",
+        panelWorkerLog: "Worker Log",
+        panelLastAction: "Last Action",
+        summaryUserFlow: "User Flow",
+        summarySequence: "Runtime Sequence",
+        summaryPlantFlow: "PlantUML user flow",
+        summaryPlantSequence: "PlantUML sequence",
+        missing: "Missing",
+        ready: "Ready",
+        idle: "Idle",
+        result: "Result",
+        running: "Running",
+        configured: "configured",
+        configuredTarget: "Configured target",
+        runCreate: "Run Create Contract",
+        noBoundary: "No boundary yet",
+        filesMayUse: "Files AI may use",
+        noWorker: "No worker running",
+        noReport: "No report yet",
+        needsWork: "needs work",
+        ok: "ok",
+        unknown: "unknown",
+        available: "available",
+        noIdeTarget: "No IDE target configured",
+        ideRulesOnly: "IDE rules only",
+        noSelectedFiles: "No selected files",
+        noFolderStructure: "No folder structure yet",
+        noWorkerLog: "No worker log yet",
+        rowFeature: "Feature",
+        rowGoal: "Goal",
+        rowSystemApis: "System APIs",
+        rowCandidates: "Candidates",
+        rowMode: "Mode",
+        rowTargets: "Targets",
+        rowHandoff: "Handoff",
+        rowGraphNodes: "Graph nodes",
+        rowRunner: "Runner",
+        rowProgress: "Progress",
+        rowResult: "Result",
+        rowWorkNote: "Work note",
+        rowScore: "Score",
+        rowStatus: "Status",
+        rowNext: "Next",
+        rowViolations: "Violations",
+        none: "none",
+        notConfigured: "not configured",
+        manual: "manual",
+        missingState: "missing",
+        readyState: "ready",
+        idleState: "idle",
+        filesSuffix: "files",
+        contractReady: "contract_ready",
+        notStarted: "not_started",
+        noMermaidUserFlow: "No Mermaid user flow",
+        noMermaidSequence: "No Mermaid sequence",
+        noPlantFlow: "No PlantUML flow",
+        noPlantSequence: "No PlantUML sequence",
+        prompt: [
+          "Read chay-memory/ai_handoff.json first.",
+          "Then read chay-structure/features/<feature_id>.md, chay-structure/folder_structure.md, and chay-structure/api_graph.md.",
+          "Follow the user_flow and sequence_diagram.",
+          "Edit only selected/allowed files.",
+          "After editing, create git diff and run cr verify."
+        ]
+      },
+      vi: {
+        eyebrow: "Không gian tính năng",
+        headlineEmpty: "Chưa có feature contract",
+        nextNoGraph: "Tạo contract trước, rồi đưa IDE Prompt cho Codex hoặc Claude.",
+        nextRunning: "AI worker đang chạy. Xem AI Activity và Worker Log.",
+        nextNoFiles: "Đã có contract nhưng chưa có selected files. Chạy lại Create Contract với Files override.",
+        nextViolations: "Verify phát hiện lỗi. Sửa các violation trước khi nhận patch.",
+        nextResult: "Đã có kết quả AI. Chạy Patch Check rồi review diff.",
+        nextPatch: "Copy IDE Prompt vào Codex hoặc Claude. Sau khi sửa code, chạy Patch Check.",
+        taskLabel: "Tính năng / task",
+        filesLabel: "Ép phạm vi file",
+        targetsLabel: "IDE đang gắn",
+        btnCreate: "Tạo Contract",
+        btnHandoff: "Làm mới Handoff",
+        btnPatch: "Kiểm Patch",
+        btnVerify: "Verify",
+        btnConfig: "Cấu hình IDE",
+        btnRefresh: "Làm mới UI",
+        btnCopy: "Copy",
+        working: "Đang chạy",
+        cardFeature: "Feature Graph",
+        cardFiles: "File được chọn",
+        cardActivity: "AI đang làm",
+        cardIde: "IDE đang nối",
+        cardVerify: "Verify",
+        panelContract: "Feature Contract",
+        panelFiles: "File được chọn",
+        panelFolders: "Cấu trúc folder",
+        panelDiagrams: "Sơ đồ",
+        panelIde: "IDE đang nối",
+        panelActivity: "AI đang làm",
+        panelPrompt: "Prompt cho IDE",
+        panelVerify: "Verify",
+        panelWorkerLog: "Log worker",
+        panelLastAction: "Action gần nhất",
+        summaryUserFlow: "User Flow",
+        summarySequence: "Runtime Sequence",
+        summaryPlantFlow: "PlantUML user flow",
+        summaryPlantSequence: "PlantUML sequence",
+        missing: "Thiếu",
+        ready: "Sẵn sàng",
+        idle: "Rảnh",
+        result: "Có kết quả",
+        running: "Đang chạy",
+        configured: "đã cấu hình",
+        configuredTarget: "Target đã cấu hình",
+        runCreate: "Chạy Tạo Contract",
+        noBoundary: "Chưa có boundary",
+        filesMayUse: "File AI được dùng",
+        noWorker: "Không có worker đang chạy",
+        noReport: "Chưa có report",
+        needsWork: "cần sửa",
+        ok: "ok",
+        unknown: "không rõ",
+        available: "có sẵn",
+        noIdeTarget: "Chưa cấu hình IDE target",
+        ideRulesOnly: "Chỉ có IDE rules",
+        noSelectedFiles: "Chưa có selected files",
+        noFolderStructure: "Chưa có folder structure",
+        noWorkerLog: "Chưa có worker log",
+        rowFeature: "Feature",
+        rowGoal: "Goal",
+        rowSystemApis: "API hệ thống",
+        rowCandidates: "Feature gợi ý",
+        rowMode: "Mode",
+        rowTargets: "Targets",
+        rowHandoff: "Handoff",
+        rowGraphNodes: "Graph nodes",
+        rowRunner: "Runner",
+        rowProgress: "Tiến độ",
+        rowResult: "Kết quả",
+        rowWorkNote: "Work note",
+        rowScore: "Điểm",
+        rowStatus: "Trạng thái",
+        rowNext: "Bước tiếp",
+        rowViolations: "Violation",
+        none: "không có",
+        notConfigured: "chưa cấu hình",
+        manual: "manual",
+        missingState: "thiếu",
+        readyState: "sẵn sàng",
+        idleState: "rảnh",
+        filesSuffix: "files",
+        contractReady: "contract_sẵn_sàng",
+        notStarted: "chưa_bắt_đầu",
+        noMermaidUserFlow: "Chưa có Mermaid user flow",
+        noMermaidSequence: "Chưa có Mermaid sequence",
+        noPlantFlow: "Chưa có PlantUML flow",
+        noPlantSequence: "Chưa có PlantUML sequence",
+        prompt: [
+          "Đọc chay-memory/ai_handoff.json trước.",
+          "Sau đó đọc chay-structure/features/<feature_id>.md, chay-structure/folder_structure.md, và chay-structure/api_graph.md.",
+          "Làm theo user_flow và sequence_diagram.",
+          "Chỉ sửa selected/allowed files.",
+          "Sau khi sửa, tạo git diff và chạy cr verify."
+        ]
+      }
+    };
+    let lang = localStorage.getItem("chay-inspector-lang") || "vi";
+    let lastState = null;
 
     document.addEventListener("click", async (event) => {
+      const langButton = event.target.closest("button[data-lang]");
+      if (langButton) {
+        setLanguage(langButton.dataset.lang);
+        return;
+      }
       const button = event.target.closest("button[data-action]");
       if (!button) return;
       await runAction(button, button.dataset.action);
@@ -719,7 +955,7 @@
     async function runAction(button, action) {
       const old = button.textContent;
       button.disabled = true;
-      button.textContent = "Working";
+      button.textContent = t("working");
       try {
         if (action === "copy-prompt") {
           await navigator.clipboard.writeText(els.idePrompt.textContent);
@@ -783,6 +1019,7 @@
     }
 
     function render(state) {
+      lastState = state;
       els.stamp.textContent = new Date(state.generated_at).toLocaleTimeString();
       const graph = state.feature_graph || {};
       const system = state.system_map || {};
@@ -801,50 +1038,50 @@
       els.targets.textContent = configuredTargets;
       els.targets.dataset.value = configuredTargets;
 
-      setText(els.headline, graph.goal || handoff.source_of_truth?.goal || firstTask(state) || "No feature contract yet");
+      setText(els.headline, graph.goal || handoff.source_of_truth?.goal || firstTask(state) || t("headlineEmpty"));
       setText(els.nextStep, nextStepText({ hasGraph, files, report, result, runner: state.runner }));
 
-      setPill(els.taskStatus, taskState, hasGraph ? "ok" : "warn");
-      setPill(els.workerStatus, state.runner ? `${state.runner.worker} running` : "worker idle", state.runner ? "warn" : "ok");
+      setPill(els.taskStatus, statusText(taskState), hasGraph ? "ok" : "warn");
+      setPill(els.workerStatus, state.runner ? `${state.runner.worker} ${t("running")}` : t("noWorker"), state.runner ? "warn" : "ok");
 
-      setText(els.featureMetric, hasGraph ? "Ready" : system.api_entries ? `${system.api_entries.length} APIs` : "Missing");
-      setText(els.featureCaption, hasGraph ? graph.feature_id : system.feature_candidates ? `${system.feature_candidates.length} feature candidates` : "Run Create Contract");
+      setText(els.featureMetric, hasGraph ? t("ready") : system.api_entries ? `${system.api_entries.length} APIs` : t("missing"));
+      setText(els.featureCaption, hasGraph ? graph.feature_id : system.feature_candidates ? `${system.feature_candidates.length} feature candidates` : t("runCreate"));
       setText(els.filesMetric, String(files.length));
-      setText(els.filesCaption, files.length ? "Files AI may use" : "No boundary yet");
-      setText(els.activityMetric, state.runner ? "Running" : result ? "Result" : "Idle");
-      setText(els.activityCaption, progress?.message || result?.summary || "No worker running");
+      setText(els.filesCaption, files.length ? t("filesMayUse") : t("noBoundary"));
+      setText(els.activityMetric, state.runner ? t("running") : result ? t("result") : t("idle"));
+      setText(els.activityCaption, progress?.message || result?.summary || t("noWorker"));
       setText(els.ideMetric, state.runner ? state.runner.engine : configuredTargets.split(",")[0]);
-      setText(els.ideCaption, state.runner ? `pid ${state.runner.pid}` : `${configuredTargets} configured`);
+      setText(els.ideCaption, state.runner ? `pid ${state.runner.pid}` : `${configuredTargets} ${t("configured")}`);
       setText(els.verifyMetric, report.score === undefined ? "--" : `${report.score}`);
-      setText(els.verifyCaption, report.grade ? `${report.grade} / ${report.ok ? "ok" : "needs work"}` : "No report yet");
+      setText(els.verifyCaption, report.grade ? `${report.grade} / ${report.ok ? t("ok") : t("needsWork")}` : t("noReport"));
 
-      setPill(els.contractState, hasGraph ? "ready" : "missing", hasGraph ? "ok" : "warn");
-      setPill(els.filesState, `${files.length} files`, files.length ? "ok" : "warn");
-      setPill(els.activityState, state.runner ? "running" : result ? result.status || "result" : "idle", state.runner ? "warn" : "ok");
+      setPill(els.contractState, hasGraph ? t("readyState") : t("missingState"), hasGraph ? "ok" : "warn");
+      setPill(els.filesState, `${files.length} ${t("filesSuffix")}`, files.length ? "ok" : "warn");
+      setPill(els.activityState, state.runner ? t("running") : result ? result.status || t("result") : t("idleState"), state.runner ? "warn" : "ok");
       setPill(els.ideState, configuredTargets, state.runner ? "warn" : "ok");
-      setPill(els.verifyState, report.ok === undefined ? "unknown" : (verifyOk ? "ok" : "needs work"), verifyOk ? "ok" : "bad");
+      setPill(els.verifyState, report.ok === undefined ? t("unknown") : (verifyOk ? t("ok") : t("needsWork")), verifyOk ? "ok" : "bad");
 
       els.overview.innerHTML = rows([
-        ["Feature", graph.feature_id || "missing"],
-        ["Goal", graph.goal || handoff.source_of_truth?.goal || firstTask(state)],
-        ["System APIs", system.api_entries ? String(system.api_entries.length) : ""],
-        ["Candidates", system.feature_candidates ? system.feature_candidates.slice(0, 6).map((item) => item.feature_id).join(", ") : ""],
-        ["Mode", ide.mode || "not configured"],
-        ["Targets", (ide.targets || []).join(", ") || "manual"],
-        ["Handoff", handoff.source_of_truth ? "chay-memory/ai_handoff.json" : "missing"],
-        ["Graph nodes", graph.nodes ? `${graph.nodes.length} nodes / ${(graph.edges || []).length} edges` : ""]
+        [t("rowFeature"), graph.feature_id || t("missingState")],
+        [t("rowGoal"), graph.goal || handoff.source_of_truth?.goal || firstTask(state)],
+        [t("rowSystemApis"), system.api_entries ? String(system.api_entries.length) : ""],
+        [t("rowCandidates"), system.feature_candidates ? system.feature_candidates.slice(0, 6).map((item) => item.feature_id).join(", ") : ""],
+        [t("rowMode"), ide.mode || t("notConfigured")],
+        [t("rowTargets"), (ide.targets || []).join(", ") || t("manual")],
+        [t("rowHandoff"), handoff.source_of_truth ? "chay-memory/ai_handoff.json" : t("missingState")],
+        [t("rowGraphNodes"), graph.nodes ? `${graph.nodes.length} nodes / ${(graph.edges || []).length} edges` : ""]
       ]);
 
-      els.files.innerHTML = files.length ? files.map((file) => `<span class="tag">${esc(file)}</span>`).join("") : `<div class="empty">No selected files</div>`;
+      els.files.innerHTML = files.length ? files.map((file) => `<span class="tag">${esc(file)}</span>`).join("") : `<div class="empty">${esc(t("noSelectedFiles"))}</div>`;
       els.folders.innerHTML = renderFolders(graph.folder_structure || handoff.source_of_truth?.folder_structure || []);
       els.ideAgents.innerHTML = renderIdeAgents(state, configuredTargets);
       els.activity.innerHTML = renderActivity(state, progress, result);
       els.verify.innerHTML = renderVerify(report);
-      els.dispatchLog.textContent = state.dispatch_log || "No worker log yet";
-      els.userFlow.textContent = graph.user_flow || graph.mermaid || "No Mermaid user flow";
-      els.sequence.textContent = graph.sequence_diagram || "No Mermaid sequence";
-      els.plantFlow.textContent = graph.plantuml_flow || "No PlantUML flow";
-      els.plantSequence.textContent = graph.plantuml_sequence || "No PlantUML sequence";
+      els.dispatchLog.textContent = state.dispatch_log || t("noWorkerLog");
+      els.userFlow.textContent = graph.user_flow || graph.mermaid || t("noMermaidUserFlow");
+      els.sequence.textContent = graph.sequence_diagram || t("noMermaidSequence");
+      els.plantFlow.textContent = graph.plantuml_flow || t("noPlantFlow");
+      els.plantSequence.textContent = graph.plantuml_sequence || t("noPlantSequence");
       els.idePrompt.textContent = promptText();
     }
 
@@ -869,38 +1106,38 @@
     }
 
     function nextStepText({ hasGraph, files, report, result, runner }) {
-      if (runner) return "AI worker is running. Watch AI Activity and Worker Log.";
-      if (!hasGraph) return "Create a contract first, then give the IDE Prompt to Codex or Claude.";
-      if (!files.length) return "Contract exists but no selected files were found. Re-run Create Contract with Files override.";
-      if (report?.violations?.length) return "Verify found issues. Fix the listed violations before accepting the patch.";
-      if (result?.status === "completed") return "AI result exists. Run Patch Check, then review the diff.";
-      return "Copy IDE Prompt into Codex or Claude. After edits, run Patch Check.";
+      if (runner) return t("nextRunning");
+      if (!hasGraph) return t("nextNoGraph");
+      if (!files.length) return t("nextNoFiles");
+      if (report?.violations?.length) return t("nextViolations");
+      if (result?.status === "completed") return t("nextResult");
+      return t("nextPatch");
     }
 
     function renderActivity(state, progress, result) {
       const rows = [];
       if (state.runner) {
-        rows.push(item("Runner", `${state.runner.worker} via ${state.runner.engine}; ${Math.round((state.runner.elapsed_ms || 0) / 1000)}s`));
+        rows.push(item(t("rowRunner"), `${state.runner.worker} via ${state.runner.engine}; ${Math.round((state.runner.elapsed_ms || 0) / 1000)}s`));
       } else {
-        rows.push(item("Runner", "No worker running"));
+        rows.push(item(t("rowRunner"), t("noWorker")));
       }
-      if (progress) rows.push(item("Progress", `${progress.step || "unknown"}${progress.message ? ` - ${progress.message}` : ""}`));
-      if (result) rows.push(item("Result", `${result.status || "unknown"} - ${result.summary || ""}`));
-      if ((state.tasks || []).length) rows.push(item("Work note", `${state.tasks[0].agent || ""} - ${state.tasks[0].goal || ""}`));
-      return rows.join("") || `<div class="empty">No AI activity yet</div>`;
+      if (progress) rows.push(item(t("rowProgress"), `${progress.step || t("unknown")}${progress.message ? ` - ${progress.message}` : ""}`));
+      if (result) rows.push(item(t("rowResult"), `${result.status || t("unknown")} - ${result.summary || ""}`));
+      if ((state.tasks || []).length) rows.push(item(t("rowWorkNote"), `${state.tasks[0].agent || ""} - ${state.tasks[0].goal || ""}`));
+      return rows.join("") || `<div class="empty">${esc(t("noWorker"))}</div>`;
     }
 
     function renderIdeAgents(state, configuredTargets) {
       const configured = new Set(configuredTargets.split(",").map((target) => target.trim()).filter(Boolean));
       const runtime = state.agent_runtime || [];
       const names = unique([...configured, ...runtime.map((agent) => agent.agent)]);
-      if (!names.length) return `<div class="empty">No IDE target configured</div>`;
+      if (!names.length) return `<div class="empty">${esc(t("noIdeTarget"))}</div>`;
       return names.map((name) => {
         const info = runtime.find((agent) => agent.agent === name);
         const isRunning = state.runner && (state.runner.worker === name || state.runner.engine === name);
         const tone = isRunning ? "warn" : configured.has(name) ? "ok" : "";
-        const status = isRunning ? "running" : configured.has(name) ? "configured" : info?.cli?.status || "available";
-        const detail = info?.cli?.summary || info?.auth?.summary || "IDE rules only";
+        const status = isRunning ? t("running") : configured.has(name) ? t("configured") : info?.cli?.status || t("available");
+        const detail = info?.cli?.summary || info?.auth?.summary || t("ideRulesOnly");
         return [
           "<div class=\"agent-row\">",
           `<div><div class="agent-name">${esc(name)}</div><div>${esc(detail)}</div></div>`,
@@ -911,18 +1148,18 @@
     }
 
     function renderVerify(report) {
-      if (!report || report.score === undefined) return `<div class="empty">No report</div>`;
+      if (!report || report.score === undefined) return `<div class="empty">${esc(t("noReport"))}</div>`;
       const violations = report.violations || [];
       return rows([
-        ["Score", `${report.score}/100 ${report.grade || ""}`],
-        ["Status", report.ok ? "ok" : "needs work"],
-        ["Next", report.next_action || ""],
-        ["Violations", violations.length ? violations.map((violation) => violation.type).join(", ") : "none"]
+        [t("rowScore"), `${report.score}/100 ${report.grade || ""}`],
+        [t("rowStatus"), report.ok ? t("ok") : t("needsWork")],
+        [t("rowNext"), report.next_action || ""],
+        [t("rowViolations"), violations.length ? violations.map((violation) => violation.type).join(", ") : t("none")]
       ]);
     }
 
     function renderFolders(items) {
-      if (!items.length) return `<div class="empty">No folder structure yet</div>`;
+      if (!items.length) return `<div class="empty">${esc(t("noFolderStructure"))}</div>`;
       return items.map((entry) => rows([
         [entry.folder || ".", (entry.code_targets || []).join(", ")]
       ])).join("");
@@ -946,13 +1183,43 @@
     }
 
     function promptText() {
-      return [
-        "Read chay-memory/ai_handoff.json first.",
-        "Then read chay-structure/features/<feature_id>.md, chay-structure/folder_structure.md, and chay-structure/api_graph.md.",
-        "Follow the user_flow and sequence_diagram.",
-        "Edit only selected/allowed files.",
-        "After editing, create git diff and run cr verify."
-      ].join("\n");
+      return t("prompt").join("\n");
+    }
+
+    function setLanguage(nextLang) {
+      lang = translations[nextLang] ? nextLang : "vi";
+      localStorage.setItem("chay-inspector-lang", lang);
+      document.documentElement.lang = lang;
+      document.querySelectorAll("button[data-lang]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.lang === lang);
+        button.setAttribute("aria-pressed", button.dataset.lang === lang ? "true" : "false");
+      });
+      document.querySelectorAll("[data-i18n]").forEach((node) => {
+        node.textContent = t(node.dataset.i18n);
+      });
+      if (lastState) render(lastState);
+      else {
+        els.headline.textContent = t("headlineEmpty");
+        els.nextStep.textContent = t("nextNoGraph");
+        els.featureMetric.textContent = t("missing");
+        els.featureCaption.textContent = t("runCreate");
+        els.filesCaption.textContent = t("noBoundary");
+        els.activityMetric.textContent = t("idle");
+        els.activityCaption.textContent = t("noWorker");
+        els.ideCaption.textContent = t("configuredTarget");
+        els.verifyCaption.textContent = t("noReport");
+        els.idePrompt.textContent = promptText();
+      }
+    }
+
+    function t(key) {
+      return translations[lang]?.[key] ?? translations.en[key] ?? key;
+    }
+
+    function statusText(value) {
+      if (value === "contract_ready") return t("contractReady");
+      if (value === "not_started") return t("notStarted");
+      return value || "";
     }
 
     function targetValue() {
@@ -991,6 +1258,7 @@
       }[char]));
     }
 
+    setLanguage(lang);
     load().catch((error) => showResult({ ok: false, error: error.message }));
     connect();
     setInterval(load, 10000);
