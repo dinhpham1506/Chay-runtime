@@ -670,8 +670,11 @@ function verifyUiTemplate() {
   const progress = fs.readFileSync(path.join(repoRoot, "src", "utils", "progress.js"), "utf8");
   const codexSkill = fs.readFileSync(path.join(repoRoot, "templates", "codex-skill", "chay-runtime", "SKILL.md"), "utf8");
   const projectRules = fs.readFileSync(path.join(repoRoot, "templates", "ide-rules", "chay-memory", "rules", "chay-runtime.md"), "utf8");
-  for (const text of ["Chạy Inspector", "targets", "taskText", "filesText", "idePrompt", "Feature Graph", "Folder Structure", "Selected Files", "Token Saving", "plantuml_sequence"]) {
+  for (const text of ["Chạy Inspector", "targets", "taskText", "filesText", "idePrompt", "Feature Graph", "Folder Structure", "Selected Files", "Verify", "plantuml_sequence"]) {
     assert.ok(html.includes(text), `missing inspector control: ${text}`);
+  }
+  for (const text of ["Token Saving", "Token Report", "data-action=\"token\"", "id=\"tokens\""]) {
+    assert.ok(!html.includes(text), `removed token UI should stay hidden: ${text}`);
   }
   for (const text of ["CASE A", "Continue existing feature", "Add or change feature", "Verify AI edit", "Feature memory before code. Feature boundary after code."]) {
     assert.ok(landing.includes(text), `missing landing case message: ${text}`);

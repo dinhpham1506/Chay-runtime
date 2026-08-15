@@ -252,7 +252,6 @@
             <button data-action="handoff">Refresh Handoff</button>
             <button data-action="config">Configure IDE</button>
             <button data-action="verify">Verify</button>
-            <button data-action="token">Token Report</button>
             <button data-action="patch">Patch Check</button>
           </div>
         </div>
@@ -299,17 +298,10 @@
         <div id="files" class="list"></div>
       </section>
 
-      <div class="grid">
-        <section class="panel">
-          <h2 class="section-title">Verify</h2>
-          <div id="verify" class="kv"></div>
-        </section>
-
-        <section class="panel">
-          <h2 class="section-title">Token Saving</h2>
-          <div id="tokens" class="kv"></div>
-        </section>
-      </div>
+      <section class="panel">
+        <h2 class="section-title">Verify</h2>
+        <div id="verify" class="kv"></div>
+      </section>
 
       <section class="panel">
         <h2 class="section-title">Diagrams</h2>
@@ -340,7 +332,6 @@
       folders: $("folders"),
       files: $("files"),
       verify: $("verify"),
-      tokens: $("tokens"),
       userFlow: $("userFlow"),
       sequence: $("sequence"),
       plantFlow: $("plantFlow"),
@@ -387,7 +378,6 @@
       if (action === "config") return { action: "config_ide", targets: els.targets.value.trim() || "manual" };
       if (action === "handoff") return { action: "handoff" };
       if (action === "verify") return { action: "verify" };
-      if (action === "token") return { action: "token_report" };
       if (action === "patch") return { action: "patch_check" };
       return { action };
     }
@@ -460,7 +450,6 @@
       els.folders.innerHTML = renderFolders(graph.folder_structure || handoff.source_of_truth?.folder_structure || []);
       els.files.innerHTML = files.length ? files.map((file) => `<span class="tag">${esc(file)}</span>`).join("") : `<div class="empty">No selected files</div>`;
       els.verify.innerHTML = renderVerify(state.eval_report);
-      els.tokens.innerHTML = renderTokens(state.token_report);
       els.userFlow.textContent = graph.user_flow || graph.mermaid || "No Mermaid user flow";
       els.sequence.textContent = graph.sequence_diagram || "No Mermaid sequence";
       els.plantFlow.textContent = graph.plantuml_flow || "No PlantUML flow";
@@ -476,16 +465,6 @@
         ["Status", report.ok ? "ok" : "needs work"],
         ["Next", report.next_action],
         ["Violations", violations.length ? violations.map((item) => item.type).join(", ") : "none"]
-      ]);
-    }
-
-    function renderTokens(report) {
-      if (!report?.estimates) return `<div class="empty">No token report</div>`;
-      return rows([
-        ["Chạy context", String(report.estimates.chay_context_tokens)],
-        ["Full repo", String(report.estimates.full_repo_tokens)],
-        ["Saved", String(report.estimates.saved_tokens)],
-        ["Savings", `${report.estimates.savings_percent}%`]
       ]);
     }
 

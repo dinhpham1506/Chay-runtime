@@ -9,7 +9,6 @@ import { writeProgressNote } from "../utils/progress.js";
 import { analyzeDiff, validateDiff } from "../core/diff.js";
 import { loadPolicy } from "../core/policy.js";
 import { buildEvalReport } from "../core/evalReport.js";
-import { buildTokenReport } from "../core/tokenReport.js";
 import { validateResultNote, validateWorkNote } from "../core/validators.js";
 import { normalizeAgentName } from "../core/agents.js";
 import { defaultWorker, resultNotePath, workNotePath } from "../core/host.js";
@@ -152,7 +151,6 @@ async function runAction(res, body) {
   if (data.action === "run_worker") { const dispatch = spawnWorker(worker, data); return sendJson(res, dispatch.ok ? 200 : 409, dispatch); }
   if (data.action === "validate_output") return validateUiOutput(res, data.file || resultNotePath(worker));
   if (data.action === "patch_check") return patchUiCheck(res, data.diff || ".chay/tmp/current.diff", data.work || workNotePath(worker));
-  if (data.action === "token_report") return sendJson(res, 200, buildTokenReport(loadPolicy(), { worker }));
   if (data.action === "eval_report") return sendJson(res, 200, buildEvalReport(loadPolicy(), { worker }));
   if (data.action === "experience_snapshot") return experienceUiSnapshot(res);
   if (data.action === "runtime_status") return sendJson(res, 200, { ok: true, agents: agentRuntimeStatus({ auth: true }) });
@@ -237,7 +235,7 @@ function buildState() {
     progress_steps: progressSteps,
     capabilities: {
       realtime: "sse_plus_file_watch",
-      actions: ["create_task", "run_worker", "validate_output", "patch_check", "token_report", "eval_report", "experience_snapshot"],
+      actions: ["create_task", "run_worker", "validate_output", "patch_check", "eval_report", "experience_snapshot"],
       worker_options: ["agent", "maxRetries", "isolate", "testCommand"]
     },
     agents: agentsFrom(host, notes, progress),
@@ -252,7 +250,6 @@ function buildState() {
     experience: optionalJson("chay-memory/experience_spectrum.json"),
     chat: readChat(),
     checks: buildChecks(notes, worker),
-    token_report: buildTokenReport(policy, { worker }),
     eval_report: buildEvalReport(policy, { worker })
   };
 }
