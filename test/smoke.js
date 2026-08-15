@@ -662,10 +662,12 @@ function verifyUiTemplate() {
   for (const text of ["CASE A", "Continue existing feature", "Add or change feature", "Verify AI edit", "Feature memory before code. Feature boundary after code."]) {
     assert.ok(landing.includes(text), `missing landing case message: ${text}`);
   }
-  for (const text of ["assets/chay-logo.png", "rel=\"icon\" type=\"image/png\"", "apple-touch-icon", "og:image", "twitter:image"]) {
+  for (const text of ["assets/chay-logo.svg", "rel=\"icon\" type=\"image/svg+xml\"", "apple-touch-icon", "og:image", "og:image:type", "twitter:image"]) {
     assert.ok(landing.includes(text), `missing landing logo asset: ${text}`);
   }
-  assert.ok(fs.existsSync(path.join(repoRoot, "site", "assets", "chay-logo.png")), "missing GitHub Pages logo asset");
+  assert.ok(!landing.includes("side-item active"), "motion sidebar should not hard-code the first step active");
+  assert.ok(landing.includes("\"IntersectionObserver\" in window"), "reveal animation must have an IntersectionObserver fallback");
+  assert.ok(fs.existsSync(path.join(repoRoot, "site", "assets", "chay-logo.svg")), "missing GitHub Pages SVG logo asset");
   for (const text of ["Continue existing feature", "Add or change feature", "Verify AI edit", "feature memory before code, feature boundary after code"]) {
     assert.ok(codexSkill.includes(text), `missing Codex Skill case message: ${text}`);
     assert.ok(projectRules.includes(text), `missing project rule case message: ${text}`);

@@ -8,14 +8,15 @@
 <meta property="og:title" content="Chạy Runtime" />
 <meta property="og:description" content="Contract, handoff và verify layer cho Codex, Claude, Cursor, Kiro và IDE AI." />
 <meta property="og:type" content="website" />
-<meta property="og:image" content="https://dinhpham1506.github.io/Chay-runtime/assets/chay-logo.png" />
+<meta property="og:image" content="https://dinhpham1506.github.io/Chay-runtime/assets/chay-logo.svg" />
+<meta property="og:image:type" content="image/svg+xml" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:image" content="https://dinhpham1506.github.io/Chay-runtime/assets/chay-logo.png" />
+<meta name="twitter:image" content="https://dinhpham1506.github.io/Chay-runtime/assets/chay-logo.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="icon" type="image/png" href="assets/chay-logo.png" />
-<link rel="apple-touch-icon" href="assets/chay-logo.png" />
+<link rel="icon" type="image/svg+xml" href="assets/chay-logo.svg" />
+<link rel="apple-touch-icon" href="assets/chay-logo.svg" />
 <style>
   :root {
     --bg: #f4f4f3;
@@ -899,7 +900,7 @@
   <div class="wrap nav-inner">
     <a class="brand" href="#top" aria-label="Chạy Runtime home">
       <span class="brand-mark">
-        <img src="assets/chay-logo.png" alt="" width="38" height="38" />
+        <img src="assets/chay-logo.svg" alt="" width="38" height="38" />
       </span>
       Chạy Runtime
     </a>
@@ -951,7 +952,7 @@
           <div class="console-body">
             <aside class="sidebar">
               <div class="side-label" data-i18n="runtimeLabel">runtime</div>
-              <div class="side-item active" data-motion-step="0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h5"/></svg> <span data-i18n="sideFeatureGraph">Feature flowchart</span></div>
+              <div class="side-item" data-motion-step="0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h5"/></svg> <span data-i18n="sideFeatureGraph">Feature flowchart</span></div>
               <div class="side-item" data-motion-step="2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h6l3-8 3 16 3-8h3"/></svg> <span data-i18n="sideApiMap">API flowchart</span></div>
               <div class="side-item" data-motion-step="3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg> <span data-i18n="sideHandoff">Handoff</span></div>
               <div class="side-item" data-motion-step="4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg> <span data-i18n="sideVerify">Verify</span></div>
@@ -1359,12 +1360,17 @@
     }
   });
 
-  const observer = new IntersectionObserver((entries) => {
-    for (const entry of entries) {
-      if (entry.isIntersecting) entry.target.classList.add("in");
-    }
-  }, { threshold: 0.16 });
-  document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+  const revealElements = Array.from(document.querySelectorAll(".reveal"));
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) entry.target.classList.add("in");
+      }
+    }, { threshold: 0.16 });
+    revealElements.forEach((el) => observer.observe(el));
+  } else {
+    revealElements.forEach((el) => el.classList.add("in"));
+  }
 
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const motionElements = Array.from(document.querySelectorAll("[data-motion-step]"));
@@ -1375,13 +1381,15 @@
       element.classList.toggle("is-done", step < activeStep);
     }
   }
-  if (!reducedMotion && motionElements.length > 0) {
+  if (motionElements.length > 0) {
     let step = 0;
     setMotionStep(step);
+    if (!reducedMotion) {
     window.setInterval(() => {
       step = (step + 1) % 5;
       setMotionStep(step);
     }, 1350);
+    }
   }
 </script>
 </body>

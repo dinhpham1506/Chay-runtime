@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Chay Runtime logo</title>
+  <desc id="desc">A stylized salmon fish mark in coral orange and deep navy.</desc>
+  <defs>
+    <linearGradient id="bodyGradient" x1="64" x2="474" y1="332" y2="154" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff5b48"/>
+      <stop offset=".52" stop-color="#ff8667"/>
+      <stop offset="1" stop-color="#ef563e"/>
+    </linearGradient>
+    <linearGradient id="bellyGradient" x1="100" x2="352" y1="356" y2="238" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff1e8"/>
+      <stop offset=".58" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#d8dde3"/>
+    </linearGradient>
+    <linearGradient id="navyGradient" x1="132" x2="460" y1="394" y2="118" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#081a3a"/>
+      <stop offset=".52" stop-color="#0b3973"/>
+      <stop offset="1" stop-color="#052f6d"/>
+    </linearGradient>
+    <filter id="softShadow" x="-12%" y="-12%" width="124%" height="124%">
+      <feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#0b1f3d" flood-opacity=".16"/>
+    </filter>
+  </defs>
+  <g filter="url(#softShadow)">
+    <path fill="url(#navyGradient)" d="M204 148c35-3 74 5 105 31-43 5-84 15-120 32 19-21 29-42 15-63Z"/>
+    <path fill="url(#bodyGradient)" d="M45 331c43-111 151-178 289-189 60-5 121 8 161 33 15 9 22 18 22 26-56-4-115 13-171 45-54 31-106 70-167 88-49 15-94 15-134-3Z"/>
+    <path fill="url(#navyGradient)" d="M45 331c38-135 168-212 319-205 61 3 116 23 151 54-51-15-110-18-176-8-128 20-224 75-294 159Z"/>
+    <path fill="url(#bodyGradient)" d="M53 333c30 13 67 16 108 8-58 45-74 98-37 138-48-17-79-46-87-84-5-22 0-42 16-62Z"/>
+    <path fill="url(#navyGradient)" d="M121 315c-16 21-23 44-16 67 12 38 57 61 113 65-61 10-121-4-156-43-24-27-27-62-9-98l68 9Z"/>
+    <path fill="url(#bellyGradient)" d="M101 326c72-49 158-75 256-79-52 17-96 43-137 73-44 32-82 50-119 50-15 0-27-4-35-10 10-10 22-21 35-34Z"/>
+    <path fill="#fff" d="M66 309c33-57 88-98 164-123-65 38-107 78-132 120-11 4-22 6-32 3Z" opacity=".92"/>
+    <path fill="#fff" d="M375 183c-34 25-47 58-30 91-33-21-36-64 30-91Z" opacity=".95"/>
+    <path fill="#fff" d="M421 188c-32 24-47 52-39 85-25-31-11-67 39-85Z" opacity=".9"/>
+    <path fill="url(#bodyGradient)" d="M374 244c25-22 58-35 96-39-32 19-54 40-67 64-13-3-23-11-29-25Z"/>
+    <path fill="url(#navyGradient)" d="M441 199c30-6 57-3 76 2-20 14-47 25-79 31 12-12 15-23 3-33Z"/>
+    <path fill="#fff" d="M442 231c27-4 51-12 71-25-11 21-37 43-69 55-2-10-3-20-2-30Z"/>
+    <path fill="url(#navyGradient)" d="M452 222c21-8 41-13 60-16-12 19-31 36-56 48 0-12-1-22-4-32Z"/>
+    <path fill="url(#navyGradient)" d="M262 319c29-14 61-24 91-26-15 22-38 40-66 52-10-6-18-14-25-26Z"/>
+    <circle cx="454" cy="189" r="7" fill="#061b3b"/>
+    <circle cx="457" cy="186" r="2.2" fill="#fff"/>
+    <g fill="#08255a">
+      <circle cx="211" cy="188" r="3.6"/>
+      <circle cx="229" cy="180" r="3.5"/>
+      <circle cx="249" cy="174" r="3.2"/>
+      <circle cx="270" cy="171" r="3"/>
+      <circle cx="292" cy="170" r="2.8"/>
+      <circle cx="316" cy="174" r="2.6"/>
+      <circle cx="340" cy="180" r="2.5"/>
+      <circle cx="192" cy="204" r="3.2"/>
+      <circle cx="217" cy="201" r="3"/>
+      <circle cx="243" cy="197" r="2.9"/>
+      <circle cx="270" cy="195" r="2.7"/>
+      <circle cx="299" cy="196" r="2.5"/>
+      <circle cx="329" cy="202" r="2.3"/>
+      <circle cx="168" cy="224" r="2.8"/>
+      <circle cx="196" cy="221" r="2.7"/>
+      <circle cx="224" cy="218" r="2.6"/>
+      <circle cx="254" cy="216" r="2.4"/>
+    </g>
+    <path fill="#fff" d="M147 284c41-19 91-30 149-32-61 13-110 29-147 51-12 7-23-12-2-19Z" opacity=".76"/>
+  </g>
+</svg>
