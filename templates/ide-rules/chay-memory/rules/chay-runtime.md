@@ -2,6 +2,18 @@
 
 Use these rules whenever an IDE AI works inside a project that has Chay Runtime files.
 
+## Core Cases
+
+Chay Runtime answers three questions around every AI coding session:
+
+1. Continue existing feature: read the right handoff/context before editing.
+2. Add or change feature: show the human flow, inferred runtime sequence, API/code relation, and code targets before AI edits.
+3. Verify AI edit: check whether the patch stayed inside the feature boundary and did not affect unrelated feature scope.
+
+Short rule: feature memory before code, feature boundary after code.
+
+Sequence rule: treat `runtime_sequence` as inferred repository evidence, not absolute truth. Check confidence, evidence, and unknowns before editing interactions.
+
 ## Required Read Order
 
 1. `.chay/ide/CHAY_IDE_INSTRUCTIONS.md`

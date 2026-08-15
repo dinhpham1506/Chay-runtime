@@ -7,9 +7,9 @@ tools: Read, Bash
 You are the Chạy Runtime reviewer.
 
 Read only:
-- memory/task_note.json
-- memory/context_package.json
-- memory/*_result_note.json
+- chay-memory/task_note.json
+- chay-memory/context_package.json
+- chay-memory/*_result_note.json
 
 Do not read:
 - audit/*.md

@@ -88,6 +88,42 @@
         }
       }
     },
+    "runtime_sequence": {
+      "type": "object",
+      "properties": {
+        "kind": { "type": "string" },
+        "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
+        "human_review_required": { "type": "boolean" },
+        "inference": { "type": "string" },
+        "participants": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "label": { "type": "string" },
+              "file": { "type": "string" },
+              "role": { "type": "string" },
+              "evidence": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": { "type": "string" },
+              "to": { "type": "string" },
+              "label": { "type": "string" },
+              "evidence": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "evidence_summary": { "type": "array", "items": { "type": "string" } },
+        "unknowns": { "type": "array", "items": { "type": "string" } }
+      }
+    },
     "plantuml_flow": { "type": "string" },
     "plantuml_sequence": { "type": "string" },
     "plantuml_api_graph": { "type": "string" },

@@ -515,7 +515,7 @@ function refreshDiff(diffFile, cwd) {
   const result = spawnSync("git", ["diff", "--no-ext-diff", "--", ...pathspec], { cwd, encoding: "utf8" });
   if (result.status === 0) {
     const untracked = spawnSync("git", ["ls-files", "--others", "--exclude-standard", "--", ...pathspec], { cwd, encoding: "utf8" });
-    writeText(diffFile, joinDiffs(result.stdout, syntheticDiffForUntracked(untracked.status === 0 ? untracked.stdout : "")));
+    writeText(diffFile, joinDiffs(result.stdout, syntheticDiffForUntracked(untracked.status === 0 ? untracked.stdout : "", cwd)));
     return { ok: true, refreshed: true };
   }
   if (exists(diffFile)) {
@@ -763,21 +763,59 @@ function isolationSummary(isolation) {
   return isolation ? { mode: isolation.mode, workspace: isolation.root } : undefined;
 }
 
-function syntheticDiffForUntracked(stdout) {
+function syntheticDiffForUntracked(stdout, cwd = process.cwd()) {
   return String(stdout || "")
     .split(/\r?\n/)
     .map((file) => file.trim())
     .filter(Boolean)
     .filter((file) => !isRuntimePath(file))
-    .map((file) => [
-      `diff --git a/${file} b/${file}`,
-      "--- /dev/null",
-      `+++ b/${file}`,
-      "@@ -0,0 +1 @@",
-      "+<untracked file>",
-      ""
-    ].join("\n"))
+    .map((file) => buildUntrackedFileDiff(file, cwd))
+    .filter(Boolean)
     .join("");
+}
+
+function buildUntrackedFileDiff(file, cwd) {
+  const safe = safeRelativePath(file, "untracked file");
+  let content;
+  try {
+    content = fs.readFileSync(path.join(cwd, safe));
+  } catch {
+    return null;
+  }
+
+  if (looksBinary(content)) {
+    return [
+      `diff --git a/${safe} b/${safe}`,
+      "--- /dev/null",
+      `+++ b/${safe}`,
+      `Binary files /dev/null and b/${safe} differ`,
+      ""
+    ].join("\n");
+  }
+
+  const lines = textLinesForDiff(content);
+  return [
+    `diff --git a/${safe} b/${safe}`,
+    "--- /dev/null",
+    `+++ b/${safe}`,
+    `@@ -0,0 +1,${lines.length} @@`,
+    ...lines.map((line) => `+${line}`),
+    ""
+  ].join("\n");
+}
+
+function looksBinary(content) {
+  const limit = Math.min(content.length, 8000);
+  for (let index = 0; index < limit; index++) {
+    if (content[index] === 0) return true;
+  }
+  return false;
+}
+
+function textLinesForDiff(content) {
+  const text = content.toString("utf8").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  if (!text) return [];
+  return (text.endsWith("\n") ? text.slice(0, -1) : text).split("\n");
 }
 
 function joinDiffs(...parts) {

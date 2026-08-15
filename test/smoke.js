@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { commandForAgent } from "../src/core/engineAdapters.js";
+import { analyzeDiff, validateDiff } from "../src/core/diff.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const cli = path.join(repoRoot, "bin", "cr.js");
@@ -13,6 +14,35 @@ const project = fs.mkdtempSync(path.join(os.tmpdir(), "chay-runtime-smoke-"));
 assert.deepEqual(commandForAgent("codex", { prompt: "hi", model: "gpt-5" }).args, ["exec", "--model", "gpt-5", "hi"]);
 assert.deepEqual(commandForAgent("claude", { prompt: "hi", worker: "codex", model: "sonnet" }).args, ["-p", "hi", "--agent", "chay-codex-worker", "--model", "sonnet"]);
 assert.equal(commandForAgent("anti", { promptFile: "prompt.txt", model: "gemini-pro" }), null);
+
+const readme = fs.readFileSync(path.join(repoRoot, "README.md"), "utf8");
+assert.ok(readme.includes("Continue existing feature"));
+assert.ok(readme.includes("Add or change feature"));
+assert.ok(readme.includes("Verify AI edit"));
+assert.ok(readme.includes("feature memory before code, feature boundary after code"));
+
+const deletedSecretDiff = [
+  "diff --git a/secrets/.env b/secrets/.env",
+  "deleted file mode 100644",
+  "--- a/secrets/.env",
+  "+++ /dev/null",
+  "@@ -1 +0,0 @@",
+  "-SECRET_KEY=leaked",
+  ""
+].join("\n");
+const deletedSecretAnalysis = analyzeDiff(deletedSecretDiff);
+assert.ok(deletedSecretAnalysis.changedFiles.includes("secrets/.env"));
+const deletedSecretValidation = validateDiff(deletedSecretAnalysis, { allowed_files: ["src/applyService.js"] }, {
+  maxChangedFiles: 6,
+  maxAddedLines: 300,
+  maxDeletedLines: 200,
+  maxTotalDiffLines: 500,
+  humanOwnedPaths: [],
+  sensitivePaths: ["secrets/"],
+  forbiddenPatterns: []
+}, deletedSecretDiff);
+assert.ok(deletedSecretValidation.violations.some((item) => item.type === "changed_file_outside_scope"));
+assert.ok(deletedSecretValidation.violations.some((item) => item.type === "sensitive_path_change_blocked"));
 
 assert.ok(fs.existsSync(path.join(repoRoot, "site", "console.html")));
 assert.ok(!fs.readFileSync(path.join(repoRoot, "src", "commands", "ui.js"), "utf8").includes("function html()"));
@@ -122,6 +152,19 @@ assert.equal(codexSkillInstall.ok, true);
 assert.equal(codexSkillInstall.codex_skill.skill, "chay-runtime");
 assert.ok(fs.existsSync(path.join(fakeCodexHome, "skills", "chay-runtime", "SKILL.md")));
 assert.ok(fs.readFileSync(path.join(fakeCodexHome, "skills", "chay-runtime", "SKILL.md"), "utf8").includes("description: Use when working in a repository that contains Chay Runtime"));
+const fakeChatCodexHome = path.join(goProject, "fake-chat-codex-home");
+const chatInstall = runIn(goProject, "chat", "install", "--target", "codex", "--codex-home", fakeChatCodexHome);
+assert.equal(chatInstall.ok, true);
+assert.equal(chatInstall.mode, "direct_chatbot_install");
+assert.equal(chatInstall.target, "codex");
+assert.equal(chatInstall.codex_skill.skill, "chay-runtime");
+assert.ok(chatInstall.usage_options.some((option) => option.name === "Direct chatbot"));
+assert.ok(fs.existsSync(path.join(fakeChatCodexHome, "skills", "chay-runtime", "SKILL.md")));
+const cursorChatInstall = runIn(goProject, "chatbot", "install", "--target", "cursor");
+assert.equal(cursorChatInstall.ok, true);
+assert.equal(cursorChatInstall.alias_used, "chatbot");
+assert.equal(cursorChatInstall.target, "cursor");
+assert.equal(cursorChatInstall.codex_skill, null);
 const goResult = runIn(goProject, "go", "Fix duplicate apply service", "--files", "src/applyService.js");
 assert.equal(goResult.ok, true);
 assert.ok(fs.existsSync(path.join(goProject, "chay-memory", "feature_graph.json")));
@@ -258,6 +301,21 @@ assert.ok(!adminRole.selected_files.includes("netlify/functions/job-applications
 const adminRoleGraph = JSON.parse(fs.readFileSync(path.join(applyJobProject, "chay-memory", "feature_graph.json"), "utf8"));
 assert.ok(!adminRoleGraph.api_links.some((link) => link.api.includes("admin-announcements")));
 assert.ok(!adminRoleGraph.api_links.some((link) => link.api.includes("admin-usage")));
+assert.equal(adminRoleGraph.runtime_sequence.kind, "inferred_runtime_sequence");
+assert.equal(adminRoleGraph.runtime_sequence.human_review_required, true);
+assert.ok(["medium", "high"].includes(adminRoleGraph.runtime_sequence.confidence));
+assert.ok(adminRoleGraph.runtime_sequence.participants.some((item) => item.file === "client/src/components/AdminDashboard.tsx"));
+assert.ok(adminRoleGraph.runtime_sequence.participants.some((item) => item.label === "/.netlify/functions/admin-users-role"));
+assert.ok(adminRoleGraph.runtime_sequence.steps.some((item) => item.evidence.some((evidence) => evidence.includes("handler: netlify/functions/admin-users-role.ts"))));
+assert.ok(adminRoleGraph.sequence_diagram.includes("Inferred Runtime Sequence"));
+assert.ok(adminRoleGraph.sequence_diagram.includes("AdminDashboard.tsx"));
+assert.ok(adminRoleGraph.sequence_diagram.includes("/.netlify/functions/admin-users-role"));
+assert.ok(!adminRoleGraph.sequence_diagram.includes("IDE_AI"));
+const adminRoleFeatureMd = fs.readFileSync(path.join(applyJobProject, "chay-structure", "features", "admin_changes_user_role.md"), "utf8");
+assert.ok(adminRoleFeatureMd.includes("## Runtime Sequence Inference"));
+assert.ok(adminRoleFeatureMd.includes("Human review required: yes"));
+const adminRoleHandoff = JSON.parse(fs.readFileSync(path.join(applyJobProject, "chay-memory", "ai_handoff.json"), "utf8"));
+assert.equal(adminRoleHandoff.source_of_truth.runtime_sequence.kind, "inferred_runtime_sequence");
 const adminRoleRepeatFiles = runIn(
   applyJobProject,
   "go",
@@ -352,6 +410,26 @@ assert.equal(isolatedRejected.ok, false);
 assert.equal(isolatedRejected.isolation.mode, "copy_workspace_v1");
 assert.ok(isolatedRejected.patch.violations.some((item) => item.type === "changed_file_outside_scope"));
 assert.equal(fs.existsSync(path.join(project, "src", "outside.js")), false);
+const untrackedSecretProject = fs.mkdtempSync(path.join(os.tmpdir(), "chay-runtime-untracked-secret-"));
+fs.mkdirSync(path.join(untrackedSecretProject, "chay-memory"), { recursive: true });
+fs.writeFileSync(path.join(untrackedSecretProject, "chay-memory", "codex_work_note.json"), JSON.stringify({
+  work_id: "untracked_secret_1",
+  goal: "Reject unsafe untracked file content",
+  allowed_files: ["src/newSecret.js"],
+  inputs: [],
+  architecture_rules: [],
+  skills: [],
+  output_contract: {},
+  allowed_tools: [],
+  forbidden: [],
+  output_schema: {}
+}, null, 2));
+const untrackedSecret = runIn(untrackedSecretProject, "dispatch", "codex", "--command", untrackedSecretWorkerCommand(), "--max-retries", "0", "--isolate", { expectCode: 2 });
+assert.equal(untrackedSecret.ok, false);
+assert.equal(untrackedSecret.patch.ok, false);
+assert.ok(untrackedSecret.patch.violations.some((item) => item.type === "forbidden_pattern" && item.pattern === "AWS_SECRET_ACCESS_KEY"));
+assert.ok(untrackedSecret.patch.violations.some((item) => item.type === "max_added_lines_exceeded"));
+assert.equal(fs.existsSync(path.join(untrackedSecretProject, "src", "newSecret.js")), false);
 const isolatedDispatch = run("dispatch", "codex", "--command", isolatedWorkerCommand(), "--max-retries", "0", "--isolate");
 assert.equal(isolatedDispatch.ok, true);
 assert.equal(isolatedDispatch.isolation.mode, "copy_workspace_v1");
@@ -546,12 +624,35 @@ function isolatedWorkerCommand(options = {}) {
   return `${JSON.stringify(process.execPath)} -e ${JSON.stringify(script)}`;
 }
 
+function untrackedSecretWorkerCommand() {
+  const script = [
+    "const fs = require('node:fs');",
+    "fs.mkdirSync('src', { recursive: true });",
+    "const lines = Array.from({ length: 320 }, (_, index) => 'export const line_' + index + ' = ' + index + ';');",
+    "lines.unshift(\"export const leaked = 'AWS_SECRET_ACCESS_KEY';\");",
+    "fs.writeFileSync('src/newSecret.js', lines.join('\\n') + '\\n');",
+    "fs.mkdirSync('chay-memory', { recursive: true });",
+    "fs.writeFileSync('chay-memory/codex_result_note.json', JSON.stringify({ work_id: 'untracked_secret_1', worker: 'codex', status: 'completed', summary: 'Created untracked file.', findings: ['created file'], changed_files: ['src/newSecret.js'], risks: [], next_recommendation: 'review_patch' }, null, 2));"
+  ].join(" ");
+  return `${JSON.stringify(process.execPath)} -e ${JSON.stringify(script)}`;
+}
+
 function verifyUiTemplate() {
   const html = fs.readFileSync(path.join(repoRoot, "site", "console.html"), "utf8");
+  const landing = fs.readFileSync(path.join(repoRoot, "site", "index.html"), "utf8");
   const server = fs.readFileSync(path.join(repoRoot, "src", "commands", "ui.js"), "utf8");
   const progress = fs.readFileSync(path.join(repoRoot, "src", "utils", "progress.js"), "utf8");
+  const codexSkill = fs.readFileSync(path.join(repoRoot, "templates", "codex-skill", "chay-runtime", "SKILL.md"), "utf8");
+  const projectRules = fs.readFileSync(path.join(repoRoot, "templates", "ide-rules", "chay-memory", "rules", "chay-runtime.md"), "utf8");
   for (const text of ["Chạy Inspector", "targets", "taskText", "filesText", "idePrompt", "Feature Graph", "Folder Structure", "Selected Files", "Token Saving", "plantuml_sequence"]) {
     assert.ok(html.includes(text), `missing inspector control: ${text}`);
+  }
+  for (const text of ["CASE A", "Continue existing feature", "Add or change feature", "Verify AI edit", "Feature memory before code. Feature boundary after code."]) {
+    assert.ok(landing.includes(text), `missing landing case message: ${text}`);
+  }
+  for (const text of ["Continue existing feature", "Add or change feature", "Verify AI edit", "feature memory before code, feature boundary after code"]) {
+    assert.ok(codexSkill.includes(text), `missing Codex Skill case message: ${text}`);
+    assert.ok(projectRules.includes(text), `missing project rule case message: ${text}`);
   }
   assert.ok(progress.includes("validate_result"), "missing progress contract: validate_result");
   assert.ok(fs.readFileSync(path.join(repoRoot, "src", "core", "agents.js"), "utf8").includes("anti: \"antigravity\""));
@@ -560,4 +661,18 @@ function verifyUiTemplate() {
   }
   assert.ok(server.includes("available_agents"));
   assert.ok(server.includes("result_notes"));
+  assert.ok(server.includes("fs.closeSync(out)"), "UI dispatch must close parent log fd after spawn");
+  assertNoStaleMemoryPaths(path.join(repoRoot, "templates"));
+}
+
+function assertNoStaleMemoryPaths(dir) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const file = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      assertNoStaleMemoryPaths(file);
+      continue;
+    }
+    const text = fs.readFileSync(file, "utf8");
+    assert.ok(!/(^|[^A-Za-z0-9_-])memory\//.test(text), `stale memory/ path in ${path.relative(repoRoot, file)}`);
+  }
 }

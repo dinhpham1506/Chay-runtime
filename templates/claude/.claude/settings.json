@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cr boundary check-note --file memory/task_note.json"
+            "command": "cr boundary check-note --file chay-memory/task_note.json"
           }
         ]
       },
@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cr boundary check-note --file memory/task_note.json"
+            "command": "cr boundary check-note --file chay-memory/task_note.json"
           }
         ]
       }
@@ -26,7 +26,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "git diff --no-ext-diff -- . > .chay/tmp/current.diff && cr patch check --diff .chay/tmp/current.diff --work memory/codex_work_note.json"
+            "command": "git diff --no-ext-diff -- . > .chay/tmp/current.diff && cr patch check --diff .chay/tmp/current.diff --work chay-memory/codex_work_note.json"
           }
         ]
       }

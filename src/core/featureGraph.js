@@ -122,6 +122,13 @@ export function createFeatureGraph({ goal, files = [], out = "chay-memory/featur
   const projectStructure = projectStructureFromIndex(projectIndex, codeTargets);
   const apiGraph = apiGraphFromIndex(projectIndex, codeTargets, goal);
   const flow = featureFlowSpec(goal, codeTargets);
+  const runtimeSequence = inferRuntimeSequence({
+    goal,
+    codeTargets,
+    projectIndex,
+    apiGraph,
+    targetRationale
+  });
   return {
     feature_id: id,
     goal,
@@ -142,15 +149,16 @@ export function createFeatureGraph({ goal, files = [], out = "chay-memory/featur
     api_graph: apiGraph.mermaid,
     api_links: apiGraph.links,
     plantuml_api_graph: apiGraph.plantuml,
+    runtime_sequence: runtimeSequence,
     target_rationale: targetRationale,
     nodes: flow.nodes,
     edges: flow.edges,
     error_nodes: flow.errorNodes,
     code_targets: codeTargets,
     user_flow: mermaidFlow(flow),
-    sequence_diagram: mermaidSequence(goal, flow.kind),
+    sequence_diagram: mermaidRuntimeSequence(runtimeSequence),
     plantuml_flow: plantumlFlow(flow),
-    plantuml_sequence: plantumlSequence(goal, flow.kind),
+    plantuml_sequence: plantumlRuntimeSequence(runtimeSequence),
     acceptance_checks: flow.acceptanceChecks,
     mermaid: mermaidFlow(flow)
   };
@@ -292,6 +300,14 @@ export function featureFlowMarkdown(graph, artifacts = {}) {
     "```mermaid",
     graph?.sequence_diagram || "",
     "```",
+    "",
+    "## Runtime Sequence Inference",
+    ""
+  );
+
+  lines.push(...runtimeSequenceMarkdown(graph?.runtime_sequence));
+
+  lines.push(
     "",
     "## API Graph",
     "",
@@ -566,6 +582,349 @@ function routeFromApiTarget(file) {
   if (apiIndex >= 0) return `/api/${normalized.slice(apiIndex + 5).replace(/\.[^.]+$/, "")}`;
   if (normalized.startsWith("api/")) return `/api/${normalized.slice(4).replace(/\.[^.]+$/, "")}`;
   return normalized;
+}
+
+function inferRuntimeSequence({ goal, codeTargets = [], projectIndex = null, apiGraph = null, targetRationale = [] }) {
+  const files = Array.isArray(projectIndex?.files) ? projectIndex.files : [];
+  const byPath = new Map(files.map((file) => [normalizePath(file.path), { ...file, path: normalizePath(file.path) }]));
+  const rationaleByPath = new Map((targetRationale || []).map((item) => [normalizePath(item.path), item]));
+  const apiLinks = Array.isArray(apiGraph?.links) ? apiGraph.links : [];
+  const targets = [...new Set(codeTargets.map(normalizePath).filter(Boolean))].map((target) => {
+    const indexed = byPath.get(target) || {};
+    const rationale = rationaleByPath.get(target) || {};
+    return {
+      ...indexed,
+      path: target,
+      role: inferRuntimeRole(target, indexed.role || rationale.role || "source"),
+      rationale: rationale.reason || ""
+    };
+  });
+
+  const participants = [];
+  const steps = [];
+  const unknowns = [];
+  const addParticipant = (participant) => {
+    if (!participant?.id || participants.some((item) => item.id === participant.id)) return;
+    participants.push(participant);
+  };
+  const addStep = (from, to, label, evidence = []) => {
+    if (!from || !to || from === to) return;
+    steps.push({ from, to, label, evidence: evidence.filter(Boolean).slice(0, 4) });
+  };
+
+  addParticipant({
+    id: "user",
+    label: "User",
+    role: "actor",
+    evidence: ["Feature starts from product/user intent."]
+  });
+
+  const uiTargets = targets.filter((file) => file.role === "client");
+  const apiTargets = targets.filter((file) => file.role === "api_controller" || file.role === "route" || isLikelyApiTarget(file.path));
+  const downstreamTargets = targets
+    .filter((file) => !uiTargets.some((item) => item.path === file.path) && !apiTargets.some((item) => item.path === file.path))
+    .sort((a, b) => runtimeRoleOrder(a.role) - runtimeRoleOrder(b.role) || a.path.localeCompare(b.path));
+
+  let current = "user";
+  if (uiTargets.length > 0) {
+    const ui = uiTargets[0];
+    const uiId = participantId(ui.path);
+    addParticipant(fileParticipant(ui));
+    addStep("user", uiId, goal || "Start feature", [
+      "selected client/UI target",
+      ui.rationale
+    ]);
+    current = uiId;
+  } else if (apiTargets.length > 0 || downstreamTargets.length > 0) {
+    addParticipant({
+      id: "client",
+      label: "User / Client",
+      role: "client",
+      evidence: ["No specific UI target was selected; client is inferred as request origin."]
+    });
+    addStep("user", "client", goal || "Start feature", ["inferred request origin"]);
+    current = "client";
+  }
+
+  const orderedApiTargets = orderApiTargets(apiTargets, apiLinks, goal);
+  for (const apiTarget of orderedApiTargets) {
+    const link = apiLinkForTarget(apiTarget.path, apiLinks);
+    const route = link?.route || firstApiRoute(apiTarget) || routeFromApiTarget(apiTarget.path);
+    if (route && route !== apiTarget.path) {
+      const routeId = `route_${slug(route)}`;
+      addParticipant({
+        id: routeId,
+        label: route,
+        role: "api_route",
+        evidence: [`route detected for ${apiTarget.path}`]
+      });
+      addStep(current, routeId, "Call API route", [
+        `route: ${route}`,
+        `handler: ${apiTarget.path}`
+      ]);
+      current = routeId;
+    }
+
+    const apiId = participantId(apiTarget.path);
+    addParticipant(fileParticipant(apiTarget));
+    addStep(current, apiId, `Handle in ${shortName(apiTarget.path)}`, [
+      `role: ${apiTarget.role}`,
+      apiTarget.rationale,
+      directImportEvidence(currentFilePath(current, participants), apiTarget.path, byPath) || "selected API/controller target"
+    ]);
+    current = apiId;
+  }
+
+  for (const target of downstreamTargets) {
+    const nextId = participantId(target.path);
+    addParticipant(fileParticipant(target));
+    addStep(current, nextId, runtimeStepLabel(target), [
+      `role: ${target.role}`,
+      target.rationale,
+      directImportEvidence(currentFilePath(current, participants), target.path, byPath) ||
+        reverseImportEvidence(currentFilePath(current, participants), target.path, byPath) ||
+        "selected feature target ordered by role/path heuristic"
+    ]);
+    current = nextId;
+  }
+
+  if (steps.length === 0) {
+    const firstTarget = targets[0];
+    if (firstTarget) {
+      const targetId = participantId(firstTarget.path);
+      addParticipant(fileParticipant(firstTarget));
+      addStep("user", targetId, goal || "Review selected target", [
+        "single selected target",
+        firstTarget.rationale || "no route/import evidence found"
+      ]);
+    }
+  }
+
+  const hasRoute = participants.some((item) => item.role === "api_route");
+  const hasResolvedImport = steps.some((step) => step.evidence.some((item) => item.includes("imports")));
+  if (!hasRoute) unknowns.push("No API route was detected for this feature from the repository scan.");
+  if (!hasResolvedImport && steps.length > 1) unknowns.push("No resolved import chain connects every selected file; order uses role/path heuristics.");
+  if (targets.length <= 1) unknowns.push("Only one selected code target was available; service/repository path may be incomplete.");
+
+  const confidence = runtimeSequenceConfidence({ hasRoute, hasResolvedImport, targetCount: targets.length, stepCount: steps.length });
+
+  return {
+    kind: "inferred_runtime_sequence",
+    confidence,
+    human_review_required: true,
+    inference: "Inferred from project scan metadata: selected code_targets, detected API routes, resolved relative imports, and file roles. Imports show relationships, not guaranteed execution order.",
+    participants,
+    steps,
+    evidence_summary: evidenceSummary({ hasRoute, hasResolvedImport, targets }),
+    unknowns
+  };
+}
+
+function fileParticipant(file) {
+  return {
+    id: participantId(file.path),
+    label: shortName(file.path),
+    file: file.path,
+    role: file.role || "source",
+    evidence: [
+      `selected target: ${file.path}`,
+      file.role ? `role: ${file.role}` : "",
+      file.rationale || ""
+    ].filter(Boolean)
+  };
+}
+
+function inferRuntimeRole(file, role) {
+  const normalized = normalizePath(file).toLowerCase();
+  if (role && role !== "source") return role;
+  if (isLikelyApiTarget(normalized) || normalized.includes("/api/")) return "api_controller";
+  if (normalized.includes("/components/") || normalized.includes("/pages/") || normalized.includes("/views/") || /\.(tsx|jsx)$/.test(normalized)) return "client";
+  if (normalized.includes("service")) return "service";
+  if (normalized.includes("repository") || normalized.includes("dao")) return "repository";
+  if (normalized.includes("model") || normalized.includes("entity")) return "model";
+  if (isDatabaseTarget(normalized)) return "database";
+  return role || "source";
+}
+
+function runtimeRoleOrder(role) {
+  return {
+    client: 0,
+    api_controller: 1,
+    route: 1,
+    service: 2,
+    repository: 3,
+    model: 4,
+    database: 5,
+    source: 6
+  }[role] ?? 6;
+}
+
+function orderApiTargets(apiTargets, apiLinks, goal) {
+  const goalTerms = new Set(String(goal || "").toLowerCase().split(/[^a-z0-9_]+/).filter((word) => word.length >= 3));
+  return [...apiTargets].sort((a, b) => {
+    const aLink = apiLinkForTarget(a.path, apiLinks);
+    const bLink = apiLinkForTarget(b.path, apiLinks);
+    const aRouteScore = aLink?.route ? 2 : 0;
+    const bRouteScore = bLink?.route ? 2 : 0;
+    const aGoalScore = [...goalTerms].filter((term) => a.path.toLowerCase().includes(term)).length;
+    const bGoalScore = [...goalTerms].filter((term) => b.path.toLowerCase().includes(term)).length;
+    return (bRouteScore + bGoalScore) - (aRouteScore + aGoalScore) || a.path.localeCompare(b.path);
+  });
+}
+
+function apiLinkForTarget(target, apiLinks) {
+  return apiLinks.find((link) =>
+    normalizePath(link.api) === target ||
+    (link.related_code || []).map(normalizePath).includes(target)
+  );
+}
+
+function firstApiRoute(file) {
+  return Array.isArray(file.api_routes) && file.api_routes.length > 0 ? file.api_routes[0] : "";
+}
+
+function runtimeStepLabel(file) {
+  if (file.role === "service") return `Run business logic in ${shortName(file.path)}`;
+  if (file.role === "repository") return `Read/write data through ${shortName(file.path)}`;
+  if (file.role === "model") return `Use domain model ${shortName(file.path)}`;
+  if (file.role === "database") return `Persist/query database via ${shortName(file.path)}`;
+  return `Continue through ${shortName(file.path)}`;
+}
+
+function directImportEvidence(fromPath, toPath, byPath) {
+  if (!fromPath || !toPath) return "";
+  const from = byPath.get(fromPath);
+  if (!from) return "";
+  const imports = (from.imports || []).map((item) => resolveImport(fromPath, item, byPath)).filter(Boolean);
+  return imports.includes(toPath) ? `${fromPath} imports ${toPath}` : "";
+}
+
+function reverseImportEvidence(fromPath, toPath, byPath) {
+  if (!fromPath || !toPath) return "";
+  const to = byPath.get(toPath);
+  if (!to) return "";
+  const imports = (to.imports || []).map((item) => resolveImport(toPath, item, byPath)).filter(Boolean);
+  return imports.includes(fromPath) ? `${toPath} imports ${fromPath}` : "";
+}
+
+function currentFilePath(participantIdValue, participants) {
+  return participants.find((item) => item.id === participantIdValue)?.file || "";
+}
+
+function runtimeSequenceConfidence({ hasRoute, hasResolvedImport, targetCount, stepCount }) {
+  if (hasRoute && hasResolvedImport && targetCount >= 3) return "high";
+  if ((hasRoute || hasResolvedImport) && stepCount >= 2) return "medium";
+  if (targetCount >= 2) return "medium";
+  return "low";
+}
+
+function evidenceSummary({ hasRoute, hasResolvedImport, targets }) {
+  const summary = [];
+  if (targets.length > 0) summary.push(`${targets.length} selected code target(s)`);
+  if (hasRoute) summary.push("detected API route(s)");
+  if (hasResolvedImport) summary.push("resolved relative import evidence");
+  if (!hasRoute && !hasResolvedImport) summary.push("role/path heuristic only");
+  return summary;
+}
+
+function runtimeSequenceMarkdown(runtimeSequence = {}) {
+  if (!runtimeSequence || typeof runtimeSequence !== "object") {
+    return ["No runtime sequence inference is available."];
+  }
+  const lines = [
+    `- Kind: ${runtimeSequence.kind || "inferred_runtime_sequence"}`,
+    `- Confidence: ${String(runtimeSequence.confidence || "low").toUpperCase()}`,
+    `- Human review required: ${runtimeSequence.human_review_required === false ? "no" : "yes"}`,
+    `- Inference rule: ${runtimeSequence.inference || "Inferred from repository metadata."}`
+  ];
+  if (runtimeSequence.evidence_summary?.length) {
+    lines.push(`- Evidence summary: ${runtimeSequence.evidence_summary.join("; ")}`);
+  }
+  if (runtimeSequence.unknowns?.length) {
+    lines.push("", "Unknowns:");
+    for (const unknown of runtimeSequence.unknowns) lines.push(`- ${unknown}`);
+  }
+  if (runtimeSequence.steps?.length) {
+    lines.push("", "Step Evidence:");
+    for (const step of runtimeSequence.steps) {
+      lines.push(`- ${participantLabel(runtimeSequence, step.from)} -> ${participantLabel(runtimeSequence, step.to)}: ${step.label}`);
+      if (step.evidence?.length) lines.push(`  - Evidence: ${step.evidence.join("; ")}`);
+    }
+  }
+  return lines;
+}
+
+function mermaidRuntimeSequence(runtimeSequence) {
+  const participants = runtimeSequence?.participants || [];
+  const steps = runtimeSequence?.steps || [];
+  const lines = ["sequenceDiagram", "  autonumber"];
+  for (const participant of participants) {
+    const keyword = participant.role === "actor" ? "actor" : "participant";
+    lines.push(`  ${keyword} ${participant.id} as ${escapeMermaid(participant.label || participant.id)}`);
+  }
+  if (participants.length >= 2) {
+    lines.push(`  Note over ${participants[0].id},${participants.at(-1).id}: Inferred Runtime Sequence. Confidence: ${String(runtimeSequence.confidence || "low").toUpperCase()}. Human review required.`);
+  }
+  for (const step of steps) {
+    lines.push(`  ${step.from}->>${step.to}: ${escapeMermaid(step.label)}`);
+    if (step.evidence?.length) {
+      lines.push(`  Note right of ${step.to}: Evidence: ${escapeMermaid(step.evidence.join("; ")).slice(0, 180)}`);
+    }
+  }
+  if (runtimeSequence?.unknowns?.length && participants.length > 0) {
+    lines.push(`  Note over ${participants[0].id}: Unknowns: ${escapeMermaid(runtimeSequence.unknowns.join("; ")).slice(0, 180)}`);
+  }
+  return lines.join("\n");
+}
+
+function plantumlRuntimeSequence(runtimeSequence) {
+  const participants = runtimeSequence?.participants || [];
+  const steps = runtimeSequence?.steps || [];
+  const lines = ["@startuml", "title Inferred Runtime Sequence"];
+  for (const participant of participants) {
+    const keyword = participant.role === "actor" ? "actor" : participant.role === "database" ? "database" : "participant";
+    lines.push(`${keyword} "${plantText(participant.label || participant.id)}" as ${participant.id}`);
+  }
+  if (participants.length >= 2) {
+    lines.push(`note over ${participants[0].id},${participants.at(-1).id}`);
+    lines.push("Inferred from repository scan metadata.");
+    lines.push(`Confidence: ${String(runtimeSequence.confidence || "low").toUpperCase()}`);
+    lines.push("Human review required.");
+    lines.push("end note");
+  }
+  for (const step of steps) {
+    lines.push(`${step.from} -> ${step.to}: ${plantText(step.label)}`);
+    if (step.evidence?.length) {
+      lines.push(`note right of ${step.to}`);
+      lines.push(`Evidence: ${plantText(step.evidence.join("; ")).slice(0, 180)}`);
+      lines.push("end note");
+    }
+  }
+  if (runtimeSequence?.unknowns?.length && participants.length > 0) {
+    lines.push(`note over ${participants[0].id}`);
+    lines.push(`Unknowns: ${plantText(runtimeSequence.unknowns.join("; ")).slice(0, 180)}`);
+    lines.push("end note");
+  }
+  lines.push("@enduml");
+  return lines.join("\n");
+}
+
+function participantLabel(runtimeSequence, id) {
+  const participant = (runtimeSequence?.participants || []).find((item) => item.id === id);
+  return participant?.label || id;
+}
+
+function participantId(file) {
+  return `p_${slug(file)}`;
+}
+
+function shortName(file) {
+  const normalized = normalizePath(file);
+  return path.posix.basename(normalized) || normalized;
+}
+
+function normalizePath(value) {
+  return String(value || "").replace(/\\/g, "/").replace(/^\.\/+/, "");
 }
 
 function featureFlowSpec(goal, codeTargets) {

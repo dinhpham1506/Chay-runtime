@@ -2,9 +2,18 @@ export function printHelp() {
   console.log(`
 Chạy Runtime
 
+Feature memory before code. Feature boundary after code.
+
+Cases:
+  A. Continue existing feature: read the right handoff/context before editing
+  B. Add/change feature: show flow, sequence, API/code relation, and code targets first
+  C. Verify AI edit: check whether the patch stayed inside feature boundary
+
 Usage:
   cr start                    # initialize external IDE AI workflow
   cr config codex,claude,anti,github-copilot,cursor,kiro
+  cr chat install              # add Chay Runtime directly to Codex/chatbot rules
+  cr chat install --target cursor # install direct IDE/chatbot rules for this repo
   cr rules install             # install IDE project rules into this project
   cr rules install --codex-skill # also add chay-runtime to Codex global Skills
   cr config check
@@ -79,6 +88,9 @@ Experience compression:
   cr experience snapshot --out chay-memory/experience_spectrum.json
 
 Integrations:
+  cr chat install
+  cr chat install --target codex --codex-home ~/.codex
+  cr chat install --target cursor
   cr rules install
   cr rules install --codex-skill
   cr integration install --target claude

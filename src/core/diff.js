@@ -5,7 +5,13 @@ export function analyzeDiff(diffText) {
   let deleted = 0;
 
   for (const line of lines) {
-    if (line.startsWith("+++ b/")) files.add(line.slice("+++ b/".length));
+    const gitHeader = line.match(/^diff --git a\/(.+?) b\/(.+)$/);
+    if (gitHeader) {
+      addDiffPath(files, gitHeader[1]);
+      addDiffPath(files, gitHeader[2]);
+    }
+    if (line.startsWith("+++ b/")) addDiffPath(files, line.slice("+++ b/".length));
+    if (line.startsWith("--- a/")) addDiffPath(files, line.slice("--- a/".length));
     if (line.startsWith("+") && !line.startsWith("+++")) added++;
     if (line.startsWith("-") && !line.startsWith("---")) deleted++;
   }
@@ -62,6 +68,12 @@ function isAllowedPath(file, allowedFile) {
 
 function normalizeRelativePath(file) {
   return String(file || "").replace(/\\/g, "/").replace(/^\.\/+/, "");
+}
+
+function addDiffPath(files, file) {
+  const normalized = normalizeRelativePath(file);
+  if (!normalized || normalized === "/dev/null" || normalized === "dev/null") return;
+  files.add(normalized);
 }
 
 function findHumanOwnedPathHits(files, work, policy) {

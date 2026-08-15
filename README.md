@@ -1,5 +1,9 @@
 # chay-runtime
 
+[![CI](https://github.com/dinhpham1506/Chay-runtime/actions/workflows/ci.yml/badge.svg)](https://github.com/dinhpham1506/Chay-runtime/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/chay-runtime.svg)](https://www.npmjs.com/package/chay-runtime)
+[![License](https://img.shields.io/npm/l/chay-runtime.svg)](LICENSE)
+
 chay-runtime is a note-based policy runtime for multi-agent coding CLIs.
 
 ## Core idea
@@ -12,6 +16,24 @@ chay-runtime is a note-based policy runtime for multi-agent coding CLIs.
 - Repo intelligence selects a small context package before agents read code.
 - `cr start` boots the external IDE AI handoff workflow; legacy main/worker agent setup stays behind `cr setup`.
 
+## What Chạy answers
+
+Every AI coding session has to answer three practical questions:
+
+1. **Continue existing feature**
+   - Is this new AI session reading the right feature context?
+   - Output: `ai_handoff.json`, feature markdown, previous result, selected files.
+
+2. **Add or change feature**
+   - What should exist before AI edits code?
+   - Output: user flow, inferred runtime sequence with confidence/evidence, API/code relation, acceptance checks, folder map, code targets.
+
+3. **Verify AI edit**
+   - What is this change allowed to touch?
+   - Output: diff boundary check against `allowed_files`, `code_targets`, sensitive paths, human-owned paths, and forbidden patterns.
+
+The short version: **feature memory before code, feature boundary after code.**
+
 ## Why it is useful
 
 Chạy Runtime is not another model wrapper. It is a small runtime layer that
@@ -20,6 +42,9 @@ turns coding agents into a bounded workflow:
 - One clear task becomes compact machine-readable notes.
 - A feature graph captures the user flow, error branches, code targets, and
   acceptance checks before a worker edits code.
+- The sequence diagram is an `Inferred Runtime Sequence`: it is built from
+  selected targets, detected routes, imports, and file roles, then marked with
+  confidence and human-review notes instead of pretending imports prove runtime order.
 - The repo scan picks a small set of relevant files instead of handing the whole
   project to every agent.
 - Codex, Claude, Antigravity, Cursor, GitHub Copilot, Kiro, or another IDE AI
@@ -36,7 +61,11 @@ the task small, reviewable, and recoverable.
 
 ## CLI shape
 
-The short path is:
+Chạy Runtime supports two ways to use the same contract workflow.
+
+### Option 1: Terminal commands
+
+Use this when you want explicit control from the shell:
 
 ```bash
 npm install -g chay-runtime@latest
@@ -53,6 +82,35 @@ context package. Open your IDE AI and tell it:
 ```text
 Read chay-memory/ai_handoff.json, then chay-structure/features/<feature_id>.md, chay-structure/folder_structure.md, and chay-structure/api_graph.md. Continue only inside selected files.
 ```
+
+### Option 2: Add it directly to the chatbot / IDE AI
+
+Use this when you want Codex, Claude Code, Cursor, GitHub Copilot, Kiro, or
+Windsurf to remember the Chạy Runtime read order through installed rules instead
+of pasting the long prompt every session:
+
+```bash
+npm install -g chay-runtime@latest
+cd your-project
+cr start
+
+# Codex: installs project rules and the global chay-runtime Codex Skill
+cr chat install --target codex
+
+# Other IDE chat surfaces: installs project rule files
+cr chat install --target cursor
+cr chat install --target github-copilot
+cr chat install --target kiro
+cr chat install --target windsurf
+
+# Claude Code: installs project rules plus Claude agent templates
+cr chat install --target claude
+```
+
+After that, open the chatbot in the repo and type the task naturally. The
+installed rules tell it to read `chay-memory/ai_handoff.json`,
+`chay-structure/features/<feature_id>.md`, folder structure, API graph, and
+selected files before editing.
 
 Friendly aliases exist for the common steps:
 
@@ -381,6 +439,12 @@ wrapper that reads `CHAY_DISPATCH_PROMPT_FILE` and writes the required result
 note JSON.
 
 ## Safety model
+
+Security boundary: Chạy Runtime is a runtime guardrail, not an OS sandbox or a
+promise of absolute containment. Treat worker CLIs and IDE agents as code running
+with the current user's permissions. Use `--isolate` to reduce accidental
+out-of-scope writes, and run the whole worker process inside a container, VM, or
+OS sandbox when you need a hard boundary for untrusted commands or models.
 
 Chạy Runtime rejects:
 - notes that are too long

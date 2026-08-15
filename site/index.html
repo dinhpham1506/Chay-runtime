@@ -612,6 +612,55 @@
     grid-template-columns: repeat(4, 1fr);
     gap: 14px;
   }
+  .case-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-top: 28px;
+  }
+  .case-card {
+    min-height: 230px;
+    display: grid;
+    align-content: start;
+    gap: 14px;
+    padding: 20px;
+    border: 1px solid rgba(8,8,8,.08);
+    border-radius: var(--radius);
+    background: rgba(255,255,255,.72);
+  }
+  .case-card .case-label {
+    width: fit-content;
+    min-height: 28px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--white);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .case-card strong {
+    display: block;
+    font-size: 21px;
+    line-height: 1.14;
+  }
+  .case-card p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .case-card code {
+    width: fit-content;
+    max-width: 100%;
+    padding: 7px 9px;
+    border-radius: 999px;
+    background: var(--bg-soft);
+    color: var(--blue);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
   .step-card {
     min-height: 230px;
     padding: 20px;
@@ -619,6 +668,7 @@
     border-radius: var(--radius);
     background: rgba(255,255,255,.72);
   }
+  .case-grid + .steps-grid { margin-top: 14px; }
   .step-card .num {
     width: 34px;
     height: 34px;
@@ -676,6 +726,42 @@
   .terminal .c { color: #7a7d84; }
   .terminal .k { color: #d6a85c; }
   .terminal .s { color: #8fa8e8; }
+  .install-options {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .install-option {
+    min-height: 190px;
+    display: grid;
+    gap: 14px;
+    align-content: start;
+    padding: 20px;
+    border-radius: 18px;
+    border: 1px solid rgba(8,8,8,.08);
+    background: rgba(255,255,255,.72);
+  }
+  .install-option strong {
+    display: block;
+    font-size: 20px;
+    line-height: 1.15;
+  }
+  .install-option p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .install-option code {
+    width: fit-content;
+    max-width: 100%;
+    padding: 8px 10px;
+    border-radius: 999px;
+    background: var(--bg-soft);
+    color: var(--blue);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
   .rules {
     display: grid;
     gap: 12px;
@@ -763,8 +849,10 @@
     .console-body { grid-template-columns: 1fr; }
     .sidebar { display: none; }
     .workspace { grid-template-columns: 1fr; }
+    .case-grid { grid-template-columns: 1fr; }
     .steps-grid { grid-template-columns: repeat(2, 1fr); }
     .split { grid-template-columns: 1fr; }
+    .install-options { grid-template-columns: 1fr; }
   }
   @media (max-width: 680px) {
     .wrap { width: min(100% - 28px, 1180px); }
@@ -822,7 +910,7 @@
       <div class="hero-copy reveal">
         <span class="eyebrow"><i></i> <span data-i18n="eyebrow">Contract layer for external IDE AI</span></span>
         <h1 data-i18n="headline">Build AI coding flows grounded in your repo.</h1>
-        <p data-i18n="subhead">Chạy Runtime turns a vague task into a compact feature contract, folder map, API flowchart, work note and handoff. Codex, Claude, Cursor or Kiro can code outside. The repo keeps the guardrails.</p>
+        <p data-i18n="subhead">Chạy Runtime turns a vague task into feature memory before code and a feature boundary after code. Codex, Claude, Cursor or Kiro can continue, change and verify work without losing the feature context.</p>
         <div class="language-switch" aria-label="Language">
           <button class="active" type="button" data-lang="en" aria-pressed="true">EN</button>
           <button type="button" data-lang="vi" aria-pressed="false">VI</button>
@@ -927,6 +1015,26 @@
         <h2 class="section-title" data-i18n="workflowTitle">One flow for new work and maintenance.</h2>
         <p data-i18n="workflowText">Chạy keeps old feature contracts updated instead of creating competing docs. When scope changes, graph, context, work note and handoff move together.</p>
       </div>
+      <div class="case-grid">
+        <article class="case-card reveal">
+          <span class="case-label">CASE A</span>
+          <strong data-i18n="caseATitle">Continue existing feature</strong>
+          <p data-i18n="caseAText">A new AI session reads the right feature context and continues from the handoff.</p>
+          <code>ai_handoff.json</code>
+        </article>
+        <article class="case-card reveal">
+          <span class="case-label">CASE B</span>
+          <strong data-i18n="caseBTitle">Add or change feature</strong>
+          <p data-i18n="caseBText">The human sees the flow, sequence, API/code relation and code targets before AI edits.</p>
+          <code>cr go "Task"</code>
+        </article>
+        <article class="case-card reveal">
+          <span class="case-label">CASE C</span>
+          <strong data-i18n="caseCTitle">Verify AI edit</strong>
+          <p data-i18n="caseCText">The patch is checked against the feature boundary and old feature scope before handoff.</p>
+          <code>cr verify</code>
+        </article>
+      </div>
       <div class="steps-grid">
         <article class="step-card reveal"><span class="num">01</span><h3 data-i18n="step1Title">Start the runtime</h3><p data-i18n="step1Text">Create local rules and a clean memory folder that IDE AI can read.</p><code>cr start</code></article>
         <article class="step-card reveal"><span class="num">02</span><h3 data-i18n="step2Title">Configure the IDE</h3><p data-i18n="step2Text">Install rule files for Codex, Claude, Cursor, Kiro or manual IDE mode.</p><code>cr config codex,cursor</code></article>
@@ -973,6 +1081,7 @@
 <span class="c"># inside your repo</span>
 <span class="k">cr</span> start
 <span class="k">cr</span> config <span class="s">codex,claude,cursor,kiro</span>
+<span class="k">cr</span> chat install <span class="s">--target codex</span>
 
 <span class="c"># new feature or maintenance branch</span>
 <span class="k">cr</span> go <span class="s">"Admin changes user role"</span>
@@ -989,6 +1098,18 @@
           <a class="btn btn-primary" href="https://github.com/dinhpham1506/Chay-runtime" target="_blank" rel="noopener"><span data-i18n="openGithub">Open GitHub</span></a>
           <a class="btn" href="https://www.npmjs.com/package/chay-runtime" target="_blank" rel="noopener"><span data-i18n="openNpm">Open npm</span></a>
         </div>
+      </div>
+      <div class="install-options reveal" aria-label="Install options">
+        <article class="install-option">
+          <strong data-i18n="optionCliTitle">Option 1: run CLI commands</strong>
+          <p data-i18n="optionCliText">Use the terminal when you want explicit contract generation and verification.</p>
+          <code>cr go "Admin changes user role"</code>
+        </article>
+        <article class="install-option">
+          <strong data-i18n="optionChatTitle">Option 2: add it to the chatbot</strong>
+          <p data-i18n="optionChatText">Install Codex Skill or IDE rules once, then type tasks naturally without pasting the read-order prompt.</p>
+          <code>cr chat install --target codex</code>
+        </article>
       </div>
     </div>
   </section>
@@ -1026,7 +1147,7 @@
       navGithub: "GitHub",
       eyebrow: "Contract layer for external IDE AI",
       headline: "Build AI coding flows grounded in your repo.",
-      subhead: "Chay Runtime turns a vague task into a compact feature contract, folder map, API flowchart, work note and handoff. Codex, Claude, Cursor or Kiro can code outside. The repo keeps the guardrails.",
+      subhead: "Chay Runtime turns a vague task into feature memory before code and a feature boundary after code. Codex, Claude, Cursor or Kiro can continue, change and verify work without losing the feature context.",
       startCta: "Start with CLI",
       workflowCta: "View workflow",
       npmCta: "View npm",
@@ -1067,6 +1188,12 @@
       workflowKicker: "workflow",
       workflowTitle: "One flow for new work and maintenance.",
       workflowText: "Chay keeps old feature contracts updated instead of creating competing docs. When scope changes, graph, context, work note and handoff move together.",
+      caseATitle: "Continue existing feature",
+      caseAText: "A new AI session reads the right feature context and continues from the handoff.",
+      caseBTitle: "Add or change feature",
+      caseBText: "The human sees the flow, sequence, API/code relation and code targets before AI edits.",
+      caseCTitle: "Verify AI edit",
+      caseCText: "The patch is checked against the feature boundary and old feature scope before handoff.",
       step1Title: "Start the runtime",
       step1Text: "Create local rules and a clean memory folder that IDE AI can read.",
       step2Title: "Configure the IDE",
@@ -1087,10 +1214,14 @@
       quickstartKicker: "quickstart",
       quickstartTitle: "Built for production repos, not demo scaffolds.",
       quickstartText: "Use explicit files when the first feature is sensitive. After that, Chay can maintain the existing contract and keep follow-up work on the same feature id.",
+      optionCliTitle: "Option 1: run CLI commands",
+      optionCliText: "Use the terminal when you want explicit contract generation and verification.",
+      optionChatTitle: "Option 2: add it to the chatbot",
+      optionChatText: "Install Codex Skill or IDE rules once, then type tasks naturally without pasting the read-order prompt.",
       openGithub: "Open GitHub",
       openNpm: "Open npm",
-      finalTitle: "Give every IDE AI session the same map before it touches code.",
-      finalText: "Program flowchart, selected files, folder structure, API flowchart, sequence diagram and handoff stay synchronized in the repo.",
+      finalTitle: "Feature memory before code. Feature boundary after code.",
+      finalText: "Continue the right feature context, show the intended change before AI edits, then verify the patch stayed inside the feature boundary.",
       backTop: "Back to top",
       viewSource: "View source",
       footerText: "Chay Runtime - local contract layer for external IDE AI."
@@ -1102,7 +1233,7 @@
       navGithub: "GitHub",
       eyebrow: "Lớp contract cho IDE AI bên ngoài",
       headline: "Cho AI code theo đúng repo của bạn.",
-      subhead: "Chạy Runtime biến task mơ hồ thành feature contract gọn, folder map, API flowchart, work note và handoff. Codex, Claude, Cursor hoặc Kiro code bên ngoài; repo giữ guardrail bên trong.",
+      subhead: "Chạy Runtime biến task mơ hồ thành feature memory trước khi code và feature boundary sau khi code. Codex, Claude, Cursor hoặc Kiro có thể tiếp tục, thay đổi và verify mà không mất context feature.",
       startCta: "Bắt đầu bằng CLI",
       workflowCta: "Xem quy trình",
       npmCta: "Xem npm",
@@ -1143,6 +1274,12 @@
       workflowKicker: "quy trình",
       workflowTitle: "Một flow cho feature mới và maintain feature cũ.",
       workflowText: "Chạy cập nhật contract cũ thay vì tạo docs cạnh tranh. Khi scope đổi, graph, context, work note và handoff đi cùng nhau.",
+      caseATitle: "Tiếp tục feature cũ",
+      caseAText: "Session AI mới đọc đúng context của feature và tiếp tục từ handoff.",
+      caseBTitle: "Thêm hoặc đổi feature",
+      caseBText: "Human thấy flow, sequence, API/code relation và code targets trước khi AI sửa.",
+      caseCTitle: "Verify phần AI sửa",
+      caseCText: "Patch được check với feature boundary và scope feature cũ trước khi handoff.",
       step1Title: "Khởi động runtime",
       step1Text: "Tạo local rules và folder memory sạch để IDE AI đọc được.",
       step2Title: "Cấu hình IDE",
@@ -1163,10 +1300,14 @@
       quickstartKicker: "bắt đầu",
       quickstartTitle: "Dành cho repo production, không phải demo scaffold.",
       quickstartText: "Với feature nhạy cảm, truyền files rõ ngay lần đầu. Sau đó Chạy maintain cùng contract và giữ follow-up trên cùng feature id.",
+      optionCliTitle: "Lựa chọn 1: chạy lệnh CLI",
+      optionCliText: "Dùng terminal khi bạn muốn tạo contract và verify một cách rõ ràng.",
+      optionChatTitle: "Lựa chọn 2: add vào chatbot",
+      optionChatText: "Cài Codex Skill hoặc IDE rules một lần, rồi gõ task tự nhiên mà không cần paste prompt thứ tự đọc.",
       openGithub: "Mở GitHub",
       openNpm: "Mở npm",
-      finalTitle: "Cho mọi session IDE AI cùng một bản đồ trước khi nó chạm code.",
-      finalText: "Program flowchart, selected files, folder structure, API flowchart, sequence diagram và handoff luôn đồng bộ trong repo.",
+      finalTitle: "Feature memory trước khi code. Feature boundary sau khi code.",
+      finalText: "Tiếp tục đúng context feature, cho human thấy thay đổi trước khi AI sửa, rồi verify patch vẫn nằm trong feature boundary.",
       backTop: "Lên đầu trang",
       viewSource: "Xem source",
       footerText: "Chạy Runtime - lớp contract local cho IDE AI bên ngoài."

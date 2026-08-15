@@ -76,6 +76,7 @@ export async function createHandoff(argv = []) {
       folder_structure: graph?.folder_structure || [],
       project_structure: graph?.project_structure || [],
       api_links: graph?.api_links || [],
+      runtime_sequence: graph?.runtime_sequence || null,
       target_rationale: graph?.target_rationale || [],
       user_flow: graph?.user_flow || graph?.mermaid || "",
       sequence_diagram: graph?.sequence_diagram || "",

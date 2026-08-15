@@ -121,13 +121,18 @@ function spawnWorker(worker, options = {}) {
     cmdArgs.push("--test-command", options.testCommand.trim());
   }
   fs.mkdirSync(".chay/tmp", { recursive: true });
-  const out = fs.openSync(".chay/tmp/ui-dispatch.log", "a");
+  let out = null;
   let child;
   try {
+    out = fs.openSync(".chay/tmp/ui-dispatch.log", "a");
     child = spawn(process.execPath, cmdArgs, { cwd: process.cwd(), detached: true, stdio: ["ignore", out, out] });
   } catch (error) {
+    if (typeof out === "number") {
+      try { fs.closeSync(out); } catch { /* best effort cleanup */ }
+    }
     return { ok: false, error: "spawn_failed", detail: error.message };
   }
+  try { fs.closeSync(out); } catch { /* child owns its duplicated fd */ }
   runningWorker = { pid: child.pid, worker, engine, started_at: new Date().toISOString() };
   child.on("exit", () => { runningWorker = null; broadcastState(); });
   child.on("error", () => { runningWorker = null; broadcastState(); });
