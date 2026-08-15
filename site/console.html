@@ -80,6 +80,17 @@
       outline: none;
     }
 
+    .readonly-field {
+      min-height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #0e1317;
+      color: var(--soft);
+      padding: 11px 12px;
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+
     textarea {
       min-height: 86px;
       resize: vertical;
@@ -427,6 +438,30 @@
       color: var(--soft);
     }
 
+    .agent-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .agent-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #0e1317;
+      padding: 9px 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .agent-name {
+      color: var(--soft);
+      font-family: var(--mono);
+      font-weight: 800;
+    }
+
     .warn { color: var(--warn); }
     .bad { color: var(--bad); }
     .muted { color: var(--muted); }
@@ -494,7 +529,7 @@
         </div>
         <div>
           <label for="targets">IDE targets</label>
-          <input id="targets" value="codex" placeholder="codex">
+          <div id="targets" class="readonly-field" data-value="codex" role="status">codex</div>
         </div>
       </div>
       <div class="actions">
@@ -522,6 +557,11 @@
         <div class="card-title">AI Activity</div>
         <div id="activityMetric" class="metric">Idle</div>
         <div id="activityCaption" class="caption">No worker running</div>
+      </article>
+      <article class="card">
+        <div class="card-title">Connected IDE</div>
+        <div id="ideMetric" class="metric">Codex</div>
+        <div id="ideCaption" class="caption">Configured target</div>
       </article>
       <article class="card">
         <div class="card-title">Verify</div>
@@ -579,6 +619,14 @@
       </div>
 
       <div class="stack">
+        <section class="panel">
+          <div class="section-title">
+            <h2>Connected IDE</h2>
+            <span id="ideState" class="pill">codex</span>
+          </div>
+          <div id="ideAgents" class="agent-grid"></div>
+        </section>
+
         <section class="panel">
           <div class="section-title">
             <h2>AI Activity</h2>
@@ -639,6 +687,8 @@
       filesCaption: $("filesCaption"),
       activityMetric: $("activityMetric"),
       activityCaption: $("activityCaption"),
+      ideMetric: $("ideMetric"),
+      ideCaption: $("ideCaption"),
       verifyMetric: $("verifyMetric"),
       verifyCaption: $("verifyCaption"),
       contractState: $("contractState"),
@@ -647,6 +697,8 @@
       folders: $("folders"),
       files: $("files"),
       activity: $("activity"),
+      ideState: $("ideState"),
+      ideAgents: $("ideAgents"),
       idePrompt: $("idePrompt"),
       verifyState: $("verifyState"),
       verify: $("verify"),
@@ -698,7 +750,7 @@
           files: els.filesText.value.trim()
         };
       }
-      if (action === "config") return { action: "config_ide", targets: els.targets.value.trim() || "manual" };
+      if (action === "config") return { action: "config_ide", targets: targetValue() };
       if (action === "handoff") return { action: "handoff" };
       if (action === "verify") return { action: "verify" };
       if (action === "patch") return { action: "patch_check" };
@@ -744,6 +796,10 @@
       const hasGraph = Boolean(graph.feature_id);
       const verifyOk = report.ok === true;
       const taskState = status.task_status || (hasGraph ? "contract_ready" : "not_started");
+      const configuredTargets = (ide.targets || []).join(", ") || "codex";
+
+      els.targets.textContent = configuredTargets;
+      els.targets.dataset.value = configuredTargets;
 
       setText(els.headline, graph.goal || handoff.source_of_truth?.goal || firstTask(state) || "No feature contract yet");
       setText(els.nextStep, nextStepText({ hasGraph, files, report, result, runner: state.runner }));
@@ -757,12 +813,15 @@
       setText(els.filesCaption, files.length ? "Files AI may use" : "No boundary yet");
       setText(els.activityMetric, state.runner ? "Running" : result ? "Result" : "Idle");
       setText(els.activityCaption, progress?.message || result?.summary || "No worker running");
+      setText(els.ideMetric, state.runner ? state.runner.engine : configuredTargets.split(",")[0]);
+      setText(els.ideCaption, state.runner ? `pid ${state.runner.pid}` : `${configuredTargets} configured`);
       setText(els.verifyMetric, report.score === undefined ? "--" : `${report.score}`);
       setText(els.verifyCaption, report.grade ? `${report.grade} / ${report.ok ? "ok" : "needs work"}` : "No report yet");
 
       setPill(els.contractState, hasGraph ? "ready" : "missing", hasGraph ? "ok" : "warn");
       setPill(els.filesState, `${files.length} files`, files.length ? "ok" : "warn");
       setPill(els.activityState, state.runner ? "running" : result ? result.status || "result" : "idle", state.runner ? "warn" : "ok");
+      setPill(els.ideState, configuredTargets, state.runner ? "warn" : "ok");
       setPill(els.verifyState, report.ok === undefined ? "unknown" : (verifyOk ? "ok" : "needs work"), verifyOk ? "ok" : "bad");
 
       els.overview.innerHTML = rows([
@@ -778,6 +837,7 @@
 
       els.files.innerHTML = files.length ? files.map((file) => `<span class="tag">${esc(file)}</span>`).join("") : `<div class="empty">No selected files</div>`;
       els.folders.innerHTML = renderFolders(graph.folder_structure || handoff.source_of_truth?.folder_structure || []);
+      els.ideAgents.innerHTML = renderIdeAgents(state, configuredTargets);
       els.activity.innerHTML = renderActivity(state, progress, result);
       els.verify.innerHTML = renderVerify(report);
       els.dispatchLog.textContent = state.dispatch_log || "No worker log yet";
@@ -830,6 +890,26 @@
       return rows.join("") || `<div class="empty">No AI activity yet</div>`;
     }
 
+    function renderIdeAgents(state, configuredTargets) {
+      const configured = new Set(configuredTargets.split(",").map((target) => target.trim()).filter(Boolean));
+      const runtime = state.agent_runtime || [];
+      const names = unique([...configured, ...runtime.map((agent) => agent.agent)]);
+      if (!names.length) return `<div class="empty">No IDE target configured</div>`;
+      return names.map((name) => {
+        const info = runtime.find((agent) => agent.agent === name);
+        const isRunning = state.runner && (state.runner.worker === name || state.runner.engine === name);
+        const tone = isRunning ? "warn" : configured.has(name) ? "ok" : "";
+        const status = isRunning ? "running" : configured.has(name) ? "configured" : info?.cli?.status || "available";
+        const detail = info?.cli?.summary || info?.auth?.summary || "IDE rules only";
+        return [
+          "<div class=\"agent-row\">",
+          `<div><div class="agent-name">${esc(name)}</div><div>${esc(detail)}</div></div>`,
+          `<span class="pill ${tone}">${esc(status)}</span>`,
+          "</div>"
+        ].join("");
+      }).join("");
+    }
+
     function renderVerify(report) {
       if (!report || report.score === undefined) return `<div class="empty">No report</div>`;
       const violations = report.violations || [];
@@ -873,6 +953,10 @@
         "Edit only selected/allowed files.",
         "After editing, create git diff and run cr verify."
       ].join("\n");
+    }
+
+    function targetValue() {
+      return els.targets.dataset.value || els.targets.textContent.trim() || "codex";
     }
 
     function showResult(data) {

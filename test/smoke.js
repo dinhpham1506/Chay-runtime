@@ -701,9 +701,11 @@ function verifyUiTemplate() {
   const progress = fs.readFileSync(path.join(repoRoot, "src", "utils", "progress.js"), "utf8");
   const codexSkill = fs.readFileSync(path.join(repoRoot, "templates", "codex-skill", "chay-runtime", "SKILL.md"), "utf8");
   const projectRules = fs.readFileSync(path.join(repoRoot, "templates", "ide-rules", "chay-memory", "rules", "chay-runtime.md"), "utf8");
-  for (const text of ["Chạy Inspector", "targets", "taskText", "filesText", "idePrompt", "Feature Graph", "Folder Structure", "Selected Files", "AI Activity", "Worker Log", "Verify", "plantuml_sequence"]) {
+  for (const text of ["Chạy Inspector", "targets", "taskText", "filesText", "idePrompt", "Feature Graph", "Folder Structure", "Selected Files", "AI Activity", "Connected IDE", "Worker Log", "Verify", "plantuml_sequence"]) {
     assert.ok(html.includes(text), `missing inspector control: ${text}`);
   }
+  assert.ok(html.includes("class=\"readonly-field\""), "IDE targets must render as read-only status");
+  assert.ok(!html.includes("<input id=\"targets\""), "IDE targets must not be directly editable in the UI");
   for (const text of ["Token Saving", "Token Report", "data-action=\"token\"", "id=\"tokens\""]) {
     assert.ok(!html.includes(text), `removed token UI should stay hidden: ${text}`);
   }
