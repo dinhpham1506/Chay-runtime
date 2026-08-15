@@ -4,7 +4,7 @@ import { parseArgs } from "../utils/args.js";
 import { exists, readJson, walk, writeJson } from "../utils/fs.js";
 
 const exts = new Set([".js", ".ts", ".tsx", ".jsx", ".java", ".kt", ".py", ".go", ".cs", ".sql", ".yml", ".yaml", ".json"]);
-const generatedParts = new Set(["obj", "bin", "generated", ".chay", ".chay-index", "chay-memory", "chay-structure", "audit", "backup", "backups", ".cache"]);
+const generatedParts = new Set(["obj", "bin", "generated", ".chay", ".chay-index", "chay-memory", "chay-structure", "memory", "audit", "backup", "backups", ".cache"]);
 const ignoredFileNames = new Set(["package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bun.lockb"]);
 const defaultMaxFileBytes = 250_000;
 const scanVersion = "repo_scan_v3_api_imports";
@@ -60,7 +60,7 @@ export async function scanRepo(argv) {
   };
 
   writeJson(out, index);
-  console.log(JSON.stringify({ ok: true, out, file_count: files.length }, null, 2));
+  if (!args.quiet) console.log(JSON.stringify({ ok: true, out, file_count: files.length }, null, 2));
 }
 
 function previousIndex(file) {

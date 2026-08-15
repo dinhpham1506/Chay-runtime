@@ -8,8 +8,11 @@ console.log(`
 chay-runtime installed.
 
 In your project, run:
-  cr setup
+  cr start
 
-Non-interactive example:
-  cr setup --agents claude,codex --main claude --main-llm sonnet --workers codex --worker-llms codex:gpt-5 --skills repo_search,solid_refactor,test_runner
+Optional direct chatbot rules:
+  cr chat install
+
+Then create a feature contract:
+  cr go "Describe the feature"
 `);

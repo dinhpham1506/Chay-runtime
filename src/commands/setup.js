@@ -10,6 +10,8 @@ import { createProjectFiles } from "./init.js";
 import { installConfiguredIntegrations, agentIntegrationTargets } from "./integrations.js";
 import { ensureAgentAuth } from "./auth.js";
 import { configureIdeTargets } from "./ide.js";
+import { scanRepo } from "./repoScan.js";
+import { createSystemMap } from "./systemMap.js";
 
 const defaultSetupAgents = ["codex", "claude", "antigravity"];
 
@@ -18,8 +20,10 @@ export async function startProject(argv = []) {
   const root = process.cwd();
   createProjectFiles(root);
 
-  const targetArg = args.target || args.targets || args.agents || args.agent || args._?.join(",") || "manual";
+  const targetArg = args.target || args.targets || args.agents || args.agent || args._?.join(",") || "codex";
   const ide = configureIdeTargets(targetArg, root);
+  await quiet(() => scanRepo(["--root", root, "--out", ".chay/project_map.json", "--quiet"]));
+  await quiet(() => createSystemMap(["--index", ".chay/project_map.json"]));
   const availableCliAgents = supportedRuntimeAgents().map((agent) => runtimeStatus(agent, { auth: Boolean(args.auth) }));
 
   console.log(JSON.stringify({
@@ -27,6 +31,17 @@ export async function startProject(argv = []) {
     mode: "external_ide_ai",
     message: "Chạy Runtime started",
     initialized: ["chay-memory/task_note.json", ".chay/tmp"],
+    system_baseline: {
+      project_map: ".chay/project_map.json",
+      system_map: "chay-memory/system_map.json",
+      overview: "chay-structure/system_overview.md",
+      api_inventory: "chay-structure/api_inventory.md",
+      folder_map: "chay-structure/system_folder_map.md",
+      diagrams: [
+        "chay-structure/diagrams/system-overview.puml",
+        "chay-structure/diagrams/api-inventory.puml"
+      ]
+    },
     ide_config: ide.config_file,
     instruction_file: ide.instruction_file,
     rule_pack: ide.rule_pack,
@@ -34,13 +49,23 @@ export async function startProject(argv = []) {
     available_cli_agents: availableCliAgents,
     next_prompt: "Read chay-memory/ai_handoff.json, chay-structure/features/<feature_id>.md, chay-structure/folder_structure.md, chay-structure/api_graph.md, and .chay/ide/CHAY_IDE_INSTRUCTIONS.md, then continue the task without editing outside allowed files.",
     next_actions: [
-      ide.targets.includes("manual") ? "cr config codex,claude,anti,github-copilot,cursor,kiro" : "cr config check",
+      ide.targets.includes("manual") ? "cr config codex" : "cr config check",
       "cr go \"Describe the feature\"",
       "Open your IDE AI and ask it to read chay-memory/ai_handoff.json and chay-structure/features/<feature_id>.md",
       "cr verify",
       "cr handoff"
     ]
   }, null, 2));
+}
+
+async function quiet(fn) {
+  const original = console.log;
+  console.log = () => {};
+  try {
+    return await fn();
+  } finally {
+    console.log = original;
+  }
 }
 
 export async function setupProject(argv, options = {}) {

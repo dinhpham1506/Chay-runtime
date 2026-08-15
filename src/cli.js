@@ -2,6 +2,7 @@ import { initProject } from "./commands/init.js";
 import { doctor } from "./commands/doctor.js";
 import { checkNote, validateOutput } from "./commands/boundary.js";
 import { scanRepo } from "./commands/repoScan.js";
+import { createSystemMap } from "./commands/systemMap.js";
 import { planContext } from "./commands/contextPlan.js";
 import { compileNote } from "./commands/noteCompile.js";
 import { checkPatch } from "./commands/patchCheck.js";
@@ -43,6 +44,7 @@ export async function main(argv) {
   if (cmd === "task") return createTask([subcmd, ...rest].filter(Boolean));
   if (cmd === "check") return doctor([subcmd, ...rest].filter(Boolean));
   if (cmd === "scan") return scanRepo([subcmd, ...rest].filter(Boolean));
+  if (cmd === "system" && (!subcmd || subcmd === "map")) return createSystemMap(rest);
   if (cmd === "plan") return planContext([subcmd, ...rest].filter(Boolean));
   if (cmd === "pack") return makeWorkpack([subcmd, ...rest].filter(Boolean));
   if (cmd === "run") return dispatch([subcmd, ...rest].filter(Boolean));
@@ -58,6 +60,7 @@ export async function main(argv) {
   if (cmd === "boundary" && subcmd === "validate-output") return validateOutput(rest);
 
   if (cmd === "repo" && subcmd === "scan") return scanRepo(rest);
+  if (cmd === "repo" && (subcmd === "map" || subcmd === "system")) return createSystemMap(rest);
   if (cmd === "context" && subcmd === "plan") return planContext(rest);
   if (cmd === "note" && subcmd === "compile") return compileNote(rest);
   if (cmd === "patch" && subcmd === "check") return checkPatch(rest);

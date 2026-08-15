@@ -11,7 +11,8 @@ Cases:
 
 Usage:
   cr start                    # recommended: initialize external IDE AI workflow
-  cr config codex,claude,anti,github-copilot,cursor,kiro
+  cr config codex              # default simple setup
+  cr config cursor             # optional: install rules for another IDE
   cr chat install              # add Chay Runtime directly to Codex/chatbot rules
   cr chat install --target cursor # install direct IDE/chatbot rules for this repo
   cr rules install             # install IDE project rules into this project
@@ -21,6 +22,7 @@ Usage:
   cr go "Block duplicate applies" --feature user_applies_to_job
   cr go "Fix duplicate apply bug" --max-files 3
   cr go                       # refresh chay-memory/ai_handoff.json for a new IDE session
+  cr system map                # scan whole repo into system overview + API inventory
   cr verify
   cr handoff
   cr ui serve --port 7770
@@ -32,6 +34,9 @@ Artifacts:
   chay-structure/folder_structure.md      # folder/code target contract in Markdown
   chay-structure/api_graph.md             # API routes and linked code from repo scan
   chay-structure/diagrams/*.puml          # PlantUML user flow, sequence, API graph
+  chay-structure/system_overview.md       # whole-project baseline from repo scan
+  chay-structure/api_inventory.md         # all detected API routes before feature selection
+  chay-memory/system_map.json             # machine-readable system baseline
   chay-memory/feature_graph.json   # user flow, sequence, code targets
   .chay/ide/CHAY_IDE_INSTRUCTIONS.md
 
@@ -51,6 +56,8 @@ Checks:
 
 Repo intelligence:
   cr repo scan --root . --out .chay/project_map.json
+  cr system map --index .chay/project_map.json
+  cr repo map --index .chay/project_map.json
   cr context plan
   cr context plan --task "Fix duplicate apply bug" --index .chay/project_map.json --out chay-memory/context_package.json
 

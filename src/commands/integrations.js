@@ -9,6 +9,14 @@ const agentTargets = ["claude", "codex", "antigravity"];
 const ideRuleTargets = ["ide-rules", "rules", "skill", "cursor", "github-copilot", "kiro", "windsurf", "manual"];
 const targets = [...agentTargets, ...ideRuleTargets];
 const chatTargets = ["codex", "claude", "cursor", "github-copilot", "kiro", "windsurf", "manual"];
+const defaultIdeRuleTargets = ["codex"];
+const ideRuleFiles = {
+  codex: ".codex/rules/chay-runtime.md",
+  cursor: ".cursor/rules/chay-runtime.mdc",
+  "github-copilot": ".github/instructions/chay-runtime.instructions.md",
+  kiro: ".kiro/steering/chay-runtime.md",
+  windsurf: ".windsurf/rules/chay-runtime.md"
+};
 
 export async function installIntegration(argv) {
   const args = parseArgs(argv);
@@ -19,7 +27,7 @@ export async function installIntegration(argv) {
   }
 
   const installed = ideRuleTargets.includes(target)
-    ? installIdeRulePack(process.cwd()).installed
+    ? installIdeRulePack(process.cwd(), [target]).installed
     : installIntegrationFiles(target, process.cwd());
   const workers = configuredWorkers(args);
   if (target === "claude") configureClaudeAgents(process.cwd(), workers);
@@ -35,7 +43,7 @@ export async function installIntegration(argv) {
 
 export function installRules(argv = [], root = process.cwd()) {
   const args = parseArgs(argv);
-  const project = installIdeRulePack(root);
+  const project = installIdeRulePack(root, ruleInstallTargets(args));
   const codexSkill = args["codex-skill"] || args.codex || args.global
     ? installCodexSkill(args)
     : null;
@@ -60,7 +68,7 @@ export function installChatbot(argv = [], root = process.cwd()) {
   if (!chatTargets.includes(target)) {
     throw new Error(`--target must be one of: ${chatTargets.join(", ")}`);
   }
-  const project = installIdeRulePack(root);
+  const project = installIdeRulePack(root, [target]);
   const claude = target === "claude"
     ? installClaudeChatbot(root, configuredWorkers(args))
     : null;
@@ -107,7 +115,7 @@ function installClaudeChatbot(root, workers) {
 export function installIntegrationFiles(target, root = process.cwd()) {
   const normalized = normalizeAgentName(target);
   if (!targets.includes(normalized)) throw new Error(`Unknown integration target: ${target}`);
-  if (ideRuleTargets.includes(normalized)) return installIdeRulePack(root).installed;
+  if (ideRuleTargets.includes(normalized)) return installIdeRulePack(root, [normalized]).installed;
   const pkgRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
   const src = path.join(pkgRoot, "templates", normalized);
 
@@ -115,18 +123,19 @@ export function installIntegrationFiles(target, root = process.cwd()) {
   return normalized;
 }
 
-export function installIdeRulePack(root = process.cwd()) {
+export function installIdeRulePack(root = process.cwd(), selectedTargets = defaultIdeRuleTargets) {
   const pkgRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
   const src = path.join(pkgRoot, "templates", "ide-rules");
-  copyDir(src, root);
-  const installed = [
-    "chay-memory/rules/chay-runtime.md",
-    ".cursor/rules/chay-runtime.mdc",
-    ".github/instructions/chay-runtime.instructions.md",
-    ".kiro/steering/chay-runtime.md",
-    ".windsurf/rules/chay-runtime.md",
-    ".codex/rules/chay-runtime.md"
-  ];
+  const normalizedTargets = normalizeRuleTargets(selectedTargets);
+  const installed = ["chay-memory/rules/chay-runtime.md"];
+  copyDir(path.join(src, "chay-memory"), path.join(root, "chay-memory"));
+  for (const target of normalizedTargets) {
+    const ruleFile = ideRuleFiles[target];
+    if (!ruleFile) continue;
+    const folder = ruleFile.split("/")[0];
+    copyDir(path.join(src, folder), path.join(root, folder));
+    installed.push(ruleFile);
+  }
   writeText(path.join(root, "chay-memory/rules/README.md"), [
     "# Chay Runtime Rules",
     "",
@@ -135,9 +144,15 @@ export function installIdeRulePack(root = process.cwd()) {
     "Source of truth:",
     "- chay-runtime.md",
     "",
+    "Installed IDE rule targets:",
+    ...normalizedTargets.map((target) => `- ${target}`),
+    "",
     "Reinstall with:",
     "- cr rules install",
-    "- cr config codex,cursor,github-copilot,kiro",
+    "- cr config codex",
+    "- cr config cursor",
+    "- cr config github-copilot",
+    "- cr rules install --all",
     ""
   ].join("\n"));
   return { installed };
@@ -162,7 +177,7 @@ export function installCodexSkill(args = {}) {
 
 export function installConfiguredIntegrations(answers, root = process.cwd()) {
   const installed = answers.agents.map((agent) => installIntegrationFiles(agent, root));
-  installIdeRulePack(root);
+  installIdeRulePack(root, answers.agents);
   if (answers.agents.includes("claude")) {
     configureClaudeAgents(root, answers.workers || []);
   }
@@ -226,6 +241,21 @@ function configuredWorkers(args) {
     }
   }
   return ["codex"];
+}
+
+function ruleInstallTargets(args) {
+  if (args.all) return Object.keys(ideRuleFiles);
+  return normalizeRuleTargets(args.target || args.targets || defaultIdeRuleTargets);
+}
+
+function normalizeRuleTargets(value) {
+  const requested = Array.isArray(value) ? value : list(value);
+  const normalized = requested.length > 0
+    ? requested.map((item) => normalizeChatTarget(item))
+    : defaultIdeRuleTargets;
+  const expanded = normalized.flatMap((target) => ["rules", "ide-rules", "skill"].includes(target) ? defaultIdeRuleTargets : [target]);
+  return [...new Set(expanded)]
+    .filter((target) => target !== "manual" && target !== "claude" && target !== "antigravity" && ideRuleFiles[target]);
 }
 
 function list(value) {

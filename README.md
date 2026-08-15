@@ -50,6 +50,10 @@ Chay Runtime creates and checks these artifacts inside your repo:
 
 | Artifact | Why it exists |
 | --- | --- |
+| `.chay/project_map.json` | Whole-repo scan: files, roles, imports, and detected API routes. |
+| `chay-memory/system_map.json` | Machine-readable system baseline created before picking one feature. |
+| `chay-structure/system_overview.md` | Human-readable whole-project baseline: layers, API feature candidates, and folder shape. |
+| `chay-structure/api_inventory.md` | All API routes detected from the repository scan. |
 | `chay-structure/features/<feature_id>.md` | Human-readable feature contract: user flow, acceptance, selected code targets. |
 | `chay-memory/feature_graph.json` | Machine-readable source of truth for feature flow, code targets, API links, inferred runtime sequence, and acceptance checks. |
 | `chay-structure/diagrams/*.puml` | PlantUML user flow, sequence, and API flowchart per feature. |
@@ -86,11 +90,15 @@ Every AI coding session has to answer three practical questions:
    - Is this new AI session reading the right feature context?
    - Output: `ai_handoff.json`, feature markdown, previous result, selected files.
 
-2. **Add or change feature**
+2. **Understand an existing project first**
+   - What APIs, folders, and likely feature areas already exist?
+   - Output: `.chay/project_map.json`, `system_map.json`, `system_overview.md`, `api_inventory.md`, and system diagrams.
+
+3. **Add or change feature**
    - What should exist before AI edits code?
    - Output: user flow, inferred runtime sequence with confidence/evidence, API/code relation, acceptance checks, folder map, code targets.
 
-3. **Verify AI edit**
+4. **Verify AI edit**
    - What is this change allowed to touch?
    - Output: diff boundary check against `allowed_files`, `code_targets`, sensitive paths, human-owned paths, and forbidden patterns.
 
@@ -147,9 +155,9 @@ Read chay-memory/ai_handoff.json, then chay-structure/features/<feature_id>.md, 
 
 ### Option 2: Add it directly to the chatbot / IDE AI
 
-Use this when you want Codex, Claude Code, Cursor, GitHub Copilot, Kiro, or
-Windsurf to remember the Chạy Runtime read order through installed rules instead
-of pasting the long prompt every session:
+Use this when you want your chatbot/IDE AI to remember the Chạy Runtime read
+order through installed rules instead of pasting the long prompt every session.
+The default path is intentionally small:
 
 ```bash
 npm install -g chay-runtime@latest
@@ -159,14 +167,8 @@ cr start
 # Codex: installs project rules and the global chay-runtime Codex Skill
 cr chat install --target codex
 
-# Other IDE chat surfaces: installs project rule files
+# Optional, only if you use another surface
 cr chat install --target cursor
-cr chat install --target github-copilot
-cr chat install --target kiro
-cr chat install --target windsurf
-
-# Claude Code: installs project rules plus Claude agent templates
-cr chat install --target claude
 ```
 
 After that, open the chatbot in the repo and type the task naturally. The
@@ -224,11 +226,12 @@ create a main/worker split, and does not run Supabase or database setup.
 Configure the IDEs you actually use:
 
 ```bash
-cr config codex,claude,anti,github-copilot,cursor,kiro
+cr config codex
+# optional: cr config cursor
 ```
 
-`cr start` and `cr config` also install IDE project rules so the IDE AI does
-not need a long pasted prompt every time:
+`cr start` and `cr config` install only the selected IDE project rules so the IDE
+AI does not need a long pasted prompt every time:
 
 - `chay-memory/rules/chay-runtime.md`
 - `.codex/rules/chay-runtime.md`
@@ -319,7 +322,8 @@ npm publish --access public
 
 ```bash
 cr start
-cr config codex,claude,anti,github-copilot,cursor,kiro
+cr config codex
+cr system map
 cr go "Fix duplicate job apply bug"
 cr verify
 cr handoff
@@ -337,6 +341,10 @@ cr go "Update RLS policy" --include-database
 `cr repo scan` reuses unchanged file metadata from the previous project map
 with an `mtime + size` cache, so UI task creation does not need to reread every
 source file on each run.
+
+`cr system map` turns `.chay/project_map.json` into a whole-project baseline.
+Use it before `cr go` when you are opening an existing repo and do not yet know
+which feature to change.
 
 Lower-level `cr graph`, `cr task`, `cr pack`, `cr run`, and dispatch commands
 remain available for scripting and legacy worker automation. See

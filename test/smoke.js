@@ -100,19 +100,47 @@ const aliasHost = JSON.parse(fs.readFileSync(path.join(aliasProject, "chay-memor
 assert.deepEqual(aliasHost.enabled_agents, ["codex", "antigravity"]);
 assert.deepEqual(aliasHost.main, { agent: "antigravity", llm: "user-selected" });
 assert.equal(aliasHost.workers[0].agent, "codex");
+
+const systemProject = fs.mkdtempSync(path.join(os.tmpdir(), "chay-runtime-system-"));
+fs.mkdirSync(path.join(systemProject, "server", "src", "api"), { recursive: true });
+fs.mkdirSync(path.join(systemProject, "server", "src", "services"), { recursive: true });
+fs.writeFileSync(path.join(systemProject, "server", "src", "services", "permission.ts"), "export function canChangeRole() { return true; }\n");
+fs.writeFileSync(path.join(systemProject, "server", "src", "api", "admin.ts"), [
+  "import { canChangeRole } from '../services/permission';",
+  "const router = { post() {}, get() {} };",
+  "router.get('/admin/users', () => {});",
+  "router.post('/admin/users/role', () => canChangeRole());",
+  ""
+].join("\n"));
+const systemMap = runIn(systemProject, "system", "map", "--scan");
+assert.equal(systemMap.ok, true);
+assert.ok(fs.existsSync(path.join(systemProject, "chay-memory", "system_map.json")));
+assert.ok(fs.existsSync(path.join(systemProject, "chay-structure", "system_overview.md")));
+assert.ok(fs.existsSync(path.join(systemProject, "chay-structure", "api_inventory.md")));
+assert.ok(fs.existsSync(path.join(systemProject, "chay-structure", "diagrams", "system-overview.puml")));
+assert.ok(fs.existsSync(path.join(systemProject, "chay-structure", "diagrams", "api-inventory.puml")));
+const systemJson = JSON.parse(fs.readFileSync(path.join(systemProject, "chay-memory", "system_map.json"), "utf8"));
+assert.ok(systemJson.api_entries.some((entry) => entry.routes.includes("POST /admin/users/role")));
+assert.ok(systemJson.feature_candidates.some((candidate) => candidate.feature_id === "admin_users"));
+assert.ok(fs.readFileSync(path.join(systemProject, "chay-structure", "system_overview.md"), "utf8").includes("API Feature Candidates"));
+
 const startProject = fs.mkdtempSync(path.join(os.tmpdir(), "chay-runtime-start-"));
 const started = runIn(startProject, "start", "--agent", "codex,anti", "--main", "codex", "--skip-login");
 assert.equal(started.message, "Chạy Runtime started");
 assert.equal(started.mode, "external_ide_ai");
 assert.deepEqual(started.targets, ["codex", "antigravity"]);
+assert.equal(started.system_baseline.overview, "chay-structure/system_overview.md");
 assert.ok(Array.isArray(started.available_cli_agents));
+assert.ok(fs.existsSync(path.join(startProject, ".chay", "project_map.json")));
+assert.ok(fs.existsSync(path.join(startProject, "chay-memory", "system_map.json")));
+assert.ok(fs.existsSync(path.join(startProject, "chay-structure", "system_overview.md")));
 assert.ok(fs.existsSync(path.join(startProject, "chay-memory", "ide_config.json")));
 assert.ok(fs.existsSync(path.join(startProject, "chay-memory", "rules", "chay-runtime.md")));
-assert.ok(fs.existsSync(path.join(startProject, ".cursor", "rules", "chay-runtime.mdc")));
-assert.ok(fs.existsSync(path.join(startProject, ".github", "instructions", "chay-runtime.instructions.md")));
-assert.ok(fs.existsSync(path.join(startProject, ".kiro", "steering", "chay-runtime.md")));
-assert.ok(fs.existsSync(path.join(startProject, ".windsurf", "rules", "chay-runtime.md")));
 assert.ok(fs.existsSync(path.join(startProject, ".codex", "rules", "chay-runtime.md")));
+assert.ok(!fs.existsSync(path.join(startProject, ".cursor", "rules", "chay-runtime.mdc")));
+assert.ok(!fs.existsSync(path.join(startProject, ".github", "instructions", "chay-runtime.instructions.md")));
+assert.ok(!fs.existsSync(path.join(startProject, ".kiro", "steering", "chay-runtime.md")));
+assert.ok(!fs.existsSync(path.join(startProject, ".windsurf", "rules", "chay-runtime.md")));
 assert.ok(!fs.existsSync(path.join(startProject, "chay-memory", "host_config.json")));
 assert.ok(!fs.existsSync(path.join(startProject, ".chay", "policies")));
 assert.ok(!fs.existsSync(path.join(startProject, ".chay", "schemas")));
@@ -165,6 +193,9 @@ const ideConfig = runIn(goProject, "config", "codex,claude,anti,github-copilot,c
 assert.equal(ideConfig.mode, "external_ide_ai");
 assert.ok(fs.existsSync(path.join(goProject, ".chay", "ide", "CHAY_IDE_INSTRUCTIONS.md")));
 assert.ok(ideConfig.rule_pack.includes("chay-memory/rules/chay-runtime.md"));
+assert.ok(ideConfig.rule_pack.includes(".cursor/rules/chay-runtime.mdc"));
+assert.ok(ideConfig.rule_pack.includes(".github/instructions/chay-runtime.instructions.md"));
+assert.ok(ideConfig.rule_pack.includes(".kiro/steering/chay-runtime.md"));
 assert.ok(fs.readFileSync(path.join(goProject, "chay-memory", "rules", "chay-runtime.md"), "utf8").includes("Existing Vs New Feature Rule"));
 assert.deepEqual(ideConfig.targets, ["codex", "claude", "antigravity", "github-copilot", "cursor", "kiro"]);
 const ideCheck = runIn(goProject, "config", "check");
@@ -670,7 +701,7 @@ function verifyUiTemplate() {
   const progress = fs.readFileSync(path.join(repoRoot, "src", "utils", "progress.js"), "utf8");
   const codexSkill = fs.readFileSync(path.join(repoRoot, "templates", "codex-skill", "chay-runtime", "SKILL.md"), "utf8");
   const projectRules = fs.readFileSync(path.join(repoRoot, "templates", "ide-rules", "chay-memory", "rules", "chay-runtime.md"), "utf8");
-  for (const text of ["Chạy Inspector", "targets", "taskText", "filesText", "idePrompt", "Feature Graph", "Folder Structure", "Selected Files", "Verify", "plantuml_sequence"]) {
+  for (const text of ["Chạy Inspector", "targets", "taskText", "filesText", "idePrompt", "Feature Graph", "Folder Structure", "Selected Files", "AI Activity", "Worker Log", "Verify", "plantuml_sequence"]) {
     assert.ok(html.includes(text), `missing inspector control: ${text}`);
   }
   for (const text of ["Token Saving", "Token Report", "data-action=\"token\"", "id=\"tokens\""]) {
@@ -697,7 +728,7 @@ function verifyUiTemplate() {
   }
   assert.ok(progress.includes("validate_result"), "missing progress contract: validate_result");
   assert.ok(fs.readFileSync(path.join(repoRoot, "src", "core", "agents.js"), "utf8").includes("anti: \"antigravity\""));
-  for (const text of ["/api/stream", "config_ide", "action === \"go\"", "action === \"handoff\"", "action === \"verify\"", "feature_graph", "handoff", "ide_config"]) {
+  for (const text of ["/api/stream", "config_ide", "action === \"go\"", "action === \"handoff\"", "action === \"verify\"", "system_map", "feature_graph", "handoff", "ide_config", "dispatch_log"]) {
     assert.ok(server.includes(text), `missing UI server contract: ${text}`);
   }
   assert.ok(server.includes("available_agents"));

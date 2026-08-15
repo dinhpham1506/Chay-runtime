@@ -242,12 +242,14 @@ function buildState() {
     tasks: taskList(notes, context),
     result_notes: resultNotes(notes),
     selected_files: context.selected_files || [],
+    system_map: optionalJson("chay-memory/system_map.json"),
     feature_graph: optionalJson("chay-memory/feature_graph.json"),
     handoff: optionalJson("chay-memory/ai_handoff.json"),
     ide_config: optionalJson("chay-memory/ide_config.json"),
     progress_history: progressHistory,
     plan_ledger: optionalJson("chay-memory/plan_ledger.json"),
     experience: optionalJson("chay-memory/experience_spectrum.json"),
+    dispatch_log: tailText(".chay/tmp/ui-dispatch.log"),
     chat: readChat(),
     checks: buildChecks(notes, worker),
     eval_report: buildEvalReport(policy, { worker })
@@ -355,6 +357,15 @@ function kind(file) { if (file.includes("progress_history")) return "progress_hi
 function stepFor(agent, notes) { const result = notes.find((note) => note.kind === "result" && note.data.worker === agent); if (result) return result.data.status === "blocked" ? "blocked" : "done"; return notes.some((note) => note.kind === "work" && note.data.assigned_to === agent) ? "assigned" : "idle"; }
 function readChat() { return exists("chay-memory/chat/messages.json") ? readJson("chay-memory/chat/messages.json") : []; }
 function optionalJson(file) { try { return exists(file) ? readJson(file) : null; } catch { return null; } }
+function tailText(file, maxChars = 12000) {
+  try {
+    if (!exists(file)) return "";
+    const text = readText(file);
+    return text.length > maxChars ? text.slice(-maxChars) : text;
+  } catch {
+    return "";
+  }
+}
 function sendJson(res, status, data) { res.writeHead(status, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" }); res.end(JSON.stringify(data, null, 2)); }
 function sendHtml(res, body) { res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" }); res.end(body); }
 function readBody(req) { return new Promise((resolve, reject) => { let body = ""; req.on("data", (chunk) => { body += chunk; if (body.length > 65536) req.destroy(); }); req.on("end", () => resolve(body)); req.on("error", reject); }); }

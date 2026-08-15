@@ -65,7 +65,7 @@ export function configureIdeTargets(targets, root = process.cwd()) {
 
   const instructionFile = ".chay/ide/CHAY_IDE_INSTRUCTIONS.md";
   const configFile = "chay-memory/ide_config.json";
-  const rulePack = installIdeRulePack(root);
+  const rulePack = installIdeRulePack(root, normalizedTargets);
   writeText(`${root}/${instructionFile}`, instructionMarkdown(normalizedTargets));
   writeJson(`${root}/${configFile}`, {
     configured_at: new Date().toISOString(),

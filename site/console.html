@@ -6,219 +6,458 @@
   <title>Chạy Inspector</title>
   <style>
     :root {
-      --bg: #0b0d10;
-      --panel: #12161a;
-      --panel-2: #171c21;
-      --line: #2a333b;
-      --text: #eef3f1;
-      --muted: #9aa8a2;
-      --accent: #55d69f;
-      --warn: #f0c46a;
-      --bad: #ff6b6b;
+      --bg: #0c1014;
+      --panel: #151a1f;
+      --panel-soft: #10151a;
+      --line: #29333c;
+      --line-strong: #3b4853;
+      --text: #f0f4f2;
+      --muted: #a3aea9;
+      --soft: #ccd5d1;
+      --accent: #5ad59f;
+      --accent-ink: #06110c;
+      --warn: #e7be62;
+      --bad: #ff7474;
+      --good-bg: rgba(90, 213, 159, .12);
+      --bad-bg: rgba(255, 116, 116, .12);
       --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: var(--sans);
-      background: var(--bg);
       color: var(--text);
+      background: var(--bg);
       line-height: 1.45;
     }
-    button, input, textarea {
+
+    button,
+    input,
+    textarea {
       font: inherit;
     }
+
     button {
-      min-height: 40px;
-      border: 1px solid var(--line);
+      min-height: 44px;
+      border: 1px solid var(--line-strong);
       border-radius: 8px;
-      background: var(--panel-2);
+      background: var(--panel-soft);
       color: var(--text);
-      padding: 9px 12px;
+      padding: 10px 14px;
       cursor: pointer;
-      font-weight: 650;
+      font-weight: 700;
     }
+
     button.primary {
-      background: var(--accent);
       border-color: var(--accent);
-      color: #06100d;
+      background: var(--accent);
+      color: var(--accent-ink);
     }
+
+    button:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible {
+      outline: 3px solid rgba(90, 213, 159, .35);
+      outline-offset: 2px;
+    }
+
     button:disabled {
-      opacity: .55;
       cursor: wait;
+      opacity: .6;
     }
-    input, textarea {
+
+    input,
+    textarea {
       width: 100%;
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: #0f1317;
+      background: #0e1317;
       color: var(--text);
-      padding: 10px 11px;
+      padding: 11px 12px;
       outline: none;
     }
-    textarea { min-height: 82px; resize: vertical; }
+
+    textarea {
+      min-height: 86px;
+      resize: vertical;
+    }
+
     label {
       display: block;
-      margin: 0 0 6px;
+      margin: 0 0 7px;
       color: var(--muted);
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 800;
+      letter-spacing: .03em;
       text-transform: uppercase;
-      letter-spacing: .04em;
     }
-    code, pre {
+
+    code,
+    pre {
       font-family: var(--mono);
     }
+
     pre {
       margin: 0;
       white-space: pre-wrap;
       word-break: break-word;
     }
+
     header {
       position: sticky;
       top: 0;
-      z-index: 5;
+      z-index: 10;
       border-bottom: 1px solid var(--line);
-      background: rgba(11, 13, 16, .92);
+      background: rgba(12, 16, 20, .94);
       backdrop-filter: blur(10px);
     }
+
+    .topbar,
+    .shell {
+      width: min(1180px, calc(100vw - 28px));
+      margin: 0 auto;
+    }
+
     .topbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
-      padding: 14px 18px;
+      padding: 14px 0;
     }
+
     .brand {
       display: flex;
-      gap: 10px;
       align-items: center;
+      gap: 10px;
       font-family: var(--mono);
       font-size: 15px;
-      font-weight: 800;
+      font-weight: 900;
     }
+
     .dot {
       width: 10px;
       height: 10px;
       border-radius: 50%;
       background: var(--accent);
-      box-shadow: 0 0 18px rgba(85, 214, 159, .6);
+      box-shadow: 0 0 18px rgba(90, 213, 159, .55);
     }
+
     .meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       color: var(--muted);
       font-family: var(--mono);
       font-size: 12px;
     }
-    main {
+
+    .shell {
       display: grid;
-      grid-template-columns: 360px minmax(0, 1fr);
       gap: 14px;
-      padding: 14px;
+      padding: 14px 0 28px;
     }
+
     .panel {
+      min-width: 0;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: var(--panel);
-      padding: 14px;
-      min-width: 0;
+      padding: 16px;
     }
+
     .stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: center;
+    }
+
+    h1,
+    h2 {
+      margin: 0;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      font-size: clamp(22px, 3vw, 34px);
+      line-height: 1.12;
+    }
+
+    h2 {
+      font-size: 15px;
+      font-family: var(--mono);
+    }
+
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 8px;
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .subtext {
+      margin: 8px 0 0;
+      color: var(--muted);
+      max-width: 760px;
+    }
+
+    .status-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      padding: 3px 9px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .pill.ok {
+      color: var(--accent);
+      border-color: rgba(90, 213, 159, .42);
+      background: var(--good-bg);
+    }
+
+    .pill.bad {
+      color: var(--bad);
+      border-color: rgba(255, 116, 116, .45);
+      background: var(--bad-bg);
+    }
+
+    .pill.warn {
+      color: var(--warn);
+      border-color: rgba(231, 190, 98, .42);
+      background: rgba(231, 190, 98, .1);
+    }
+
+    .compose {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, .75fr);
+      gap: 14px;
+    }
+
+    .field-stack {
       display: grid;
       gap: 12px;
     }
+
     .actions {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      align-content: end;
     }
+
     .actions .wide {
       grid-column: 1 / -1;
     }
-    .grid {
+
+    .cards {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 14px;
     }
+
+    .card {
+      display: grid;
+      gap: 8px;
+      min-height: 124px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-soft);
+      padding: 14px;
+    }
+
+    .card-title {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+    }
+
+    .metric {
+      color: var(--text);
+      font-size: 24px;
+      font-weight: 900;
+      line-height: 1.1;
+    }
+
+    .caption {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(320px, .95fr);
+      gap: 14px;
+      align-items: start;
+    }
+
     .section-title {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      margin: 0 0 10px;
-      font-size: 14px;
-      font-weight: 800;
-      font-family: var(--mono);
+      margin-bottom: 12px;
     }
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      min-height: 24px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 2px 8px;
-      color: var(--muted);
-      font-family: var(--mono);
-      font-size: 11px;
-    }
-    .pill.ok { color: var(--accent); border-color: rgba(85, 214, 159, .35); }
-    .pill.bad { color: var(--bad); border-color: rgba(255, 107, 107, .35); }
+
     .kv {
       display: grid;
-      gap: 8px;
+      gap: 9px;
     }
+
     .row {
       display: grid;
-      grid-template-columns: 132px minmax(0, 1fr);
+      grid-template-columns: 134px minmax(0, 1fr);
       gap: 10px;
       align-items: start;
       color: var(--muted);
       font-size: 13px;
     }
+
     .row b {
-      color: var(--text);
-      font-weight: 700;
+      color: var(--soft);
+      font-weight: 800;
     }
+
     .list {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 7px;
     }
+
     .tag {
       border: 1px solid var(--line);
       border-radius: 7px;
-      padding: 4px 7px;
-      color: var(--muted);
-      background: #0f1317;
+      background: #0e1317;
+      color: var(--soft);
+      padding: 5px 8px;
       font-family: var(--mono);
       font-size: 12px;
     }
-    .log {
-      max-height: 320px;
-      overflow: auto;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #0f1317;
-      padding: 11px;
-      color: var(--muted);
-      font-size: 12px;
-    }
-    .prompt {
-      color: var(--accent);
-      font-size: 12px;
-    }
-    .warn { color: var(--warn); }
-    .bad { color: var(--bad); }
-    .muted { color: var(--muted); }
+
     .empty {
       color: var(--muted);
       font-size: 13px;
-      padding: 10px 0;
+      padding: 4px 0;
     }
+
+    .log {
+      max-height: 260px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #0e1317;
+      color: var(--muted);
+      padding: 12px;
+      font-size: 12px;
+    }
+
+    .log.short {
+      max-height: 170px;
+    }
+
+    .prompt {
+      color: var(--accent);
+    }
+
+    details {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-soft);
+      overflow: hidden;
+    }
+
+    details + details {
+      margin-top: 10px;
+    }
+
+    summary {
+      min-height: 44px;
+      padding: 11px 13px;
+      cursor: pointer;
+      color: var(--soft);
+      font-family: var(--mono);
+      font-weight: 800;
+    }
+
+    details pre {
+      border-top: 1px solid var(--line);
+      border-radius: 0;
+      max-height: 330px;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 9px;
+    }
+
+    .timeline-item {
+      display: grid;
+      gap: 4px;
+      border-left: 2px solid var(--line-strong);
+      padding-left: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .timeline-item b {
+      color: var(--soft);
+    }
+
+    .warn { color: var(--warn); }
+    .bad { color: var(--bad); }
+    .muted { color: var(--muted); }
+    .ok-text { color: var(--accent); }
+
     @media (max-width: 980px) {
-      main { grid-template-columns: 1fr; }
-      .grid { grid-template-columns: 1fr; }
+      .hero,
+      .compose,
+      .layout,
+      .cards {
+        grid-template-columns: 1fr;
+      }
+
+      .status-line {
+        justify-content: flex-start;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .actions {
+        grid-template-columns: 1fr;
+      }
+
+      .row {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -226,92 +465,159 @@
   <header>
     <div class="topbar">
       <div class="brand"><span class="dot"></span> Chạy Inspector</div>
-      <div class="meta"><span id="streamStatus">connecting</span> · <span id="stamp">--:--:--</span></div>
+      <div class="meta"><span id="streamStatus">connecting</span><span id="stamp">--:--:--</span></div>
     </div>
   </header>
 
-  <main>
-    <aside class="stack">
-      <section class="panel">
-        <h2 class="section-title">Control</h2>
-        <div class="stack">
-          <div>
-            <label for="targets">IDE targets</label>
-            <input id="targets" value="codex,claude,anti,github-copilot,cursor,kiro">
-          </div>
-          <div>
-            <label for="taskText">Feature / task</label>
-            <textarea id="taskText" placeholder="User applies to job"></textarea>
-          </div>
-          <div>
-            <label for="filesText">Files override</label>
-            <input id="filesText" placeholder="src/applyService.js">
-          </div>
-          <div class="actions">
-            <button class="primary" data-action="go">Create Contract</button>
-            <button data-action="handoff">Refresh Handoff</button>
-            <button data-action="config">Configure IDE</button>
-            <button data-action="verify">Verify</button>
-            <button data-action="patch">Patch Check</button>
-          </div>
+  <main class="shell">
+    <section class="panel hero" aria-live="polite">
+      <div>
+        <span class="eyebrow">Feature workspace</span>
+        <h1 id="headline">No feature contract yet</h1>
+        <p id="nextStep" class="subtext">Create a contract first so the AI can read the right feature context before editing.</p>
+      </div>
+      <div class="status-line">
+        <span id="taskStatus" class="pill">not_started</span>
+        <span id="workerStatus" class="pill">worker idle</span>
+      </div>
+    </section>
+
+    <section class="panel compose">
+      <div class="field-stack">
+        <div>
+          <label for="taskText">Feature / task</label>
+          <textarea id="taskText" placeholder="Admin changes user role"></textarea>
         </div>
-      </section>
+        <div>
+          <label for="filesText">Files override</label>
+          <input id="filesText" placeholder="client/src/components/AdminDashboard.tsx,netlify/functions/admin-users-role.ts">
+        </div>
+        <div>
+          <label for="targets">IDE targets</label>
+          <input id="targets" value="codex" placeholder="codex">
+        </div>
+      </div>
+      <div class="actions">
+        <button class="primary wide" data-action="go">Create Contract</button>
+        <button data-action="handoff">Refresh Handoff</button>
+        <button data-action="patch">Patch Check</button>
+        <button data-action="verify">Verify</button>
+        <button data-action="config">Configure IDE</button>
+        <button data-action="refresh">Refresh UI</button>
+      </div>
+    </section>
 
-      <section class="panel">
-        <h2 class="section-title">IDE Prompt <button data-action="copy-prompt">Copy</button></h2>
-        <pre id="idePrompt" class="log prompt"></pre>
-      </section>
+    <section class="cards" aria-label="Runtime summary">
+      <article class="card">
+        <div class="card-title">Feature Graph</div>
+        <div id="featureMetric" class="metric">Missing</div>
+        <div id="featureCaption" class="caption">Run Create Contract</div>
+      </article>
+      <article class="card">
+        <div class="card-title">Selected Files</div>
+        <div id="filesMetric" class="metric">0</div>
+        <div id="filesCaption" class="caption">No boundary yet</div>
+      </article>
+      <article class="card">
+        <div class="card-title">AI Activity</div>
+        <div id="activityMetric" class="metric">Idle</div>
+        <div id="activityCaption" class="caption">No worker running</div>
+      </article>
+      <article class="card">
+        <div class="card-title">Verify</div>
+        <div id="verifyMetric" class="metric">--</div>
+        <div id="verifyCaption" class="caption">No report yet</div>
+      </article>
+    </section>
 
-      <section class="panel">
-        <h2 class="section-title">Last Action</h2>
-        <pre id="actionResult" class="log"></pre>
-      </section>
-    </aside>
-
-    <section class="stack">
-      <div class="grid">
+    <section class="layout">
+      <div class="stack">
         <section class="panel">
-          <h2 class="section-title">Current Task <span id="taskStatus" class="pill">unknown</span></h2>
+          <div class="section-title">
+            <h2>Feature Contract</h2>
+            <span id="contractState" class="pill">missing</span>
+          </div>
           <div id="overview" class="kv"></div>
         </section>
 
         <section class="panel">
-          <h2 class="section-title">Artifacts</h2>
-          <div id="artifacts" class="kv"></div>
-        </section>
-      </div>
-
-      <div class="grid">
-        <section class="panel">
-          <h2 class="section-title">Feature Graph</h2>
-          <div id="graphSummary" class="kv"></div>
+          <div class="section-title">
+            <h2>Selected Files</h2>
+            <span id="filesState" class="pill">0 files</span>
+          </div>
+          <div id="files" class="list"></div>
         </section>
 
         <section class="panel">
-          <h2 class="section-title">Folder Structure</h2>
+          <div class="section-title">
+            <h2>Folder Structure</h2>
+          </div>
           <div id="folders" class="kv"></div>
         </section>
+
+        <section class="panel">
+          <div class="section-title">
+            <h2>Diagrams</h2>
+          </div>
+          <details open>
+            <summary>User Flow</summary>
+            <pre id="userFlow" class="log"></pre>
+          </details>
+          <details open>
+            <summary>Runtime Sequence</summary>
+            <pre id="sequence" class="log"></pre>
+          </details>
+          <details>
+            <summary>PlantUML user flow</summary>
+            <pre id="plantFlow" class="log"></pre>
+          </details>
+          <details>
+            <summary>PlantUML sequence <span class="muted">plantuml_sequence</span></summary>
+            <pre id="plantSequence" class="log"></pre>
+          </details>
+        </section>
       </div>
 
-      <section class="panel">
-        <h2 class="section-title">Selected Files</h2>
-        <div id="files" class="list"></div>
-      </section>
+      <div class="stack">
+        <section class="panel">
+          <div class="section-title">
+            <h2>AI Activity</h2>
+            <span id="activityState" class="pill">idle</span>
+          </div>
+          <div id="activity" class="timeline"></div>
+        </section>
 
-      <section class="panel">
-        <h2 class="section-title">Verify</h2>
-        <div id="verify" class="kv"></div>
-      </section>
+        <section class="panel">
+          <div class="section-title">
+            <h2>IDE Prompt</h2>
+            <button data-action="copy-prompt">Copy</button>
+          </div>
+          <pre id="idePrompt" class="log short prompt"></pre>
+        </section>
 
-      <section class="panel">
-        <h2 class="section-title">Diagrams</h2>
-        <div class="grid">
-          <pre id="userFlow" class="log"></pre>
-          <pre id="sequence" class="log"></pre>
-          <pre id="plantFlow" class="log"></pre>
-          <pre id="plantSequence" class="log"></pre>
-        </div>
-      </section>
+        <section class="panel">
+          <div class="section-title">
+            <h2>Verify</h2>
+            <span id="verifyState" class="pill">unknown</span>
+          </div>
+          <div id="verify" class="kv"></div>
+        </section>
+
+        <section class="panel">
+          <div class="section-title">
+            <h2>Worker Log</h2>
+            <span class="pill">.chay/tmp/ui-dispatch.log</span>
+          </div>
+          <pre id="dispatchLog" class="log short"></pre>
+        </section>
+
+        <section class="panel">
+          <div class="section-title">
+            <h2>Last Action</h2>
+          </div>
+          <pre id="actionResult" class="log short"></pre>
+        </section>
+      </div>
     </section>
   </main>
 
@@ -323,21 +629,34 @@
       targets: $("targets"),
       taskText: $("taskText"),
       filesText: $("filesText"),
-      idePrompt: $("idePrompt"),
-      actionResult: $("actionResult"),
+      headline: $("headline"),
+      nextStep: $("nextStep"),
       taskStatus: $("taskStatus"),
+      workerStatus: $("workerStatus"),
+      featureMetric: $("featureMetric"),
+      featureCaption: $("featureCaption"),
+      filesMetric: $("filesMetric"),
+      filesCaption: $("filesCaption"),
+      activityMetric: $("activityMetric"),
+      activityCaption: $("activityCaption"),
+      verifyMetric: $("verifyMetric"),
+      verifyCaption: $("verifyCaption"),
+      contractState: $("contractState"),
+      filesState: $("filesState"),
       overview: $("overview"),
-      artifacts: $("artifacts"),
-      graphSummary: $("graphSummary"),
       folders: $("folders"),
       files: $("files"),
+      activity: $("activity"),
+      idePrompt: $("idePrompt"),
+      verifyState: $("verifyState"),
       verify: $("verify"),
+      dispatchLog: $("dispatchLog"),
+      actionResult: $("actionResult"),
       userFlow: $("userFlow"),
       sequence: $("sequence"),
       plantFlow: $("plantFlow"),
       plantSequence: $("plantSequence")
     };
-    let currentState = null;
 
     document.addEventListener("click", async (event) => {
       const button = event.target.closest("button[data-action]");
@@ -355,8 +674,12 @@
           showResult({ ok: true, copied: "ide_prompt" });
           return;
         }
-        const body = actionPayload(action);
-        const result = await api("/api/action", body);
+        if (action === "refresh") {
+          await load();
+          showResult({ ok: true, refreshed: true });
+          return;
+        }
+        const result = await api("/api/action", actionPayload(action));
         showResult(result);
         await load();
       } catch (error) {
@@ -408,48 +731,56 @@
     }
 
     function render(state) {
-      currentState = state;
       els.stamp.textContent = new Date(state.generated_at).toLocaleTimeString();
-      const handoff = state.handoff || {};
       const graph = state.feature_graph || {};
-      const ide = state.ide_config || {};
+      const system = state.system_map || {};
+      const handoff = state.handoff || {};
       const status = handoff.status || {};
-      const files = unique([
-        ...(handoff.relevant_files?.allowed_files || []),
-        ...(handoff.relevant_files?.graph_code_targets || []),
-        ...(handoff.relevant_files?.context_selected_files || []),
-        ...(state.selected_files || []).map((file) => file.path)
-      ]);
+      const ide = state.ide_config || {};
+      const report = state.eval_report || {};
+      const files = selectedFiles(state, handoff);
+      const progress = latestProgress(state);
+      const result = latestResult(state);
+      const hasGraph = Boolean(graph.feature_id);
+      const verifyOk = report.ok === true;
+      const taskState = status.task_status || (hasGraph ? "contract_ready" : "not_started");
 
-      const done = status.task_status === "completed";
-      els.taskStatus.textContent = status.task_status || "not_started";
-      els.taskStatus.className = `pill ${done ? "ok" : "bad"}`;
+      setText(els.headline, graph.goal || handoff.source_of_truth?.goal || firstTask(state) || "No feature contract yet");
+      setText(els.nextStep, nextStepText({ hasGraph, files, report, result, runner: state.runner }));
+
+      setPill(els.taskStatus, taskState, hasGraph ? "ok" : "warn");
+      setPill(els.workerStatus, state.runner ? `${state.runner.worker} running` : "worker idle", state.runner ? "warn" : "ok");
+
+      setText(els.featureMetric, hasGraph ? "Ready" : system.api_entries ? `${system.api_entries.length} APIs` : "Missing");
+      setText(els.featureCaption, hasGraph ? graph.feature_id : system.feature_candidates ? `${system.feature_candidates.length} feature candidates` : "Run Create Contract");
+      setText(els.filesMetric, String(files.length));
+      setText(els.filesCaption, files.length ? "Files AI may use" : "No boundary yet");
+      setText(els.activityMetric, state.runner ? "Running" : result ? "Result" : "Idle");
+      setText(els.activityCaption, progress?.message || result?.summary || "No worker running");
+      setText(els.verifyMetric, report.score === undefined ? "--" : `${report.score}`);
+      setText(els.verifyCaption, report.grade ? `${report.grade} / ${report.ok ? "ok" : "needs work"}` : "No report yet");
+
+      setPill(els.contractState, hasGraph ? "ready" : "missing", hasGraph ? "ok" : "warn");
+      setPill(els.filesState, `${files.length} files`, files.length ? "ok" : "warn");
+      setPill(els.activityState, state.runner ? "running" : result ? result.status || "result" : "idle", state.runner ? "warn" : "ok");
+      setPill(els.verifyState, report.ok === undefined ? "unknown" : (verifyOk ? "ok" : "needs work"), verifyOk ? "ok" : "bad");
 
       els.overview.innerHTML = rows([
+        ["Feature", graph.feature_id || "missing"],
         ["Goal", graph.goal || handoff.source_of_truth?.goal || firstTask(state)],
-        ["Next", status.next_action || state.eval_report?.next_action || ""],
-        ["IDE mode", ide.mode || "not configured"],
+        ["System APIs", system.api_entries ? String(system.api_entries.length) : ""],
+        ["Candidates", system.feature_candidates ? system.feature_candidates.slice(0, 6).map((item) => item.feature_id).join(", ") : ""],
+        ["Mode", ide.mode || "not configured"],
         ["Targets", (ide.targets || []).join(", ") || "manual"],
-        ["Worker file", state.default_worker ? `chay-memory/${state.default_worker}_work_note.json` : ""]
+        ["Handoff", handoff.source_of_truth ? "chay-memory/ai_handoff.json" : "missing"],
+        ["Graph nodes", graph.nodes ? `${graph.nodes.length} nodes / ${(graph.edges || []).length} edges` : ""]
       ]);
 
-      els.artifacts.innerHTML = rows([
-        ["Handoff", "chay-memory/ai_handoff.json"],
-        ["Graph", graph.feature_id ? "chay-memory/feature_graph.json" : "missing"],
-        ["Instructions", ide.instruction_file || ".chay/ide/CHAY_IDE_INSTRUCTIONS.md"],
-        ["Result", state.default_worker ? `chay-memory/${state.default_worker}_result_note.json` : ""]
-      ]);
-
-      els.graphSummary.innerHTML = rows([
-        ["Feature", graph.feature_id || ""],
-        ["Nodes", String((graph.nodes || []).length)],
-        ["Edges", String((graph.edges || []).length)],
-        ["Code targets", (graph.code_targets || []).join(", ")]
-      ]);
-
-      els.folders.innerHTML = renderFolders(graph.folder_structure || handoff.source_of_truth?.folder_structure || []);
       els.files.innerHTML = files.length ? files.map((file) => `<span class="tag">${esc(file)}</span>`).join("") : `<div class="empty">No selected files</div>`;
-      els.verify.innerHTML = renderVerify(state.eval_report);
+      els.folders.innerHTML = renderFolders(graph.folder_structure || handoff.source_of_truth?.folder_structure || []);
+      els.activity.innerHTML = renderActivity(state, progress, result);
+      els.verify.innerHTML = renderVerify(report);
+      els.dispatchLog.textContent = state.dispatch_log || "No worker log yet";
       els.userFlow.textContent = graph.user_flow || graph.mermaid || "No Mermaid user flow";
       els.sequence.textContent = graph.sequence_diagram || "No Mermaid sequence";
       els.plantFlow.textContent = graph.plantuml_flow || "No PlantUML flow";
@@ -457,25 +788,64 @@
       els.idePrompt.textContent = promptText();
     }
 
+    function selectedFiles(state, handoff) {
+      return unique([
+        ...(handoff.relevant_files?.allowed_files || []),
+        ...(handoff.relevant_files?.graph_code_targets || []),
+        ...(handoff.relevant_files?.context_selected_files || []),
+        ...(state.selected_files || []).map((file) => file.path)
+      ]);
+    }
+
+    function latestProgress(state) {
+      const history = state.progress_history || [];
+      if (history.length) return history[history.length - 1];
+      return (state.agents || []).find((agent) => agent.message || agent.step) || null;
+    }
+
+    function latestResult(state) {
+      const results = state.result_notes || [];
+      return results.length ? results[results.length - 1] : null;
+    }
+
+    function nextStepText({ hasGraph, files, report, result, runner }) {
+      if (runner) return "AI worker is running. Watch AI Activity and Worker Log.";
+      if (!hasGraph) return "Create a contract first, then give the IDE Prompt to Codex or Claude.";
+      if (!files.length) return "Contract exists but no selected files were found. Re-run Create Contract with Files override.";
+      if (report?.violations?.length) return "Verify found issues. Fix the listed violations before accepting the patch.";
+      if (result?.status === "completed") return "AI result exists. Run Patch Check, then review the diff.";
+      return "Copy IDE Prompt into Codex or Claude. After edits, run Patch Check.";
+    }
+
+    function renderActivity(state, progress, result) {
+      const rows = [];
+      if (state.runner) {
+        rows.push(item("Runner", `${state.runner.worker} via ${state.runner.engine}; ${Math.round((state.runner.elapsed_ms || 0) / 1000)}s`));
+      } else {
+        rows.push(item("Runner", "No worker running"));
+      }
+      if (progress) rows.push(item("Progress", `${progress.step || "unknown"}${progress.message ? ` - ${progress.message}` : ""}`));
+      if (result) rows.push(item("Result", `${result.status || "unknown"} - ${result.summary || ""}`));
+      if ((state.tasks || []).length) rows.push(item("Work note", `${state.tasks[0].agent || ""} - ${state.tasks[0].goal || ""}`));
+      return rows.join("") || `<div class="empty">No AI activity yet</div>`;
+    }
+
     function renderVerify(report) {
-      if (!report) return `<div class="empty">No report</div>`;
+      if (!report || report.score === undefined) return `<div class="empty">No report</div>`;
       const violations = report.violations || [];
       return rows([
-        ["Score", `${report.score}/100 ${report.grade}`],
+        ["Score", `${report.score}/100 ${report.grade || ""}`],
         ["Status", report.ok ? "ok" : "needs work"],
-        ["Next", report.next_action],
-        ["Violations", violations.length ? violations.map((item) => item.type).join(", ") : "none"]
+        ["Next", report.next_action || ""],
+        ["Violations", violations.length ? violations.map((violation) => violation.type).join(", ") : "none"]
       ]);
     }
 
     function renderFolders(items) {
       if (!items.length) return `<div class="empty">No folder structure yet</div>`;
-      return items.map((item) => [
-        "<div class=\"row\">",
-        `<b>${esc(item.folder || ".")}</b>`,
-        `<span>${esc((item.code_targets || []).join(", "))}</span>`,
-        "</div>"
-      ].join("")).join("");
+      return items.map((entry) => rows([
+        [entry.folder || ".", (entry.code_targets || []).join(", ")]
+      ])).join("");
     }
 
     function rows(items) {
@@ -487,17 +857,21 @@
       ].join("")).join("");
     }
 
+    function item(title, body) {
+      return `<div class="timeline-item"><b>${esc(title)}</b><span>${esc(body || "")}</span></div>`;
+    }
+
     function firstTask(state) {
       return (state.tasks || [])[0]?.goal || "";
     }
 
     function promptText() {
       return [
-        "Read chay-memory/ai_handoff.json, chay-structure/features/<feature_id>.md, chay-structure/folder_structure.md, chay-structure/api_graph.md, and .chay/ide/CHAY_IDE_INSTRUCTIONS.md.",
-        "Follow folder_structure first.",
-        "Follow the feature graph user_flow and sequence_diagram.",
+        "Read chay-memory/ai_handoff.json first.",
+        "Then read chay-structure/features/<feature_id>.md, chay-structure/folder_structure.md, and chay-structure/api_graph.md.",
+        "Follow the user_flow and sequence_diagram.",
         "Edit only selected/allowed files.",
-        "Update the result_note JSON, then stop for cr verify."
+        "After editing, create git diff and run cr verify."
       ].join("\n");
     }
 
@@ -507,7 +881,16 @@
 
     function setStream(ok) {
       els.streamStatus.textContent = ok ? "realtime" : "reconnecting";
-      els.streamStatus.className = ok ? "prompt" : "warn";
+      els.streamStatus.className = ok ? "ok-text" : "warn";
+    }
+
+    function setPill(el, text, tone) {
+      el.textContent = text || "";
+      el.className = `pill ${tone || ""}`.trim();
+    }
+
+    function setText(el, text) {
+      el.textContent = text || "";
     }
 
     function unique(items) {

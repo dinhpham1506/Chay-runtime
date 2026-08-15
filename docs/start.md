@@ -10,21 +10,35 @@ Use this path when a human wants an IDE chatbot or coding agent to continue a fe
 npm install -g chay-runtime@latest
 cd your-project
 cr start
-cr config codex,claude,github-copilot,cursor,kiro
+cr config codex
+```
+
+`cr start` also creates the first whole-project baseline:
+
+```text
+.chay/project_map.json
+chay-memory/system_map.json
+chay-structure/system_overview.md
+chay-structure/api_inventory.md
+chay-structure/system_folder_map.md
+chay-structure/diagrams/system-overview.puml
+chay-structure/diagrams/api-inventory.puml
+```
+
+Refresh that baseline any time with:
+
+```bash
+cr system map
 ```
 
 Install persistent rules for the chat surface you use:
 
 ```bash
 cr chat install --target codex
-cr chat install --target cursor
-cr chat install --target github-copilot
-cr chat install --target kiro
-cr chat install --target windsurf
-cr chat install --target claude
+# optional: cr chat install --target cursor
 ```
 
-For Codex, `cr chat install --target codex` also installs the global `chay-runtime` Codex Skill when a Codex home is available.
+For Codex, `cr chat install --target codex` also installs the global `chay-runtime` Codex Skill when a Codex home is available. Other targets are still supported, but install them only when you use them.
 
 ## Work On A Feature
 

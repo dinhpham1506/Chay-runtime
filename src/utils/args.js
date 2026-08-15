@@ -50,6 +50,7 @@ const repeatableArgs = new Set([
 
 const booleanArgs = new Set([
   "auth",
+  "all",
   "codex",
   "codex-skill",
   "compact",
@@ -61,6 +62,7 @@ const booleanArgs = new Set([
   "login",
   "no-compact",
   "require-existing",
+  "quiet",
   "skip-login",
   "skip-context-plan",
   "skip-token-check",
